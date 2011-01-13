@@ -1,0 +1,260 @@
+<?xml version="1.0"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="9"/>
+    <PathDelim Value="\"/>
+    <General>
+      <MainUnit Value="0"/>
+      <ResourceType Value="res"/>
+      <UseXPManifest Value="True"/>
+      <Icon Value="0"/>
+      <ActiveWindowIndexAtStart Value="0"/>
+    </General>
+    <i18n>
+      <EnableI18N LFM="False"/>
+    </i18n>
+    <VersionInfo>
+      <StringTable ProductVersion=""/>
+    </VersionInfo>
+    <BuildModes Count="1" Active="Default">
+      <Item1 Name="Default" Default="True"/>
+    </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+      <IncludeFileFilter Value="*.(pas|pp|inc|lfm|lpr|lrs|lpi|lpk|sh|xml)"/>
+      <ExcludeFileFilter Value="*.(bak|ppu|o|so);*~;backup"/>
+    </PublishOptions>
+    <RunParams>
+      <local>
+        <FormatVersion Value="1"/>
+      </local>
+    </RunParams>
+    <RequiredPackages Count="1">
+      <Item1>
+        <PackageName Value="LCL"/>
+      </Item1>
+    </RequiredPackages>
+    <Units Count="17">
+      <Unit0>
+        <Filename Value="chemera.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="chemera"/>
+        <EditorIndex Value="3"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="38" Y="15"/>
+        <UsageCount Value="48"/>
+        <Loaded Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="chemeramain.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="CmMainForm"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="chemeramain"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="0"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="7"/>
+        <CursorPos X="24" Y="20"/>
+        <UsageCount Value="48"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="formmanager.pas"/>
+        <UnitName Value="formmanager"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="28"/>
+        <CursorPos X="19" Y="88"/>
+        <UsageCount Value="18"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="..\display\displayobjects.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="displayobjects"/>
+        <EditorIndex Value="1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="6"/>
+        <CursorPos X="18" Y="12"/>
+        <UsageCount Value="48"/>
+        <Loaded Value="True"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="..\molecule\molecules.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="molecules"/>
+        <EditorIndex Value="2"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="49"/>
+        <CursorPos X="50" Y="47"/>
+        <UsageCount Value="48"/>
+        <Loaded Value="True"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="..\molecule\pdbmolecules.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="pdbmolecules"/>
+        <EditorIndex Value="5"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="138"/>
+        <CursorPos X="16" Y="15"/>
+        <UsageCount Value="48"/>
+        <Loaded Value="True"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="..\general\basetypes.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="basetypes"/>
+        <EditorIndex Value="4"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="120"/>
+        <CursorPos X="13" Y="127"/>
+        <UsageCount Value="48"/>
+        <Loaded Value="True"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="..\display\moleculedisplay.pas"/>
+        <UnitName Value="moleculedisplay"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="15"/>
+        <CursorPos X="41" Y="33"/>
+        <UsageCount Value="27"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="..\molecule\selections.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="selections"/>
+        <EditorIndex Value="6"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="1" Y="1"/>
+        <UsageCount Value="48"/>
+        <Loaded Value="True"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="..\UI\glutwindow.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="glutwindow"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="191"/>
+        <CursorPos X="21" Y="203"/>
+        <UsageCount Value="48"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="..\display\base3ddisplay.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="base3ddisplay"/>
+        <EditorIndex Value="9"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="19"/>
+        <CursorPos X="22" Y="73"/>
+        <UsageCount Value="48"/>
+        <Loaded Value="True"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="..\UI\ogllclwindow.pas"/>
+        <UnitName Value="ogllclwindow"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="37" Y="22"/>
+        <UsageCount Value="19"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="..\UI\displaysettings.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="DisplaySettingsForm"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="displaysettings"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="64"/>
+        <CursorPos X="53" Y="77"/>
+        <UsageCount Value="39"/>
+        <LoadedDesigner Value="True"/>
+      </Unit12>
+      <Unit13>
+        <Filename Value="C:\lazarus\fpc\2.4.3\source\rtl\inc\objpash.inc"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="262"/>
+        <CursorPos X="8" Y="274"/>
+        <UsageCount Value="9"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="C:\lazarus\fpc\2.4.3\source\rtl\inc\systemh.inc"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="572"/>
+        <CursorPos X="34" Y="580"/>
+        <UsageCount Value="9"/>
+      </Unit14>
+      <Unit15>
+        <Filename Value="C:\lazarus\fpc\2.4.3\source\packages\opengl\src\glut.pp"/>
+        <UnitName Value="Glut"/>
+        <EditorIndex Value="7"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="513"/>
+        <CursorPos X="11" Y="525"/>
+        <UsageCount Value="11"/>
+        <Loaded Value="True"/>
+      </Unit15>
+      <Unit16>
+        <Filename Value="C:\lazarus\fpc\2.4.3\source\packages\opengl\src\gl.pp"/>
+        <UnitName Value="GL"/>
+        <EditorIndex Value="8"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="792"/>
+        <CursorPos X="16" Y="805"/>
+        <UsageCount Value="11"/>
+        <Loaded Value="True"/>
+      </Unit16>
+    </Units>
+    <JumpHistory Count="4" HistoryIndex="3">
+      <Position1>
+        <Filename Value="..\display\base3ddisplay.pas"/>
+        <Caret Line="32" Column="33" TopLine="16"/>
+      </Position1>
+      <Position2>
+        <Filename Value="..\display\base3ddisplay.pas"/>
+        <Caret Line="72" Column="16" TopLine="49"/>
+      </Position2>
+      <Position3>
+        <Filename Value="..\display\base3ddisplay.pas"/>
+        <Caret Line="36" Column="31" TopLine="24"/>
+      </Position3>
+      <Position4>
+        <Filename Value="chemera.lpr"/>
+        <Caret Line="1" Column="1" TopLine="1"/>
+      </Position4>
+    </JumpHistory>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="9"/>
+    <PathDelim Value="\"/>
+    <Target>
+      <Filename Value="chemera"/>
+    </Target>
+    <SearchPaths>
+      <IncludeFiles Value="$(ProjOutDir)"/>
+      <OtherUnitFiles Value="..\display;..\molecule;..\general;..\forms"/>
+      <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+    <Other>
+      <CompilerMessages>
+        <UseMsgFile Value="True"/>
+      </CompilerMessages>
+      <CompilerPath Value="$(CompPath)"/>
+    </Other>
+  </CompilerOptions>
+  <Debugging>
+    <Exceptions Count="3">
+      <Item1>
+        <Name Value="EAbort"/>
+      </Item1>
+      <Item2>
+        <Name Value="ECodetoolError"/>
+      </Item2>
+      <Item3>
+        <Name Value="EFOpenError"/>
+      </Item3>
+    </Exceptions>
+  </Debugging>
+</CONFIG>

@@ -1,0 +1,40 @@
+object ProgressFrame: TProgressFrame
+  Height = 83
+  Width = 397
+  ClientHeight = 83
+  ClientWidth = 397
+  TabOrder = 0
+  Visible = False
+  DesignLeft = 195
+  DesignTop = 109
+  object TaskTitleLbl: TLabel
+    Left = 8
+    Height = 14
+    Top = 3
+    Width = 76
+    Caption = 'No task running'
+    ParentColor = False
+  end
+  object TaskTimeLbl: TLabel
+    Left = 8
+    Height = 14
+    Top = 53
+    Width = 10
+    Caption = '   '
+    ParentColor = False
+  end
+  object TaskPBar: TProgressBar
+    Height = 20
+    Top = 24
+    Width = 392
+    TabOrder = 0
+  end
+  object CancelBt: TButton
+    Left = 317
+    Height = 25
+    Top = 53
+    Width = 75
+    Caption = 'Cancel'
+    TabOrder = 1
+  end
+end
