@@ -18,7 +18,8 @@ unit chemeramain;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Menus, pdbmolecules,glutwindow;
+  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Menus,
+  pdbmolecules,oglform,displayobjects,LCLProc;
 
 type
 
@@ -32,7 +33,8 @@ type
   private
     { private declarations }
     FInitializing:Boolean;
-    FDisplay:TGlutWindow;
+    FDisplay:TOpenGlForm;
+    FDispMan:TDisplayManager;
     procedure InitChemera;
   public
     { public declarations }
@@ -54,7 +56,14 @@ end;
 
 procedure TCmMainForm.InitChemera;
 begin
-  FDisplay:=TGlutWindow.Create(Top+Height,Left,600,Width);
+  FInitializing:=False;
+  FDisplay:=TOpenGLForm.Create(Self);
+  FDisplay.Show;
+  FDispMan:=TDisplayManager.Create(FDisplay);
+
+  //DEBUG:
+  FDispMan.Test;
+  DebugLn('Init')
 end;
 
 procedure TCmMainForm.FormActivate(Sender: TObject);

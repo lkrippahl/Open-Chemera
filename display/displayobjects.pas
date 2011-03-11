@@ -21,9 +21,55 @@ unit displayobjects;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, basetypes, base3ddisplay,LCLProc;
+
+type
+
+  { TDisplayManager }
+
+  TDisplayManager=class
+  private
+    FDisplay:IBase3DDisplay;
+  public
+    constructor Create(Display:IBase3DDisplay);
+    procedure SetDisplay(Display:IBase3DDisplay);
+    //this is for testing and debugging displays
+    procedure Test;
+  end;
+
 
 implementation
+
+{ TDisplayManager }
+
+constructor TDisplayManager.Create(Display: IBase3DDisplay);
+begin
+  inherited Create;
+  SetDisplay(Display);
+end;
+
+procedure TDisplayManager.SetDisplay(Display: IBase3DDisplay);
+begin
+  FDisplay:=Display;
+end;
+
+procedure TDisplayManager.Test;
+
+var ol:T3DObjectList;
+
+begin
+  ol.Material:=ColorMaterial(1,0.5,0.1,1);
+  SetLength(ol.Objects,1);
+  with ol.Objects[0] do
+    begin
+    ObjecType:=otSphere;
+    Rad:=2;
+    sphC:=Coord(0,0,0);
+    end;
+  FDisplay.AddObjectList(ol);
+  FDisplay.Compile;
+  DebugLn('Test');
+end;
 
 end.
 

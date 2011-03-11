@@ -1,0 +1,16 @@
+object OpenGLForm: TOpenGLForm
+  Left = 419
+  Height = 455
+  Top = 167
+  Width = 593
+  Caption = 'OpenGLForm'
+  ClientHeight = 455
+  ClientWidth = 593
+  LCLVersion = '0.9.31'
+  object OGLPb: TOpenGLControl
+    Left = 8
+    Height = 442
+    Top = 8
+    Width = 576
+  end
+end

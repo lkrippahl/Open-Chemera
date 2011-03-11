@@ -7,8 +7,8 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, chemeramain, displayobjects, molecules, pdbmolecules, basetypes, selections, glutwindow, base3ddisplay,
-displaysettings;
+  Forms, chemeramain, displayobjects, molecules, pdbmolecules, basetypes, selections, base3ddisplay,
+displaysettings, oglform, lazopenglcontext;
 
 {$R *.res}
 
