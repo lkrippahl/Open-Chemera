@@ -62,8 +62,8 @@ begin
   FDispMan:=TDisplayManager.Create(FDisplay);
 
   //DEBUG:
-  FDispMan.Test;
-  DebugLn('Init')
+  //FDispMan.Test;
+  //DebugLn('Init')
 end;
 
 procedure TCmMainForm.FormActivate(Sender: TObject);

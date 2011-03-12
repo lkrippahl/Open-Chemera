@@ -6,11 +6,16 @@ object OpenGLForm: TOpenGLForm
   Caption = 'OpenGLForm'
   ClientHeight = 455
   ClientWidth = 593
+  OnResize = FormResize
   LCLVersion = '0.9.31'
   object OGLPb: TOpenGLControl
     Left = 8
     Height = 442
     Top = 8
     Width = 576
+    OnMouseDown = OGLPbMouseDown
+    OnMouseMove = OGLPbMouseMove
+    OnPaint = OGLPbPaint
+    OnResize = OGLPbResize
   end
 end

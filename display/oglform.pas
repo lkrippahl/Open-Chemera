@@ -16,15 +16,26 @@ type
 
   TOpenGLForm = class(TForm,IBase3DDisplay)
     OGLPb: TOpenGLControl;
+    procedure FormResize(Sender: TObject);
+    procedure OGLPbMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure OGLPbMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer
+      );
+    procedure OGLPbPaint(Sender: TObject);
+    procedure OGLPbResize(Sender: TObject);
   private
     { private declarations }
   protected
-      FTop,FLeft,FHeight,FWidth:Integer;
-      FForm:TOpenGLForm;
+      FInitialized:Boolean;
       FBaseSphere,FBaseCube:TQuadMesh;
       FDisplayLists:array of GLUInt;
       FObjectLists: array of T3DObjectList;
       FDisplayColors: array of TGluRGBA; //colors for displaylists
+
+      //mouse tracking
+      FCX,FCY:Integer;                   //current mouse position
+      FOX,FOY:Integer;                   //old mouse position
+      FModelMat:array [0..15] of GlFloat;//rotation matrix
       //Light attributes
       FLAmbient,FLDiffuse,FLPosition,FLSpecular: TGluRGBA;
 
@@ -33,6 +44,7 @@ type
       procedure ClearDisplayLists;
       function CompileList(ObjectList:T3DObjectList):GLUInt;
       procedure SetMaterial(Material:T3DMaterial);
+      procedure InitOGL;
     public
       constructor Create(TheOwner: TComponent); override;
       //IBase3DInterface functions
@@ -79,43 +91,64 @@ begin
   inherited Create(TheOwner);
   OGLPb.MakeCurrent;
     SetQuality(3);
-
-  FLAmbient:=GluColor(0.2, 0.2, 0.2, 1 );
-  FLDiffuse:=GluColor( 0.7, 0.7, 0.7, 1 );
-  FLSpecular:=GluColor( 1, 1, 1, 1 );
-  FLPosition:=GluColor( 0.0, 100.0, 0, 20 );
-
-  FTop:=Top;
-  FLeft:=Left;
-  FHeight:=Height;
-  FWidth:=Width;
-
-  glClearColor(0.0, 1.0, 0.0, 1);
-  glClearDepth(1.0);
-  glEnable(GL_DEPTH_TEST);
-  glDepthFunc(GL_LESS);
-  glHint(GL_PERSPECTIVE_CORRECTION_HINT,GL_NICEST);
-
-
-  //Default lights and Rendering options
-
-  glShadeModel(GL_SMOOTH);
-  glLightfv(GL_LIGHT0, GL_SPECULAR,FLSpecular);
-  glLightfv(GL_LIGHT0, GL_POSITION,FLPosition);
-  glLightfv(GL_LIGHT0, GL_AMBIENT,FLAmbient);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE,FLDiffuse);
-  glEnable(GL_LIGHT0);
-  glEnable(GL_LIGHTING);
-
-  glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-
-  glCullFace(GL_BACK);
-  glEnable(GL_CULL_FACE);
 end;
 
+procedure TOpenGLForm.OGLPbPaint(Sender: TObject);
+begin
+  if not FInitialized then
+    InitOGL;
+  Refresh;
+end;
+
+procedure TOpenGLForm.OGLPbResize(Sender: TObject);
+begin
+  if (FInitialized) and OGLPb.MakeCurrent then
+    begin
+    glViewport (0, 0, OGLPb.Width, OGLPb.Height);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(60.0, OGLPb.Width/OGLPb.Height, 1, 600.0);
+    glMatrixMode(GL_MODELVIEW);
+    end;
+end;
+
+procedure TOpenGLForm.FormResize(Sender: TObject);
+begin
+  OGlPb.Top:=3;
+  OGlPb.Left:=3;
+  OGlPb.Width:=Width-6;
+  OGlPb.Height:=Height-6;
+
+end;
+
+procedure TOpenGLForm.OGLPbMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  //set old and current mouse position to this position
+  FOX:=X;
+  FOY:=Y;
+  FCX:=X;
+  FCY:=Y;
+end;
+
+procedure TOpenGLForm.OGLPbMouseMove(Sender: TObject; Shift: TShiftState; X,
+  Y: Integer);
+begin
+  if Shift=[ssLeft] then
+    begin
+    FCX:=X;
+    FCY:=Y;
+    OGLPb.Invalidate;
+    end;
+end;
 
 procedure TOpenGLForm.ClearDisplayLists;
+
+var f:Integer;
+
 begin
+  for f:=0 to High(FDisplayLists) do
+    glDeleteLists(FDisplayLists[f],1);
   FDisplayLists:=nil;
 end;
 
@@ -177,18 +210,88 @@ begin
     //store and set each color, for sending pointers
     //TODO: check if better way to do this...
     FDisplayColors[colix]:=RGBAToGlu(Material.Ambient);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, @FDisplayColors[colix]);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, FDisplayColors[colix]);
     FDisplayColors[colix+1]:=RGBAToGlu(Material.Diffuse);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, @FDisplayColors[colix+1]);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, FDisplayColors[colix+1]);
     FDisplayColors[colix+2]:=RGBAToGlu(Material.Specular);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, @FDisplayColors[colix+2]);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, FDisplayColors[colix+2]);
     end;
+end;
+
+procedure TOpenGLForm.InitOGL;
+
+procedure InitLights;
+
+begin
+  FLAmbient:=GluColor(0.2, 0.2, 0.2, 1 );
+  FLDiffuse:=GluColor( 0.7, 0.7, 0.7, 1 );
+  FLSpecular:=GluColor( 1, 1, 1, 1 );
+  FLPosition:=GluColor( 1.0, 1.0, 1, 0 );
+end;
+
+begin
+  if FInitialized then exit;
+  FInitialized:=true;
+  InitLights;
+  {setting lighting conditions}
+  glEnable(GL_LIGHT0);
+  glLightfv(GL_LIGHT0, GL_AMBIENT, FLAmbient);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, FLDiffuse);
+  glLightfv(GL_LIGHT0, GL_SPECULAR, FLSpecular);
+  glLightfv(GL_LIGHT0, GL_POSITION, FLPosition);
+
+  glMaterialfv(GL_FRONT, GL_DIFFUSE, ColorLtGray);
+  glMaterialfv(GL_FRONT, GL_AMBIENT, ColorLtGray);
+
+  glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+
+  glCullFace(GL_BACK);
+  glEnable(GL_CULL_FACE);
+
+  //Fog
+  glEnable (GL_FOG);
+  glFogi (GL_FOG_MODE,GL_LINEAR);
+  glFogfv (GL_FOG_COLOR, ColorBlack);
+  glFogf (GL_FOG_DENSITY, 0.01);
+  glFogf(GL_FOG_START, 20);
+  glFogf(GL_FOG_END, 100);
+  glHint (GL_FOG_HINT, GL_NICEST);
+
+  //textures
+  //TODO:  FTextures.BindTextures;
+
+  glClearColor(0.0,0.0,0.0,1.0);    // sets background color
+  glClearDepth(1.0);
+  glDepthFunc(GL_LEQUAL);           // the type of depth test to do
+  glEnable(GL_DEPTH_TEST);          // enables depth testing
+  glShadeModel(GL_SMOOTH);          // enables smooth color shading
+
+  glEnable(GL_LIGHTING);
+
+  glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
+  glHint(GL_POLYGON_SMOOTH_HINT,GL_NICEST);
+  glHint(GL_PERSPECTIVE_CORRECTION_HINT,GL_NICEST);
+
+  glMatrixMode (GL_PROJECTION);    { prepare for and then }
+  glLoadIdentity ();               { define the projection }
+  glFrustum (-2.0, 2.0, -2.0, 2.0, 5, 200); { transformation }
+  glMatrixMode (GL_MODELVIEW);  { back to modelview matrix }
+  glViewport (0, 0, OGLPb.Width, OGLPb.Height);
+  OGLPbResize(nil);
+
+  //set the matrix for rotation
+  glLoadIdentity;
+  glGetFloatv(GL_MODELVIEW_MATRIX,FModelMat);
+
+
+
 end;
 
 procedure TOpenGLForm.AddObjectList(ObjectList: T3DObjectList);
 begin
   SetLength(FObjectLists,Length(FObjectLists)+1);
   FObjectLists[High(FObjectLists)]:=ObjectList;
+  DebugLn('Added');
 end;
 
 procedure TOpenGLForm.ClearObjectLists;
@@ -197,8 +300,15 @@ begin
 end;
 
 procedure TOpenGLForm.Compile;
-begin
+// create display lists for all objects
+var
+  f:Integer;
 
+begin
+  ClearDisplayLists;
+  SetLength(FDisplayLists,Length(FObjectLists));
+  for f:=0 to High(FObjectLists) do
+    FDisplayLists[f]:=CompileList(FObjectLists[f]);
 end;
 
 
@@ -209,22 +319,32 @@ procedure TOpenGLForm.Refresh;
 var
   f:Integer;
   col:TGluRGBA;
+ //v:TCoords;
 
 begin
   glClearColor(0.0, 0, 0.0, 1);
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
-  glPushMatrix;
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity;
 
-  //Set rotation here
-  //TODO:translation needs variable parameter
-  glTranslatef(0,0,-20);
+
+  glPushMatrix;
+
+  //Set rotation and reset X Y
+  glLoadIdentity;
+  glRotatef(0.2*(FCX-FOX),0,1,0);
+  glRotatef(0.2*(FCY-FOY),1,0,0);
+  glMultMatrixf(FModelMat);
+  glGetFloatv(GL_MODELVIEW_MATRIX,FModelMat);
+  FOX:=FCX;
+  FOY:=FCY;
+
+  //set objects in place and rotation
+  glLoadIdentity;
+  glTranslatef(0,0,-100);
+  glMultMatrixf(FModelMat);
 
   for f:=0 to High(FDisplayLists) do
     glCallList(FDisplayLists[f]);
-
   glPopMatrix;
   OGLPb.SwapBuffers;
 

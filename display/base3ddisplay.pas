@@ -29,7 +29,7 @@ unit base3ddisplay;
 interface
 
 uses
-  Classes, SysUtils, basetypes;
+  Classes, SysUtils, basetypes, glu;
 
 const
   //Object type constants
@@ -37,6 +37,14 @@ const
   otLine=1;
   otCilinder=2;
   otCuboid=3;
+
+  //useful colors
+
+  ColorWhite:T4FArray=(1,1,1,1);
+  ColorBlack:T4FArray=(0,0,0,1);
+  ColorGray:T4FArray=(0.5,0.5,0.5,1);
+  ColorDkGray:T4FArray=(0.2,0.2,0.2,1);
+  ColorLtGray:T4FArray=(0.9,0.9,0.9,1);
 
 
 

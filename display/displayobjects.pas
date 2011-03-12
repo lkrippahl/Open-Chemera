@@ -55,17 +55,29 @@ end;
 
 procedure TDisplayManager.Test;
 
-var ol:T3DObjectList;
+const
+  count=3;
+  dist=10;
+
+var
+  ol:T3DObjectList;
+  x,y,z:Integer;
 
 begin
-  ol.Material:=ColorMaterial(1,0.5,0.1,1);
-  SetLength(ol.Objects,1);
-  with ol.Objects[0] do
-    begin
-    ObjecType:=otSphere;
-    Rad:=2;
-    sphC:=Coord(0,0,0);
-    end;
+  ol.Material:=ColorMaterial(1,0,0,1);
+  ol.Objects:=nil;
+  for x:=-count to count do
+    for y:=-count to count do
+      for z:=-count to count do
+        begin
+        SetLength(ol.Objects,Length(ol.Objects)+1);
+        with ol.Objects[High(ol.Objects)] do
+          begin
+          ObjecType:=otSphere;
+          Rad:=2;
+          sphC:=Coord(x*dist,y*dist,z*dist);
+          end;
+        end;
   FDisplay.AddObjectList(ol);
   FDisplay.Compile;
   DebugLn('Test');
