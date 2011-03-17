@@ -8,14 +8,13 @@ uses
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms, chemeramain, displayobjects, molecules, pdbmolecules, basetypes, selections, base3ddisplay,
-displaysettings, oglform, lazopenglcontext;
+displaysettings, oglform, pdbparser, lazopenglcontext, chemeraconfig;
 
 {$R *.res}
 
 begin
   Application.Initialize;
   Application.CreateForm(TCmMainForm, CmMainForm);
-  Application.CreateForm(TDisplaySettingsForm, DisplaySettingsForm);
   Application.Run;
 end.
 

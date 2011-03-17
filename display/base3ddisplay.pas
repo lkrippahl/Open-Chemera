@@ -1,6 +1,6 @@
 {*******************************************************************************
 This file is part of the Open Chemera Library.
-This work is public domain. Enjoy.
+This work is public domain (see README.TXT).
 ********************************************************************************
 Author: Ludwig Krippahl
 Date: 9.1.2011
@@ -15,6 +15,8 @@ Requirements:
     Colors and stuff
 Revisions:
 To do:
+  The QuadSphere is not a good idea. Better to split icosahedron, use triangles.
+
   Material specs (only color at present)
   Add textures
   Add lights
@@ -59,7 +61,7 @@ type
 
 
   TRGBAColor=array[0..3] of TOCFLoat;
-  //TODO: decide on callback parameters (Clicked, etc)
+  //TO DO: decide on callback parameters (Clicked, etc)
   TBase3DOnMouse=procedure(ObjectId:Integer; Action:Integer);
 
   //Material specifications. Should have the most features implemented
@@ -69,7 +71,7 @@ type
   end;
 
   T3DObject=record
-    case ObjecType:Integer of
+    case ObjectType:Integer of
       otSphere:(Rad:TOCFloat;sphC:TOCCoord);
       otLine:(linC1,linC2:TOCCoord);
       otCilinder:(cylC1,cylC2:TOCCoord;Rad1,Rad2:TOCFLoat);
@@ -84,13 +86,15 @@ type
     end;
 
   //Display interface
-  //TODO: fill in functions in paralel with GLUT window development
+  //TO DO: fill in functions in paralel with GLUT window development
   IBase3DDisplay=interface
     procedure AddObjectList(ObjectList:T3DObjectList);
+      //The arrays of objects in the object lists must be copied so that caller
+      //does not need to keep them.
     procedure ClearObjectLists;
     procedure Compile;
       //for rendering, preparing display lists, etc. Depends on the engine
-    procedure Resize(NewWidth,NewHeight:Integer);
+    procedure ResizeForm(NewWidth,NewHeight:Longint);
     procedure Refresh;
       //refreshing currently rendered objects
     procedure SetQuality(Quality:Integer);
@@ -195,7 +199,7 @@ end;
 
 procedure ListEdges;
 
-var f,g:Integer;
+var f:Integer;
 
 begin
   with Result do

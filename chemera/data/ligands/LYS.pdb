@@ -1,0 +1,56 @@
+HEADER    NONAME 22-Aug-09
+TITLE     Produced by PDBeChem
+COMPND    LYS      
+AUTHOR    EBI-PDBe Generated
+REVDAT   1  22-Aug-09     0
+ATOM      1  N   LYS     0       1.422   1.796   0.198  1.00 20.00           N+0
+ATOM      2  CA  LYS     0       1.394   0.355   0.484  1.00 20.00           C+0
+ATOM      3  C   LYS     0       2.657  -0.284  -0.032  1.00 20.00           C+0
+ATOM      4  O   LYS     0       3.316   0.275  -0.876  1.00 20.00           O+0
+ATOM      5  CB  LYS     0       0.184  -0.278  -0.206  1.00 20.00           C+0
+ATOM      6  CG  LYS     0      -1.102   0.282   0.407  1.00 20.00           C+0
+ATOM      7  CD  LYS     0      -2.313  -0.351  -0.283  1.00 20.00           C+0
+ATOM      8  CE  LYS     0      -3.598   0.208   0.329  1.00 20.00           C+0
+ATOM      9  NZ  LYS     0      -4.761  -0.400  -0.332  1.00 20.00           N+1
+ATOM     10  OXT LYS     0       3.050  -1.476   0.446  1.00 20.00           O+0
+ATOM     11  H   LYS     0       1.489   1.891  -0.804  1.00 20.00           H+0
+ATOM     12  H2  LYS     0       0.521   2.162   0.464  1.00 20.00           H+0
+ATOM     13  HA  LYS     0       1.322   0.200   1.560  1.00 20.00           H+0
+ATOM     14  HB2 LYS     0       0.210  -0.047  -1.270  1.00 20.00           H+0
+ATOM     15  HB3 LYS     0       0.211  -1.359  -0.068  1.00 20.00           H+0
+ATOM     16  HG2 LYS     0      -1.128   0.050   1.471  1.00 20.00           H+0
+ATOM     17  HG3 LYS     0      -1.130   1.363   0.269  1.00 20.00           H+0
+ATOM     18  HD2 LYS     0      -2.287  -0.120  -1.348  1.00 20.00           H+0
+ATOM     19  HD3 LYS     0      -2.285  -1.432  -0.145  1.00 20.00           H+0
+ATOM     20  HE2 LYS     0      -3.625  -0.023   1.394  1.00 20.00           H+0
+ATOM     21  HE3 LYS     0      -3.626   1.289   0.192  1.00 20.00           H+0
+ATOM     22  HZ1 LYS     0      -4.736  -0.185  -1.318  1.00 20.00           H+0
+ATOM     23  HZ2 LYS     0      -4.735  -1.400  -0.205  1.00 20.00           H+0
+ATOM     24  HZ3 LYS     0      -5.609  -0.031   0.071  1.00 20.00           H+0
+ATOM     25  HXT LYS     0       3.861  -1.886   0.115  1.00 20.00           H+0
+CONECT    1    2   11   12
+CONECT    2    3    5   13    1
+CONECT    3    2    4   10
+CONECT    4    3
+CONECT    5    2    6   14   15
+CONECT    6    5    7   16   17
+CONECT    7    8    6   18   19
+CONECT    8    7   20   21    9
+CONECT    9    8   22   23   24
+CONECT   10    3   25
+CONECT   11    1
+CONECT   12    1
+CONECT   13    2
+CONECT   14    5
+CONECT   15    5
+CONECT   16    6
+CONECT   17    6
+CONECT   18    7
+CONECT   19    7
+CONECT   20    8
+CONECT   21    8
+CONECT   22    9
+CONECT   23    9
+CONECT   24    9
+CONECT   25   10
+END

@@ -1,0 +1,32 @@
+HEADER    NONAME 22-Aug-09
+TITLE     Produced by PDBeChem
+COMPND    ALA      
+AUTHOR    EBI-PDBe Generated
+REVDAT   1  22-Aug-09     0
+ATOM      1  N   ALA     0      -0.966   0.493   1.500  1.00 20.00           N+0
+ATOM      2  CA  ALA     0       0.257   0.418   0.692  1.00 20.00           C+0
+ATOM      3  C   ALA     0      -0.094   0.017  -0.716  1.00 20.00           C+0
+ATOM      4  O   ALA     0      -1.056  -0.682  -0.923  1.00 20.00           O+0
+ATOM      5  CB  ALA     0       1.204  -0.620   1.296  1.00 20.00           C+0
+ATOM      6  OXT ALA     0       0.661   0.439  -1.742  1.00 20.00           O+0
+ATOM      7  H   ALA     0      -1.383  -0.425   1.482  1.00 20.00           H+0
+ATOM      8  H2  ALA     0      -0.676   0.661   2.452  1.00 20.00           H+0
+ATOM      9  HA  ALA     0       0.746   1.392   0.682  1.00 20.00           H+0
+ATOM     10  HB1 ALA     0       1.459  -0.330   2.316  1.00 20.00           H+0
+ATOM     11  HB2 ALA     0       0.715  -1.594   1.307  1.00 20.00           H+0
+ATOM     12  HB3 ALA     0       2.113  -0.676   0.697  1.00 20.00           H+0
+ATOM     13  HXT ALA     0       0.435   0.182  -2.647  1.00 20.00           H+0
+CONECT    1    2    7    8
+CONECT    2    3    5    9    1
+CONECT    3    2    4    6
+CONECT    4    3
+CONECT    5    2   10   11   12
+CONECT    6    3   13
+CONECT    7    1
+CONECT    8    1
+CONECT    9    2
+CONECT   10    5
+CONECT   11    5
+CONECT   12    5
+CONECT   13    6
+END

@@ -1,0 +1,160 @@
+HEADER    NONAME 22-Aug-09
+TITLE     Produced by PDBeChem
+COMPND    HEC      
+AUTHOR    EBI-PDBe Generated
+REVDAT   1  22-Aug-09     0
+ATOM      1 FE   HEC     0       0.000   0.000   0.000  1.00 20.00          FE+0
+ATOM      2  CHA HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM      3  CHB HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM      4  CHC HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM      5  CHD HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM      6  NA  HEC     0       0.000   0.000   0.000  1.00 20.00           N+0
+ATOM      7  C1A HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM      8  C2A HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM      9  C3A HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     10  C4A HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     11  CMA HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     12  CAA HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     13  CBA HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     14  CGA HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     15  O1A HEC     0       0.000   0.000   0.000  1.00 20.00           O+0
+ATOM     16  O2A HEC     0       0.000   0.000   0.000  1.00 20.00           O+0
+ATOM     17  NB  HEC     0       0.000   0.000   0.000  1.00 20.00           N+0
+ATOM     18  C1B HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     19  C2B HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     20  C3B HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     21  C4B HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     22  CMB HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     23  CAB HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     24  CBB HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     25  NC  HEC     0       0.000   0.000   0.000  1.00 20.00           N+0
+ATOM     26  C1C HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     27  C2C HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     28  C3C HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     29  C4C HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     30  CMC HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     31  CAC HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     32  CBC HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     33  ND  HEC     0       0.000   0.000   0.000  1.00 20.00           N+0
+ATOM     34  C1D HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     35  C2D HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     36  C3D HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     37  C4D HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     38  CMD HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     39  CAD HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     40  CBD HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     41  CGD HEC     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     42  O1D HEC     0       0.000   0.000   0.000  1.00 20.00           O+0
+ATOM     43  O2D HEC     0       0.000   0.000   0.000  1.00 20.00           O+0
+ATOM     44  HHA HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     45  HHB HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     46  HHC HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     47  HHD HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     48 HMA1 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     49 HMA2 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     50 HMA3 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     51 HAA1 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     52 HAA2 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     53 HBA1 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     54 HBA2 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     55  H2A HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     56 HMB1 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     57 HMB2 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     58 HMB3 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     59  HAB HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     60 HBB1 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     61 HBB2 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     62 HBB3 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     63 HMC1 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     64 HMC2 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     65 HMC3 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     66  HAC HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     67 HBC1 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     68 HBC2 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     69 HBC3 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     70 HMD1 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     71 HMD2 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     72 HMD3 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     73 HAD1 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     74 HAD2 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     75 HBD1 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     76 HBD2 HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     77  H2D HEC     0       0.000   0.000   0.000  1.00 20.00           H+0
+CONECT    1    6   17   25   33
+CONECT    2    7   37   44
+CONECT    3   18   10   45
+CONECT    4   26   21   46
+CONECT    5   34   29   47
+CONECT    6    7   10    1
+CONECT    7    8    2    6
+CONECT    8    7    9   12
+CONECT    9    8   10   11
+CONECT   10    9    3    6
+CONECT   11    9   48   49   50
+CONECT   12    8   13   51   52
+CONECT   13   12   14   53   54
+CONECT   14   13   15   16
+CONECT   15   14
+CONECT   16   14   55
+CONECT   17   18   21    1
+CONECT   18   19    3   17
+CONECT   19   18   20   22
+CONECT   20   19   21   23
+CONECT   21   20    4   17
+CONECT   22   19   56   57   58
+CONECT   23   20   24   59
+CONECT   24   23   60   61   62
+CONECT   25   26   29    1
+CONECT   26   27    4   25
+CONECT   27   26   28   30
+CONECT   28   27   29   31
+CONECT   29   28    5   25
+CONECT   30   27   63   64   65
+CONECT   31   28   32   66
+CONECT   32   31   67   68   69
+CONECT   33   34   37    1
+CONECT   34   35    5   33
+CONECT   35   34   36   38
+CONECT   36   35   37   39
+CONECT   37   36    2   33
+CONECT   38   35   70   71   72
+CONECT   39   36   40   73   74
+CONECT   40   39   41   75   76
+CONECT   41   40   42   43
+CONECT   42   41
+CONECT   43   41   77
+CONECT   44    2
+CONECT   45    3
+CONECT   46    4
+CONECT   47    5
+CONECT   48   11
+CONECT   49   11
+CONECT   50   11
+CONECT   51   12
+CONECT   52   12
+CONECT   53   13
+CONECT   54   13
+CONECT   55   16
+CONECT   56   22
+CONECT   57   22
+CONECT   58   22
+CONECT   59   23
+CONECT   60   24
+CONECT   61   24
+CONECT   62   24
+CONECT   63   30
+CONECT   64   30
+CONECT   65   30
+CONECT   66   31
+CONECT   67   32
+CONECT   68   32
+CONECT   69   32
+CONECT   70   38
+CONECT   71   38
+CONECT   72   38
+CONECT   73   39
+CONECT   74   39
+CONECT   75   40
+CONECT   76   40
+CONECT   77   43
+END

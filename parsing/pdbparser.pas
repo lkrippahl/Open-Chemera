@@ -1,24 +1,34 @@
-unit pdbparser;
+{*******************************************************************************
+This file is part of the Open Chemera Library.
+This work is public domain (see README.TXT).
+********************************************************************************
+Author: Ludwig Krippahl
+Date: 9.1.2011
+Purpose:
+  Parser for PDB files
+Requirements:
+  Record supported:
+  ATOM / HETATM
+  CONNECT
+  MODEL: increments model counter only
+  TER: increments chain counter.
 
-{
-Parser for PDB files
-Record supported:
-ATOM / HETATM
-CONNECT
-MODEL: increments model counter only
-TER: increments chain counter.
-}
+Revisions:
+To do: Read pdb info and comments
+*******************************************************************************}
+
+unit pdbparser;
 
 {$mode objfpc}{$H+}
 
 interface
 
 uses
-  Classes, SysUtils, basetypes, ocstringutils;
+  Classes, SysUtils, basetypes, ocstringutils,LCLProc;
 
 type
   TPDBAtom = record
-    IsHet:Boolean; // if it is hetatom
+    IsHet:Boolean;      //heteroatom
     Serial:Integer;
     AtomName:string[4];
     AltLoc:string[1];
@@ -31,8 +41,9 @@ type
     Temp:Single;
     Element:string[2];
     Charge:string[2];
-    ModelNum:Integer; //continuous count incremented on MODEL keyword, -1 if no MODEL
-    ChainNum:Integer; //count incremented on TER, starting at 0
+    ModelNum:Integer;   //continuous count incremented on MODEL keyword, -1 if no MODEL
+    ChainNum:Integer;
+      //count incremented on TER, starting at 0. Can be used to index the chainIDs
     end;
 
   TPDBAtoms=array of TPDBAtom;
@@ -44,19 +55,31 @@ type
 
   TPDBConnections=array of TPDBConnection;
 
-  { PDBFile }
+  TPDBLayerInfo=record
+    Header,Title,Compound,Source,
+    KeyWords,ExpTechnique,Author,Journal,Remarks:TOCStrings;
+    UserComments:TOCStrings;
+    end;
 
   { TPDBReader }
 
   TPDBReader=class
   private
+    FChainIDs:TOCStrings;
     FAtoms:TPDBAtoms;
     FConnections:TPDBConnections;
     FAtomCount,FModelCount,FChainCount:Integer;
+    FInfo:TPDBLayerInfo;
   public
+    property Info:TPDBLayerInfo read FInfo;
     property Atoms:TPDBAtoms read FAtoms;
     property Connections:TPDBConnections read FConnections;
+    property AtomCount:Integer read FAtomCount;
+    property ChainCount:Integer read FChainCount;
+    property ChainIDs:TOCStrings read FChainIDs;
+    property ModelCount:Integer read FModelCount;
     constructor Create(FromFile:string = '');
+    procedure IndexChains;                                    //creates FChainIDs
     procedure Load(FromFile:string);
     procedure ReadFromList(Buf: TStringList);
     procedure Clear;
@@ -71,6 +94,16 @@ constructor TPDBReader.Create(fromfile: string = '');
 begin
   inherited Create;
   if fromfile<>'' then Load(fromfile);
+end;
+
+procedure TPDBReader.IndexChains;
+
+var f:Integer;
+
+begin
+  SetLength(FChainIDs,FChainCount);
+  for f:=0 to High(FAtoms) do
+    FChainIDs[FAtoms[f].ChainNum]:=FAtoms[f].ChainID;
 end;
 
 procedure TPDBReader.Load(FromFile: string);
@@ -118,9 +151,9 @@ begin
       ChainID:=GetString(s,22,22);
       ResSeq:=GetInteger(s,23,26);
       ICode:=GetString(s,27,27);
-      Coords[1]:=GetFloat(s,31,38);
-      Coords[2]:=GetFloat(s,39,46);
-      Coords[3]:=GetFloat(s,47,54);
+      Coords[0]:=GetFloat(s,31,38);
+      Coords[1]:=GetFloat(s,39,46);
+      Coords[2]:=GetFloat(s,47,54);
       Occupancy:=GetFloat(s,55,60);
       Temp:=GetFloat(s,61,66);
       Element:=GetString(s,77,78);
@@ -155,7 +188,7 @@ end;
 procedure ReadLines;
 
 var
-  f,ft:Integer;
+  f:Integer;
   s:string;
 
 begin
@@ -185,6 +218,7 @@ begin
   SetLength(FAtoms,FAtomCount);
   FChainCount:=FAtoms[High(FAtoms)].ChainNum+1; // in case one TER was missing
   FModelCount:=FAtoms[High(FAtoms)].ModelNum+1; // 0 if no models. This may be redundant, but with PDB files one never knows...
+  IndexChains;
 end;
 
 procedure TPDBReader.Clear;

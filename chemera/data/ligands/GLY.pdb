@@ -1,0 +1,26 @@
+HEADER    NONAME 22-Aug-09
+TITLE     Produced by PDBeChem
+COMPND    GLY      
+AUTHOR    EBI-PDBe Generated
+REVDAT   1  22-Aug-09     0
+ATOM      1  N   GLY     0       1.931   0.090  -0.034  1.00 20.00           N+0
+ATOM      2  CA  GLY     0       0.761  -0.799  -0.008  1.00 20.00           C+0
+ATOM      3  C   GLY     0      -0.498   0.029  -0.005  1.00 20.00           C+0
+ATOM      4  O   GLY     0      -0.429   1.235  -0.023  1.00 20.00           O+0
+ATOM      5  OXT GLY     0      -1.697  -0.574   0.018  1.00 20.00           O+0
+ATOM      6  H   GLY     0       1.910   0.738   0.738  1.00 20.00           H+0
+ATOM      7  H2  GLY     0       2.788  -0.442  -0.037  1.00 20.00           H+0
+ATOM      8  HA2 GLY     0       0.772  -1.440  -0.889  1.00 20.00           H+0
+ATOM      9  HA3 GLY     0       0.793  -1.415   0.891  1.00 20.00           H+0
+ATOM     10  HXT GLY     0      -2.477  -0.002   0.019  1.00 20.00           H+0
+CONECT    1    2    6    7
+CONECT    2    3    8    9    1
+CONECT    3    2    4    5
+CONECT    4    3
+CONECT    5    3   10
+CONECT    6    1
+CONECT    7    1
+CONECT    8    2
+CONECT    9    2
+CONECT   10    5
+END

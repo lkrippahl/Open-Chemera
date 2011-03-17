@@ -1,6 +1,6 @@
 {*******************************************************************************
 This file is part of the Open Chemera Library.
-This work is public domain. Enjoy.
+This work is public domain (see README.TXT).
 ********************************************************************************
 Author: Ludwig Krippahl
 Date: 9.1.2011
@@ -37,14 +37,17 @@ type
   function AddVectors(c1,c2:TOCCoord):TOCCoord;  // sum of two vectors (as coord)
   function ScaleVector(c:TOCCoord;s:TOCFloat):TOCCoord; // multiply vector (as coord)
   procedure AddInteger(i:Integer; var a:TOCIntegers); // adds an integer to an array
+  function IndexOf(const i:Integer; const a:TOCIntegers):Integer;
   function Distance(c1,c2:TOCCoord):TOCFloat;
   function Min(vals:TOCFLoats):TOCFLoat;overload;
   function Max(vals:TOCFLoats):TOCFLoat;overload;
   function Min(vals:TOCMatrix):TOCFLoat;overload;
   function Max(vals:TOCMatrix):TOCFLoat;overload;
   function Coord(X,Y,Z:TOCFloat):TOCCoord;
+
   // Array generation utils
   function FilledInts(Len,Val: Integer): TOCIntegers;
+
 
 
 const
@@ -84,6 +87,14 @@ procedure AddInteger(i: Integer; var a: TOCIntegers);
 begin
   SetLength(a,Length(a)+1);
   a[High(a)]:=i;
+end;
+
+function IndexOf(const i:Integer; const a:TOCIntegers):Integer;
+
+begin
+  Result:=High(a);
+  while (Result>=0) and (a[Result]<>i) do
+    Dec(Result);
 end;
 
 function Distance(c1, c2: TOCCoord): TOCFloat;

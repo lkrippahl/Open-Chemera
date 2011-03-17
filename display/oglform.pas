@@ -1,3 +1,19 @@
+{*******************************************************************************
+This file is part of the Open Chemera Library.
+This work is public domain (see README.TXT).
+********************************************************************************
+Author: Ludwig Krippahl
+Date: 9.1.2011
+Purpose:
+  Class for storing PDB-like file data.
+  TPDBLayer corresponds to a file. Contains chains, residues, etc.
+  TPDBLayerSet contains several layers.
+  This is the base organization for molecules. The assumption is that a pdb-like
+  organization is sufficient for all (proteins, DNA, ligands, etc).
+Requirements:
+Revisions:
+To do: Comments
+*******************************************************************************}
 unit oglform;
 
 {$mode objfpc}{$H+}
@@ -42,7 +58,7 @@ type
       //for testing only
       FAngle:Single;
       procedure ClearDisplayLists;
-      function CompileList(ObjectList:T3DObjectList):GLUInt;
+      procedure CompileList(ObjectList: T3DObjectList; ListName: GLUInt);
       procedure SetMaterial(Material:T3DMaterial);
       procedure InitOGL;
     public
@@ -51,7 +67,7 @@ type
       procedure AddObjectList(ObjectList:T3DObjectList);
       procedure ClearObjectLists;
       procedure Compile;
-      procedure Resize(NewWidth,NewHeight:Integer);
+      procedure ResizeForm(NewWidth,NewHeight:Longint);
       procedure Refresh;
       procedure SetQuality(Quality:Integer);
 
@@ -152,7 +168,7 @@ begin
   FDisplayLists:=nil;
 end;
 
-function TOpenGLForm.CompileList(ObjectList: T3DObjectList): GLUInt;
+procedure TOpenGLForm.CompileList(ObjectList: T3DObjectList; ListName: GLUInt);
 
 procedure DoSphere(Rad:TOCFloat;sphC:TOCCoord);
 
@@ -169,21 +185,22 @@ begin
         glNormal3f(c0[0],c0[1],c0[2]);
         c:=ScaleVector(c0,Rad);
         c:=AddVectors(c,sphC);
-        //TODO:if UseTextures then glTexCoord2f(,);
+        //TO DO:if UseTextures then glTexCoord2f(,);
         glVertex3f(c[0],c[1],c[2]);
         end;
 end;
 
-var f:Integer;
+var
+  f:Integer;
+  tmp:GLUint;
 
 begin
-  //setup
-  glNewList(Result, GL_COMPILE);
+  glNewList(ListName, GL_COMPILE);
   SetMaterial(ObjectList.Material);
   glBegin(GL_QUADS);
   for f:=0 to High(ObjectList.Objects) do
     with ObjectList.Objects[f] do
-    case ObjecType of
+    case ObjectType of
       otSphere:DoSphere(Rad,sphC);
       {otCilinder:(cylC1,cylC2:TOCCoord;Rad1,Rad2:TOCFLoat);
       otCuboid:(cubTopLeft,cubBotRight:TOCCoord);}
@@ -201,14 +218,14 @@ begin
   with Material do
     begin
 
-    //TODO: Textures, need handles
+    //TO DO: Textures, need handles
     //if Texture<>'' then glEnable(GL_TEXTURE_2D)
     //else glDisable(GL_TEXTURE_2D);
 
     colix:=Length(FDisplayColors);
     SetLength(FDisplayColors,colix+3);
     //store and set each color, for sending pointers
-    //TODO: check if better way to do this...
+    //TO DO: check if better way to do this...
     FDisplayColors[colix]:=RGBAToGlu(Material.Ambient);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, FDisplayColors[colix]);
     FDisplayColors[colix+1]:=RGBAToGlu(Material.Diffuse);
@@ -224,8 +241,8 @@ procedure InitLights;
 
 begin
   FLAmbient:=GluColor(0.2, 0.2, 0.2, 1 );
-  FLDiffuse:=GluColor( 0.7, 0.7, 0.7, 1 );
-  FLSpecular:=GluColor( 1, 1, 1, 1 );
+  FLDiffuse:=GluColor( 1, 1, 1, 1 );
+  FLSpecular:=GluColor( 0, 0, 0, 1 );
   FLPosition:=GluColor( 1.0, 1.0, 1, 0 );
 end;
 
@@ -249,7 +266,7 @@ begin
   glEnable(GL_CULL_FACE);
 
   //Fog
-  glEnable (GL_FOG);
+  //glEnable (GL_FOG);
   glFogi (GL_FOG_MODE,GL_LINEAR);
   glFogfv (GL_FOG_COLOR, ColorBlack);
   glFogf (GL_FOG_DENSITY, 0.01);
@@ -258,7 +275,7 @@ begin
   glHint (GL_FOG_HINT, GL_NICEST);
 
   //textures
-  //TODO:  FTextures.BindTextures;
+  //TO DO:  FTextures.BindTextures;
 
   glClearColor(0.0,0.0,0.0,1.0);    // sets background color
   glClearDepth(1.0);
@@ -291,7 +308,9 @@ procedure TOpenGLForm.AddObjectList(ObjectList: T3DObjectList);
 begin
   SetLength(FObjectLists,Length(FObjectLists)+1);
   FObjectLists[High(FObjectLists)]:=ObjectList;
-  DebugLn('Added');
+  //copy the objects array so that caller can reuse the original
+  FObjectLists[High(FObjectLists)].Objects:=
+    Copy(ObjectList.Objects,0,Length(Objectlist.Objects));
 end;
 
 procedure TOpenGLForm.ClearObjectLists;
@@ -301,6 +320,9 @@ end;
 
 procedure TOpenGLForm.Compile;
 // create display lists for all objects
+//TO DO: should check which object lists changed, delete those display lists
+// and reuse them (that's what FDisplayLists is for...)
+
 var
   f:Integer;
 
@@ -308,7 +330,10 @@ begin
   ClearDisplayLists;
   SetLength(FDisplayLists,Length(FObjectLists));
   for f:=0 to High(FObjectLists) do
-    FDisplayLists[f]:=CompileList(FObjectLists[f]);
+    begin
+    FDisplayLists[f]:=f+1;
+    CompileList(FObjectLists[f],f+1);
+    end;
 end;
 
 
@@ -357,7 +382,7 @@ begin
   FBaseCube:=QuadCube;
 end;
 
-procedure TOpenGLForm.Resize(NewWidth, NewHeight: Integer);
+procedure TOpenGLForm.ResizeForm(NewWidth, NewHeight: Longint);
 begin
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -366,8 +391,6 @@ begin
                          0.1,   // Distance to near clipping plane
                     100.0 ); // Distance to far clipping plane
   glViewport(0, 0, Width, Height);
-  DebugLn('Resize');
-
 end;
 
 end.

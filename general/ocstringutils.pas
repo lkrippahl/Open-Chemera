@@ -5,7 +5,7 @@ unit ocstringutils;
 interface
 
 uses
-  Classes, SysUtils, basetypes;
+  Classes, SysUtils, basetypes,LCLProc;
 
 function SplitString(AString:string;Separator:string):TOCStrings;
 function GetInteger(AString:string;Start,Finish:Integer; out Val:Integer):Boolean;overload;
@@ -72,7 +72,8 @@ begin
   f:=Start;
   while (f<=Length(AString)) and (f<=Finish) do
     begin
-    if AString[f]<>' ' then s:=s+AString[f];
+    if AString[f] in [',','.'] then s:=s+DecimalSeparator
+      else if AString[f]<>' ' then s:=s+AString[f];
     Inc(f);
     end;
   try

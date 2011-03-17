@@ -1,9 +1,18 @@
-unit chartutils;
-
-{
+{*******************************************************************************
+This file is part of the Open Chemera Library.
+This work is public domain (see README.TXT).
+********************************************************************************
+Author: Ludwig Krippahl
+Date: 9.1.2011
+Purpose:
  Types and functions for charts, like histograms.
  No user interface, but may create graphical plots in Bmps.
-}
+Requirements:
+
+Revisions:
+To do:
+*******************************************************************************}
+unit chartutils;
 
 {$mode objfpc}{$H+}
 

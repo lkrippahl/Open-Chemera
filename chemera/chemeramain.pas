@@ -1,6 +1,6 @@
 {*******************************************************************************
 This file is part of the Open Chemera Library.
-This work is public domain. Enjoy.
+This work is public domain (see README.TXT).
 ********************************************************************************
 Author: Ludwig Krippahl
 Date: 9.1.2011
@@ -19,22 +19,26 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Menus,
-  pdbmolecules,oglform,displayobjects,LCLProc;
+  pdbmolecules, oglform, displayobjects, LCLProc, chemeraconfig;
 
 type
 
   { TCmMainForm }
 
   TCmMainForm = class(TForm)
-    MainMenu1: TMainMenu;
-    MenuItem1: TMenuItem;
+    MainMenu: TMainMenu;
+    FileMn: TMenuItem;
+    OpenDlg: TOpenDialog;
+    OpenMn: TMenuItem;
     procedure FormActivate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure OpenMnClick(Sender: TObject);
   private
     { private declarations }
     FInitializing:Boolean;
     FDisplay:TOpenGlForm;
     FDispMan:TDisplayManager;
+    FMolecules:TPdbLayerMan;
     procedure InitChemera;
   public
     { public declarations }
@@ -54,6 +58,19 @@ begin
   FInitializing:=True;
 end;
 
+procedure TCmMainForm.OpenMnClick(Sender: TObject);
+
+
+begin
+  OpenDlg.Filter:='Pdb file|*.pdb';
+  if OpenDlg.Execute then
+    begin
+    FDispMan.Attach(
+      FMolecules.LoadLayer(OpenDlg.FileName));
+    FDispMan.Render;
+    end;
+end;
+
 procedure TCmMainForm.InitChemera;
 begin
   FInitializing:=False;
@@ -61,9 +78,10 @@ begin
   FDisplay.Show;
   FDispMan:=TDisplayManager.Create(FDisplay);
 
-  //DEBUG:
+  //DEBUG
   //FDispMan.Test;
-  //DebugLn('Init')
+
+  FMolecules:=TPdbLayerMan.Create(Config.LigandsFolder);
 end;
 
 procedure TCmMainForm.FormActivate(Sender: TObject);

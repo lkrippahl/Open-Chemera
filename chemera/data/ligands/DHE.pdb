@@ -1,0 +1,168 @@
+HEADER    NONAME 22-Aug-09
+TITLE     Produced by PDBeChem
+COMPND    DHE      
+AUTHOR    EBI-PDBe Generated
+REVDAT   1  22-Aug-09     0
+ATOM      1 FE   DHE     0       0.000   0.000   0.000  1.00 20.00          FE+0
+ATOM      2  CHA DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM      3  CHB DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM      4  CHC DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM      5  CHD DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM      6  NA  DHE     0       0.000   0.000   0.000  1.00 20.00           N+0
+ATOM      7  C1A DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM      8  C2A DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM      9  C3A DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     10  C4A DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     11  CMA DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     12  CAA DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     13  CBA DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     14  CGA DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     15  O1A DHE     0       0.000   0.000   0.000  1.00 20.00           O+0
+ATOM     16  O2A DHE     0       0.000   0.000   0.000  1.00 20.00           O+0
+ATOM     17  NB  DHE     0       0.000   0.000   0.000  1.00 20.00           N+0
+ATOM     18  C1B DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     19  C2B DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     20  OMB DHE     0       0.000   0.000   0.000  1.00 20.00           O+0
+ATOM     21  C3B DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     22  CGB DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     23  CAB DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     24  CBB DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     25  O1B DHE     0       0.000   0.000   0.000  1.00 20.00           O+0
+ATOM     26  O2B DHE     0       0.000   0.000   0.000  1.00 20.00           O+0
+ATOM     27  C4B DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     28  NC  DHE     0       0.000   0.000   0.000  1.00 20.00           N+0
+ATOM     29  C1C DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     30  C2C DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     31  OMC DHE     0       0.000   0.000   0.000  1.00 20.00           O+0
+ATOM     32  C3C DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     33  CGC DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     34  CAC DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     35  CBC DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     36  O1C DHE     0       0.000   0.000   0.000  1.00 20.00           O+0
+ATOM     37  O2C DHE     0       0.000   0.000   0.000  1.00 20.00           O+0
+ATOM     38  C4C DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     39  ND  DHE     0       0.000   0.000   0.000  1.00 20.00           N+0
+ATOM     40  C1D DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     41  C2D DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     42  C3D DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     43  C4D DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     44  CMD DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     45  CAD DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     46  CBD DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     47  CGD DHE     0       0.000   0.000   0.000  1.00 20.00           C+0
+ATOM     48  O1D DHE     0       0.000   0.000   0.000  1.00 20.00           O+0
+ATOM     49  O2D DHE     0       0.000   0.000   0.000  1.00 20.00           O+0
+ATOM     50  HHA DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     51  HHB DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     52  HHC DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     53  HHD DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     54 HMA1 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     55 HMA2 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     56 HMA3 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     57 HAA1 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     58 HAA2 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     59 HBA1 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     60 HBA2 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     61  H2A DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     62 HGB1 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     63 HGB2 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     64 HGB3 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     65 HAB1 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     66 HAB2 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     67  H2B DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     68 HGC1 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     69 HGC2 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     70 HGC3 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     71 HAC1 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     72 HAC2 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     73  H2C DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     74 HMD1 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     75 HMD2 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     76 HMD3 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     77 HAD1 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     78 HAD2 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     79 HBD1 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     80 HBD2 DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+ATOM     81  H2D DHE     0       0.000   0.000   0.000  1.00 20.00           H+0
+CONECT    1    6   17   28   39
+CONECT    2    7   43   50
+CONECT    3   18   10   51
+CONECT    4   29   27   52
+CONECT    5   40   38   53
+CONECT    6    7   10    1
+CONECT    7    8    2    6
+CONECT    8    7    9   12
+CONECT    9    8   10   11
+CONECT   10    9    3    6
+CONECT   11    9   54   55   56
+CONECT   12    8   13   57   58
+CONECT   13   12   14   59   60
+CONECT   14   13   15   16
+CONECT   15   14
+CONECT   16   14   61
+CONECT   17   18   27    1
+CONECT   18   19    3   17
+CONECT   19   18   21   20
+CONECT   20   19
+CONECT   21   19   27   23   22
+CONECT   22   21   62   63   64
+CONECT   23   21   24   65   66
+CONECT   24   23   25   26
+CONECT   25   24
+CONECT   26   24   67
+CONECT   27   21    4   17
+CONECT   28   29   38    1
+CONECT   29   30    4   28
+CONECT   30   29   32   31
+CONECT   31   30
+CONECT   32   30   38   34   33
+CONECT   33   32   68   69   70
+CONECT   34   32   35   71   72
+CONECT   35   34   36   37
+CONECT   36   35
+CONECT   37   35   73
+CONECT   38   32    5   28
+CONECT   39   40   43    1
+CONECT   40   41    5   39
+CONECT   41   40   42   44
+CONECT   42   41   43   45
+CONECT   43   42    2   39
+CONECT   44   41   74   75   76
+CONECT   45   42   46   77   78
+CONECT   46   45   47   79   80
+CONECT   47   46   48   49
+CONECT   48   47
+CONECT   49   47   81
+CONECT   50    2
+CONECT   51    3
+CONECT   52    4
+CONECT   53    5
+CONECT   54   11
+CONECT   55   11
+CONECT   56   11
+CONECT   57   12
+CONECT   58   12
+CONECT   59   13
+CONECT   60   13
+CONECT   61   16
+CONECT   62   22
+CONECT   63   22
+CONECT   64   22
+CONECT   65   23
+CONECT   66   23
+CONECT   67   26
+CONECT   68   33
+CONECT   69   33
+CONECT   70   33
+CONECT   71   34
+CONECT   72   34
+CONECT   73   37
+CONECT   74   44
+CONECT   75   44
+CONECT   76   44
+CONECT   77   45
+CONECT   78   45
+CONECT   79   46
+CONECT   80   46
+CONECT   81   49
+END

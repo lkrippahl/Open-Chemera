@@ -1,16 +1,18 @@
 {*******************************************************************************
 This file is part of the Open Chemera Library.
-This work is public domain. Enjoy.
+This work is public domain (see README.TXT).
 ********************************************************************************
 Author: Ludwig Krippahl
 Date: 10.1.2011
 Purpose:
-  This form stores all display options for showing atoms and bonds.
+  This form interfaces with the DisplayManager settings
 Requirements:
 Revisions:
 To do:
   Add materials, display options
   Add support for other objects and molecules.
+  Organize links to molecules to allow adding or removing one withou messing
+  the display of the rest
 *******************************************************************************}
 
 unit displaysettings;
@@ -21,45 +23,23 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs,
-  basetypes, molecules, pdbmolecules,base3ddisplay;
+  basetypes, molecules,base3ddisplay, displayobjects;
 
 type
-  TAtomSettings=record
-    Atom:TAtom;
-  end;
-  TAtomSettingsArray=array of TAtomSettings;
-  TBondSettings=record
-    BondIx:Integer;
-    Molecule:TMolecule;
-  end;
-  TBondSettingsArray=array of TBondSettings;
 
   { TDisplaySettingsForm }
 
   TDisplaySettingsForm = class(TForm)
   private
     { private declarations }
+    FDispMan:TDisplayManager;
 
-    //These objects are provided externally.
-    //This form neither creates nor destroys them
-    FDisplay:IBase3DDisplay;        //Interface to display window
-    FLayerSet:TPDBLayerSet;         //Where molecules are stored
-
-    //SettingsLists
-    FAtoms:TAtomSettingsArray;
-    FBonds:TBondSettingsArray;
 
   public
     { public declarations }
-    constructor Create(Display:IBase3DDisplay;Layers:TPDBLayerSet);
-    procedure Render;
-    //called from molecules in order to remove tagged atoms and affected bonds
-    //the atoms to be deleted are tagged with molecules.TagToDelete
-    procedure OnDeleteAtoms;
-  end; 
+    constructor Create(TheOwner:TComponent;DisplayManager: TDisplayManager);reintroduce;
 
-var
-  DisplaySettingsForm: TDisplaySettingsForm;
+  end;
 
 implementation
 
@@ -67,21 +47,13 @@ implementation
 
 { TDisplaySettingsForm }
 
-constructor TDisplaySettingsForm.Create(Display: IBase3DDisplay;
-  Layers: TPDBLayerSet);
+constructor TDisplaySettingsForm.Create(TheOwner:TComponent;
+  DisplayManager: TDisplayManager);
 begin
-
+  inherited Create(TheOwner);
+  FDispMan:=DisplayManager;
 end;
 
-procedure TDisplaySettingsForm.Render;
-begin
-
-end;
-
-procedure TDisplaySettingsForm.OnDeleteAtoms;
-begin
-
-end;
 
 end.
 

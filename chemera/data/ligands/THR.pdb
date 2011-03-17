@@ -1,0 +1,40 @@
+HEADER    NONAME 24-Aug-09
+TITLE     Produced by PDBeChem
+COMPND    THR      
+AUTHOR    EBI-PDBe Generated
+REVDAT   1  24-Aug-09     0
+ATOM      1  N   THR     0       1.543  -0.702   0.430  1.00 20.00           N+0
+ATOM      2  CA  THR     0       0.122  -0.706   0.056  1.00 20.00           C+0
+ATOM      3  C   THR     0      -0.038  -0.090  -1.309  1.00 20.00           C+0
+ATOM      4  O   THR     0       0.732   0.761  -1.683  1.00 20.00           O+0
+ATOM      5  CB  THR     0      -0.675   0.104   1.079  1.00 20.00           C+0
+ATOM      6  OG1 THR     0      -0.193   1.448   1.103  1.00 20.00           O+0
+ATOM      7  CG2 THR     0      -0.511  -0.521   2.466  1.00 20.00           C+0
+ATOM      8  OXT THR     0      -1.039  -0.488  -2.110  1.00 20.00           O+0
+ATOM      9  H   THR     0       1.839   0.261   0.434  1.00 20.00           H+0
+ATOM     10  H2  THR     0       1.593  -1.025   1.385  1.00 20.00           H+0
+ATOM     11  HA  THR     0      -0.245  -1.732   0.038  1.00 20.00           H+0
+ATOM     12  HB  THR     0      -1.729   0.101   0.802  1.00 20.00           H+0
+ATOM     13  HG1 THR     0       0.740   1.406   1.352  1.00 20.00           H+0
+ATOM     14 HG21 THR     0      -1.080   0.056   3.194  1.00 20.00           H+0
+ATOM     15 HG22 THR     0      -0.879  -1.547   2.448  1.00 20.00           H+0
+ATOM     16 HG23 THR     0       0.542  -0.518   2.743  1.00 20.00           H+0
+ATOM     17  HXT THR     0      -1.143  -0.092  -2.986  1.00 20.00           H+0
+CONECT    1    2    9   10
+CONECT    2    3    5   11    1
+CONECT    3    2    4    8
+CONECT    4    3
+CONECT    5    2    7   12    6
+CONECT    6    5   13
+CONECT    7    5   14   15   16
+CONECT    8    3   17
+CONECT    9    1
+CONECT   10    1
+CONECT   11    2
+CONECT   12    5
+CONECT   13    6
+CONECT   14    7
+CONECT   15    7
+CONECT   16    7
+CONECT   17    8
+END

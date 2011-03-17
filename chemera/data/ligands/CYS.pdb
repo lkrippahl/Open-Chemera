@@ -1,0 +1,34 @@
+HEADER    NONAME 22-Aug-09
+TITLE     Produced by PDBeChem
+COMPND    CYS      
+AUTHOR    EBI-PDBe Generated
+REVDAT   1  22-Aug-09     0
+ATOM      1  N   CYS     0       1.585   0.483  -0.081  1.00 20.00           N+0
+ATOM      2  CA  CYS     0       0.141   0.450   0.186  1.00 20.00           C+0
+ATOM      3  C   CYS     0      -0.095   0.006   1.606  1.00 20.00           C+0
+ATOM      4  O   CYS     0       0.685  -0.742   2.143  1.00 20.00           O+0
+ATOM      5  CB  CYS     0      -0.533  -0.530  -0.774  1.00 20.00           C+0
+ATOM      6  SG  CYS     0      -0.247   0.004  -2.484  1.00 20.00           S+0
+ATOM      7  OXT CYS     0      -1.174   0.443   2.275  1.00 20.00           O+0
+ATOM      8  H   CYS     0       1.928  -0.454   0.063  1.00 20.00           H+0
+ATOM      9  H2  CYS     0       1.693   0.682  -1.065  1.00 20.00           H+0
+ATOM     10  HA  CYS     0      -0.277   1.446   0.042  1.00 20.00           H+0
+ATOM     11  HB2 CYS     0      -0.114  -1.526  -0.630  1.00 20.00           H+0
+ATOM     12  HB3 CYS     0      -1.604  -0.554  -0.575  1.00 20.00           H+0
+ATOM     13  HG  CYS     0      -0.904  -0.965  -3.145  1.00 20.00           H+0
+ATOM     14  HXT CYS     0      -1.326   0.158   3.186  1.00 20.00           H+0
+CONECT    1    2    8    9
+CONECT    2    3    5   10    1
+CONECT    3    2    4    7
+CONECT    4    3
+CONECT    5    2   11   12    6
+CONECT    6    5   13
+CONECT    7    3   14
+CONECT    8    1
+CONECT    9    1
+CONECT   10    2
+CONECT   11    5
+CONECT   12    5
+CONECT   13    6
+CONECT   14    7
+END

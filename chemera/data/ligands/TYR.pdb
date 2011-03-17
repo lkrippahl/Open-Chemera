@@ -1,0 +1,54 @@
+HEADER    NONAME 24-Aug-09
+TITLE     Produced by PDBeChem
+COMPND    TYR      
+AUTHOR    EBI-PDBe Generated
+REVDAT   1  24-Aug-09     0
+ATOM      1  N   TYR     0       1.320   0.952   1.428  1.00 20.00           N+0
+ATOM      2  CA  TYR     0      -0.018   0.429   1.734  1.00 20.00           C+0
+ATOM      3  C   TYR     0      -0.103   0.094   3.201  1.00 20.00           C+0
+ATOM      4  O   TYR     0       0.886  -0.254   3.799  1.00 20.00           O+0
+ATOM      5  CB  TYR     0      -0.274  -0.831   0.907  1.00 20.00           C+0
+ATOM      6  CG  TYR     0      -0.189  -0.496  -0.559  1.00 20.00           C+0
+ATOM      7  CD1 TYR     0       1.022  -0.589  -1.219  1.00 20.00           C+0
+ATOM      8  CD2 TYR     0      -1.324  -0.102  -1.244  1.00 20.00           C+0
+ATOM      9  CE1 TYR     0       1.103  -0.282  -2.563  1.00 20.00           C+0
+ATOM     10  CE2 TYR     0      -1.247   0.210  -2.587  1.00 20.00           C+0
+ATOM     11  CZ  TYR     0      -0.032   0.118  -3.252  1.00 20.00           C+0
+ATOM     12  OH  TYR     0       0.044   0.420  -4.574  1.00 20.00           O+0
+ATOM     13  OXT TYR     0      -1.279   0.184   3.842  1.00 20.00           O+0
+ATOM     14  H   TYR     0       1.977   0.225   1.669  1.00 20.00           H+0
+ATOM     15  H2  TYR     0       1.365   1.063   0.426  1.00 20.00           H+0
+ATOM     16  HA  TYR     0      -0.767   1.183   1.489  1.00 20.00           H+0
+ATOM     17  HB2 TYR     0       0.473  -1.585   1.152  1.00 20.00           H+0
+ATOM     18  HB3 TYR     0      -1.268  -1.219   1.134  1.00 20.00           H+0
+ATOM     19  HD1 TYR     0       1.905  -0.902  -0.683  1.00 20.00           H+0
+ATOM     20  HD2 TYR     0      -2.269  -0.031  -0.727  1.00 20.00           H+0
+ATOM     21  HE1 TYR     0       2.049  -0.354  -3.078  1.00 20.00           H+0
+ATOM     22  HE2 TYR     0      -2.132   0.523  -3.121  1.00 20.00           H+0
+ATOM     23  HH  TYR     0      -0.123  -0.399  -5.059  1.00 20.00           H+0
+ATOM     24  HXT TYR     0      -1.333  -0.030   4.784  1.00 20.00           H+0
+CONECT    1    2   14   15
+CONECT    2    3    5   16    1
+CONECT    3    2    4   13
+CONECT    4    3
+CONECT    5    2    6   17   18
+CONECT    6    5    7    8
+CONECT    7    9    6   19
+CONECT    8   10    6   20
+CONECT    9    7   11   21
+CONECT   10    8   11   22
+CONECT   11    9   10   12
+CONECT   12   11   23
+CONECT   13    3   24
+CONECT   14    1
+CONECT   15    1
+CONECT   16    2
+CONECT   17    5
+CONECT   18    5
+CONECT   19    7
+CONECT   20    8
+CONECT   21    9
+CONECT   22   10
+CONECT   23   12
+CONECT   24   13
+END

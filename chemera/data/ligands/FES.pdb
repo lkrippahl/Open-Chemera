@@ -1,0 +1,14 @@
+HEADER    NONAME 22-Aug-09
+TITLE     Produced by PDBeChem
+COMPND    FES      
+AUTHOR    EBI-PDBe Generated
+REVDAT   1  22-Aug-09     0
+ATOM      1 FE1  FES     0       0.000  -0.213  -1.531  1.00 20.00          FE+0
+ATOM      2 FE2  FES     0       0.000  -0.213   1.531  1.00 20.00          FE+0
+ATOM      3  S1  FES     0       1.461   0.372   0.000  1.00 20.00           S+0
+ATOM      4  S2  FES     0      -1.461   0.372   0.000  1.00 20.00           S+0
+CONECT    1    3    4
+CONECT    2    3    4
+CONECT    3    1    2
+CONECT    4    1    2
+END

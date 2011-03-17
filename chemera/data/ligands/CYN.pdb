@@ -1,0 +1,10 @@
+HEADER    NONAME 22-Aug-09
+TITLE     Produced by PDBeChem
+COMPND    CYN      
+AUTHOR    EBI-PDBe Generated
+REVDAT   1  22-Aug-09     0
+ATOM      1  C   CYN     0       0.000   0.000  -0.611  1.00 20.00           C-1
+ATOM      2  N   CYN     0       0.000   0.000   0.524  1.00 20.00           N+0
+CONECT    1    2
+CONECT    2    1
+END

@@ -1,0 +1,34 @@
+HEADER    NONAME 22-Aug-09
+TITLE     Produced by PDBeChem
+COMPND    SER      
+AUTHOR    EBI-PDBe Generated
+REVDAT   1  22-Aug-09     0
+ATOM      1  N   SER     0       1.525   0.493  -0.608  1.00 20.00           N+0
+ATOM      2  CA  SER     0       0.100   0.469  -0.252  1.00 20.00           C+0
+ATOM      3  C   SER     0      -0.053   0.004   1.173  1.00 20.00           C+0
+ATOM      4  O   SER     0       0.751  -0.760   1.649  1.00 20.00           O+0
+ATOM      5  CB  SER     0      -0.642  -0.489  -1.184  1.00 20.00           C+0
+ATOM      6  OG  SER     0      -0.496  -0.049  -2.535  1.00 20.00           O+0
+ATOM      7  OXT SER     0      -1.084   0.440   1.913  1.00 20.00           O+0
+ATOM      8  H   SER     0       1.867  -0.449  -0.499  1.00 20.00           H+0
+ATOM      9  H2  SER     0       1.574   0.707  -1.593  1.00 20.00           H+0
+ATOM     10  HA  SER     0      -0.316   1.471  -0.354  1.00 20.00           H+0
+ATOM     11  HB2 SER     0      -0.225  -1.491  -1.081  1.00 20.00           H+0
+ATOM     12  HB3 SER     0      -1.699  -0.507  -0.920  1.00 20.00           H+0
+ATOM     13  HG  SER     0      -0.978  -0.679  -3.088  1.00 20.00           H+0
+ATOM     14  HXT SER     0      -1.183   0.142   2.828  1.00 20.00           H+0
+CONECT    1    2    8    9
+CONECT    2    3    5   10    1
+CONECT    3    2    4    7
+CONECT    4    3
+CONECT    5    2   11   12    6
+CONECT    6    5   13
+CONECT    7    3   14
+CONECT    8    1
+CONECT    9    1
+CONECT   10    2
+CONECT   11    5
+CONECT   12    5
+CONECT   13    6
+CONECT   14    7
+END

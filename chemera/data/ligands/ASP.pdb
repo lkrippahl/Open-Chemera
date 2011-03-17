@@ -1,0 +1,38 @@
+HEADER    NONAME 22-Aug-09
+TITLE     Produced by PDBeChem
+COMPND    ASP      
+AUTHOR    EBI-PDBe Generated
+REVDAT   1  22-Aug-09     0
+ATOM      1  N   ASP     0       1.664  -0.030   0.265  1.00 20.00           N+0
+ATOM      2  CA  ASP     0       0.268   0.370   0.483  1.00 20.00           C+0
+ATOM      3  C   ASP     0      -0.145   0.009   1.886  1.00 20.00           C+0
+ATOM      4  O   ASP     0       0.353  -0.943   2.437  1.00 20.00           O+0
+ATOM      5  CB  ASP     0      -0.632  -0.356  -0.517  1.00 20.00           C+0
+ATOM      6  CG  ASP     0      -0.218   0.005  -1.920  1.00 20.00           C+0
+ATOM      7  OD1 ASP     0       0.702   0.765  -2.102  1.00 20.00           O+0
+ATOM      8  OD2 ASP     0      -0.873  -0.518  -2.969  1.00 20.00           O+0
+ATOM      9  OXT ASP     0      -1.067   0.746   2.524  1.00 20.00           O+0
+ATOM     10  H   ASP     0       1.704  -1.029   0.405  1.00 20.00           H+0
+ATOM     11  H2  ASP     0       1.865   0.133  -0.709  1.00 20.00           H+0
+ATOM     12  HA  ASP     0       0.173   1.447   0.342  1.00 20.00           H+0
+ATOM     13  HB2 ASP     0      -0.537  -1.432  -0.376  1.00 20.00           H+0
+ATOM     14  HB3 ASP     0      -1.668  -0.058  -0.356  1.00 20.00           H+0
+ATOM     15  HD2 ASP     0      -0.608  -0.286  -3.869  1.00 20.00           H+0
+ATOM     16  HXT ASP     0      -1.333   0.514   3.425  1.00 20.00           H+0
+CONECT    1    2   10   11
+CONECT    2    3    5   12    1
+CONECT    3    2    4    9
+CONECT    4    3
+CONECT    5    2    6   13   14
+CONECT    6    5    7    8
+CONECT    7    6
+CONECT    8    6   15
+CONECT    9    3   16
+CONECT   10    1
+CONECT   11    1
+CONECT   12    2
+CONECT   13    5
+CONECT   14    5
+CONECT   15    8
+CONECT   16    9
+END

@@ -1,6 +1,6 @@
 {*******************************************************************************
 This file is part of the Open Chemera Library.
-This work is public domain. Enjoy.
+This work is public domain (see README.TXT).
 ********************************************************************************
 Author: Ludwig Krippahl
 Date: 9.1.2011
@@ -23,7 +23,7 @@ unit molecules;
 interface
 
 uses
-  Classes, SysUtils, basetypes;
+  Classes, SysUtils, basetypes,LCLProc;
 
 const
   //bond types
@@ -57,7 +57,7 @@ type
     FParent:TAbstractMolecule;
 
     //Atom properties
-    FCoords:TOCCoords;
+    FCoord:TOCCoord;
     FRadius:TOCFloat;
     FCharge:TOCFloat;
     FMass:TOCFloat;
@@ -69,10 +69,10 @@ type
     //Should not be relied on to store persistent information. It is meant
     //to be used and discarded in the same function (such as deleting atoms)
     Tag:Integer;
-
-    property Coords:TOCCoords read FCoords write FCoords;
+    property Name:string read FName write FName;
+    property Coords:TOCCoord read FCoord write FCoord;
     property Charge:TOCFloat read FCharge write FCharge;
-    property ID:Integer read FID write FID;
+    property ID:Integer read FID write FID;       //should be unique for each molecule
     constructor Create(AName:string; AID:Integer;AParent:TAbstractMolecule);
   end;
 
@@ -96,10 +96,11 @@ type
   protected
     FAtoms:TAtoms;              //Atoms that do not belong in groups
 
-    FGroups:array of TMolecule; //Groups such as monomers. If has groups should
-                                //not have atoms will not assume that it only
+    FGroups:array of TMolecule; //Groups such as monomers. If molecule has
+                                //groups it should not have atoms.
+                                //Will not assume that it only
                                 //can have atoms or groups, but
-                                //that would make more sense for
+                                //that makes more sense for
                                 //modelling actual molecules
 
     FBondsTable:TAtomBonds;     //Best if there is only one bonds table
@@ -108,8 +109,9 @@ type
 
     FParent:TMolecule;          // if a monomer in a larger complex. Can make tres of arbitrary depth
     FType:string;               //not fixed. For proteins should be residue, chain, complex
-    FName:string;
-    FID:Integer;
+    FName:string;               //identifier, managed externally
+    FID:Integer;                //identifier, managed externally
+
     function AtomIndex(AAtom:TAtom):Integer;      //index in FAtoms
     function GroupIndex(Group:TMolecule):Integer; //Index in FGroups
     procedure AddGroup(Group:TMolecule);          //adds an existing group
@@ -133,6 +135,7 @@ type
     procedure RemoveTaggedAtomBonds(Tag:Integer;OnDelete:TOnDeleteCallback=nil);
     procedure RemoveTaggedBonds(Tag:Integer;OnDelete:TOnDeleteCallback=nil);
     procedure DeleteAtoms(Atoms:TAtoms;OnDelete:TOnDeleteCallback=nil);
+    function AtomById(AId:Integer):TAtom;    //looks also recursively in groups
 
     //These procedures clear all groups or atoms, respectively
     //They are meant to be used on empty molecules
@@ -142,11 +145,11 @@ type
 
     procedure ClearAtoms(OnDelete:TOnDeleteCallback=nil);
     procedure ClearGroups(OnDelete:TOnDeleteCallback=nil);
-    procedure ClearBonds(OnDelete:TOnDeleteCallback=nil);   //TODO: Needs implementing callback
+    procedure ClearBonds(OnDelete:TOnDeleteCallback=nil);   //TO DO: Needs implementing callback
 
     //This is a recursive version of ClearBonds to clear all bonds
-    //from offpring too.
-    procedure ClearAllBonds(OnDelete:TOnDeleteCallback=nil);//TODO: Needs implementing callback
+    //from offspring too.
+    procedure ClearAllBonds(OnDelete:TOnDeleteCallback=nil);//TO DO: Needs implementing callback
 
     //Clears everything
     procedure CleanUp(OnDelete:TOnDeleteCallback=nil);
@@ -192,6 +195,9 @@ begin
   FName:=AName;
   FID:=AID;
   FParent:=AParent;
+  FGroups:=nil;
+  FBondsTable:=nil;
+  FAtoms:=nil;
 end;
 
 procedure TMolecule.DeleteTaggedAtoms(Tag:Integer;OnDelete:TOnDeleteCallback=nil);
@@ -361,11 +367,13 @@ end;
 
 function TMolecule.GetGroup(GroupIx:Integer): TMolecule;
 begin
+  Assert((GroupIx<Length(FGroups)) and (GroupIx>=0),'Invalid group index');
   Result:=FGroups[GroupIx];
 end;
 
 function TMolecule.GetAtom(AtomIx: Integer): TAtom;
 begin
+  Assert((AtomIx<Length(FGroups)) and (AtomIx>=0),'Invalid atom index');
   Result:=FAtoms[AtomIx];
 end;
 
@@ -424,6 +432,28 @@ begin
   DeleteTaggedAtoms(TagToDelete,OnDelete);
 end;
 
+function TMolecule.AtomById(AId: Integer): TAtom;
+//WARNING: if IDs are repeated, will return the first atom.
+//It's up to caller to guarantee no repeated ids.
+
+var f:Integer;
+
+begin
+  Result:=nil;
+  for f:=0 to High(FAtoms) do
+    if FAtoms[f].Id=AId then
+      begin
+      Result:=FAtoms[f];
+      if Result<>nil then Break;
+      end;
+  if Result=nil then
+      for f:=0 to High(FGroups) do
+        begin
+        Result:=FGroups[f].AtomById(Id);
+        if Result<> nil then Break;
+        end;
+end;
+
 procedure TMolecule.CreateEmptyGroups(Count: Integer);
 //Sets molecule with an array of empty groups
 //Clears all existing groups first.
@@ -454,8 +484,6 @@ procedure TMolecule.ClearAtoms(OnDelete:TOnDeleteCallback=nil);
 
 //Clears atoms at this level. Not recursive, does not delete atoms in offespring.
 
-var f:Integer;
-
 begin
   DeleteAtoms(FAtoms,OnDelete);
   FAtoms:=nil;
@@ -482,9 +510,7 @@ begin
 end;
 
 procedure TMolecule.ClearBonds(OnDelete:TOnDeleteCallback);
-//TODO: use callback to warn of bond deletion
-
-var f:Integer;
+//TO DO: use callback to warn of bond deletion
 
 begin
   //Warn of deletion if callback provided, by tagging all bonds
@@ -500,9 +526,9 @@ procedure TMolecule.ClearAllBonds(OnDelete:TOnDeleteCallback);
 
 //Clears all bonds in this level and, recursively, in all descendants
 //useful for cleaning up everything, before deleting all atoms
-//TODO: callback to warn of bond deletion
+//TO DO: callback to warn of bond deletion
 
-var f,g:Integer;
+var f:Integer;
 
 begin
   //if needs to warn about deletion
@@ -514,7 +540,6 @@ begin
       FGroups[f].TagAllBonds(TagToDelete);
     OnDelete(TagToDelete);
     end;
-
   //Clear bonds with no more callbacks, even in offspring
   ClearBonds;
   for f:=0 to High(FGroups) do
@@ -551,7 +576,6 @@ begin
   Atom.FParent:=Self;
   SetLength(FAtoms,Length(FAtoms)+1);
   FAtoms[High(FAtoms)]:=Atom;
-  FParent.AddAtom(Atom);
 end;
 
 end.
