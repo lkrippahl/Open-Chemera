@@ -1,3 +1,16 @@
+{*******************************************************************************
+This file is part of the Open Chemera Library.
+This work is public domain (see README.TXT).
+********************************************************************************
+Author: Ludwig Krippahl
+Date: 9.1.2011
+Purpose:
+  Parser for FASTA
+Requirements:
+Revisions:
+To do:
+  Merge with alignment unit?
+*******************************************************************************}
 unit fasta;
 
 {$mode objfpc}{$H+}

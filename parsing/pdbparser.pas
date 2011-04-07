@@ -24,7 +24,7 @@ unit pdbparser;
 interface
 
 uses
-  Classes, SysUtils, basetypes, ocstringutils,LCLProc;
+  Classes, SysUtils, basetypes, ocstringutils, zstream, LCLProc;
 
 type
   TPDBAtom = record
@@ -107,12 +107,21 @@ begin
 end;
 
 procedure TPDBReader.Load(FromFile: string);
+// if file extension is .gz assumes a gzip file
 
-var buf:TStringList;
+var
+  buf:TStringList;
+  zfs:TGZFileStream;
 
 begin
   buf:=TStringList.Create;
-  buf.LoadFromFile(FromFile);
+  if Uppercase(ExtractFileExt(FromFile))='.GZ' then
+    begin
+    zfs:=TGZFileStream.Create(FromFile,gzopenread);
+    buf.LoadFromStream(zfs);
+    zfs.Free;
+    end
+    else buf.LoadFromFile(FromFile);
   ReadFromList(buf);
   buf.Free;
 end;
@@ -179,10 +188,10 @@ var i:Integer;
 begin
   Result.AtomId:=GetInteger(s,7,11);
   Result.Connects:=nil;
-  if GetInteger(s,12,16,i) then AddInteger(i,Result.Connects);
-  if GetInteger(s,17,21,i) then AddInteger(i,Result.Connects);
-  if GetInteger(s,22,26,i) then AddInteger(i,Result.Connects);
-  if GetInteger(s,27,31,i) then AddInteger(i,Result.Connects);
+  if GetInteger(s,12,16,i) then AddToArray(i,Result.Connects);
+  if GetInteger(s,17,21,i) then AddToArray(i,Result.Connects);
+  if GetInteger(s,22,26,i) then AddToArray(i,Result.Connects);
+  if GetInteger(s,27,31,i) then AddToArray(i,Result.Connects);
 end;
 
 procedure ReadLines;

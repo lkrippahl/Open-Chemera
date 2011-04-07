@@ -1,3 +1,16 @@
+{*******************************************************************************
+This file is part of the Open Chemera Library.
+This work is public domain (see README.TXT).
+********************************************************************************
+Author: Ludwig Krippahl
+Date: 9.1.2011
+Purpose:
+  Parser for clustall MSA files.
+Requirements:
+Revisions:
+To do:
+*******************************************************************************}
+
 unit clustalparser;
 
 {$mode objfpc}{$H+}
@@ -5,7 +18,7 @@ unit clustalparser;
 interface
 
 uses
-  Classes, SysUtils, basetypes, alignment, ocstringutils;
+  Classes, SysUtils, basetypes, alignment, ocstringutils, LCLProc;
 
 
 function ReadClustal(fromfile:string):TMSA;
@@ -31,16 +44,17 @@ begin
       begin
       seq:=Copy(s,19,Length(s));
       Delete(seq,Pos(' ',seq),Length(seq));
+      Ix:=LastIndexOf(nam,Result.SequenceIDs);
+      if Ix<0 then
+        begin
+        AddToArray(nam,Result.SequenceIDs);
+        AddToArray(seq,Result.Alignment);
+        end
+      else
+        Result.Alignment[Ix]:=Result.Alignment[Ix]+seq;
       end;
-    Ix:=LastIndexOf(nam,Result.SequenceIDs);
-    if Ix<0 then
-      begin
-      AddString(nam,Result.SequenceIDs);
-      AddString(seq,Result.Alignment);
-      end
-    else
-      Result.Alignment[Ix]:=Result.Alignment[Ix]+seq;
     end;
+
   sl.Free;
 end;
 

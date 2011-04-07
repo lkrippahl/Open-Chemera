@@ -22,7 +22,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs,
-  OpenGLContext,gl,glu,base3ddisplay,basetypes,LCLProc;
+  OpenGLContext,gl,glu,base3ddisplay,basetypes,threedcalc,LCLProc;
 
 type
   //color format compatible with glu

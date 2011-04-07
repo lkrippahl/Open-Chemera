@@ -1,15 +1,25 @@
-unit alignment;
+{*******************************************************************************
+This file is part of the Open Chemera Library.
+This work is public domain (see README.TXT).
+********************************************************************************
+Author: Ludwig Krippahl
+Date: 9.1.2011
+Purpose:
+  Functions for alignment of sequences
+Requirements:
+Revisions:
+To do:
+  SinglesToMSA is ignoring the TrimToQuery parameter. Rewrite
+*******************************************************************************}
 
-{
-  General alignment utilities and basetypes
-}
+unit alignment;
 
 {$mode objfpc}{$H+}
 
 interface
 
 uses
-  Classes, SysUtils,basetypes, ocstringutils, debugutils;
+  Classes, SysUtils,basetypes, ocstringutils, debugutils, LCLProc;
 
 const
 
@@ -21,7 +31,7 @@ type
 {
   Sequences stored in these data structures are meant to be
   the alignment results, not the original sequences.
-  The SequenceID fields shoule be used to identify the original sequences
+  The SequenceID fields should be used to identify the original sequences
 }
 
   TMSA=record
@@ -44,20 +54,35 @@ type
 
   TSingleAlignments=array of TSingleAlignment;
 
+  TSubMatrix=record
+    //Substitution matrices
+    MonomerIndex:string;      //one letter code for monomers, same length as matrix
+    Matrix:TOCMatrix;         //substitution values
+    Comments:TOCStrings;
+  end;
+
 function TrimMSA(msa:TMSA; seqid:string):TMSA;
   // removes all gaps from the identified sequence and trims all others
   // helps to find the residue variations from one sequence to all others
   // if the sequence is not found returns an empty MSA
 
-function SinglesToMSA(query:string;sas:TSingleAlignments; gapmarker:char=DefaultGapMarker):TMSA;
+function SinglesToMSA(query:string;sas:TSingleAlignments;
+  TrimToQuery:Boolean=False; gapmarker:char=DefaultGapMarker):TMSA;
   // Builds a MSA with the query sequence as the first sequence and
   // all matches in the array as aligned sequences.
-  // Gaps in the query sequence at each alignment are removed from the matches.
+  // Gaps in the query sequence at each alignment are removed from the matches,
+  // if TrimToQuery is true.
   // The gapmarker must match the marker used in the source sequences.
   // Warning: this function doesn't check if all alignments correspond to the
   // same query sequence.
 
 procedure AddAlignment(al:TSingleAlignment; var als:TSingleAlignments);
+
+function ReadBLASTMatrix(FileName:string):TSubMatrix;
+  //Reads a substitution matrix in the BLAST format
+  //see ftp://ftp.ncbi.nih.gov/blast/matrices for examples
+
+procedure SaveMSAToFile(MSA:TMSA; FileName:string);
 
 implementation
 
@@ -74,7 +99,7 @@ var f:Integer;
 begin
   positionlist:=nil;
   for f:=1 to Length(s) do
-    if s[f]<>gm then AddInteger(f,positionlist);
+    if s[f]<>gm then AddToArray(f,positionlist);
 end;
 
 function FromList(s:string):string;
@@ -93,8 +118,7 @@ begin
   Result.Alignment:=nil;
   Result.GapMarker:=msa.GapMarker;
   six:=LastIndexOf(seqid,msa.SequenceIDs);
-
-  if six>0 then
+  if six>=0 then
     begin
     GetList(msa.Alignment[six],msa.GapMarker);
     SetLength(Result.Alignment,Length(msa.Alignment));
@@ -103,11 +127,15 @@ begin
       begin
       Result.SequenceIDs[f]:=msa.SequenceIDs[f];
       Result.Alignment[f]:=FromList(msa.Alignment[f]);
+      if f<10 then DebugLn(Result.Alignment[f]);
       end;
     end;
 end;
 
-function SinglesToMSA(query: string; sas: TSingleAlignments; gapmarker:char=DefaultGapMarker): TMSA;
+function SinglesToMSA(query: string; sas: TSingleAlignments;
+  TrimToQuery:Boolean=False; gapmarker:char=DefaultGapMarker): TMSA;
+
+//TO DO: implement TrimToQuery. Currently being ignored, and trimming everything
 
 var
   f,l:Integer;
@@ -158,6 +186,73 @@ begin
   als[l]:=al;
 end;
 
+function ReadBLASTMatrix(FileName:string):TSubMatrix;
+
+var
+  buf:TStringList;
+  f,ix:Integer;
+  s:string;
+
+begin
+  Result.Comments:=nil;
+  Result.Matrix:=nil;
+  Result.MonomerIndex:='';
+  buf:=TStringList.Create;
+  buf.LoadFromFile(FileName);
+  for f:=0 to buf.Count-1 do
+    begin
+    s:=buf.Strings[f];
+
+    // snip comments
+    ix:=Pos('#',s);
+    if ix>0 then
+      begin
+      AddToArray(Copy(s,ix+1,Length(s)),Result.Comments);
+      Delete(s,ix,Length(s));
+      end;
+    if s<>'' then
+      begin
+      if Result.MonomerIndex='' then    //first data line must be headings
+        begin
+        for ix:=1 to Length(s) do
+          if s[ix]>' ' then
+            Result.MonomerIndex:=Result.MonomerIndex+s[ix];
+            SetLength(Result.Matrix,Length(Result.MonomerIndex));
+        end
+      else                               //other lines are value lines
+        begin
+        ix:=Pos(s[1],Result.MonomerIndex);
+        if ix>0 then
+          begin
+          Dec(ix);
+          Delete(s,1,1);                 //remove monomer code
+          Result.Matrix[ix]:=StringToFloats(s);
+          end;
+        end;
+
+      end;
+
+    end;
+  buf.Free;
+end;
+
+procedure SaveMSAToFile(MSA:TMSA; FileName:string);
+
+var
+  f:Integer;
+  buf:TStringList;
+
+begin
+  buf:=TStringList.Create;
+  buf.Add('**IDENTIFIERS**');
+  for f:=0 to High(MSA.SequenceIDs) do
+    buf.Add(MSA.SequenceIds[f]);
+  buf.Add('**ALIGNMENT**');
+  for f:=0 to High(MSA.Alignment) do
+    buf.Add(MSA.Alignment[f]);
+  buf.SaveToFile(FileName);
+  buf.Free;
+end;
 
 end.
 

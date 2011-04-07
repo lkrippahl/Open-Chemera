@@ -1,18 +1,22 @@
-unit secstruccomp;
-
-//sequence evolution correlations and structure comparisons
-
-{*****
-TODO
-  1.Single function to extract sequences by matching organisms instead of having each
-  cross* function do its own
-  2. Then use OrganismUnknown to check if organism was found
-  3. Then change ImportEBIBlastOrgIDs to remove the creation of unique organism IDS
-
-
-
-
-*****}
+{*******************************************************************************
+This file is part of the Open Chemera Library.
+This work is public domain (see README.TXT).
+********************************************************************************
+Author: Ludwig Krippahl
+Date: 9.1.2011
+Purpose:
+  sequence evolution correlations and structure comparisons
+Requirements:
+Revisions:
+To do:
+ 1.Single function to extract sequences by matching organisms instead
+ of having each cross* function do its own
+ 2. Then use OrganismUnknown to check if organism was found
+ 3. Then change ImportEBIBlastOrgIDs to remove the creation of unique
+ organism IDS. Also ImportEBIFastaOrgIDs
+ 4. there is some code duplication on storing alignments. Use TMSA?
+*******************************************************************************}
+unit seqstruccomp;
 
 {$mode objfpc}{$H+}
 
@@ -20,10 +24,10 @@ interface
 
 uses
   Classes, SysUtils, basetypes, fasta, pdbparser, clustalparser, alignment,
-  ocstringutils, ebixmlparser, progress, chartutils, graphics, debugutils;
+  ocstringutils, ebixmlparser, ebifastaparser, progress, chartutils, graphics, threedcalc, sequence;
 
 const
-  //
+  //default organism name
   OrganismUnknown='Organism unknown';
 
   //Result types
@@ -100,12 +104,17 @@ type
     procedure LoadInteractionPropensities(FileName:string);
     procedure ClearData;
     procedure LoadQuery(id,seqfile,pdbfile:string);
-    procedure LoadClustalMSA(queryid,alnfile:string);
+    procedure LoadClustalMSA(queryid,alnfile:string;TrimToQuery:Boolean = False);
       // queryid is both the query sequence id and the id of the corresponding
       // sequence in the .aln file
-    procedure LoadEBIBlast(queryid,filename:string);
+    procedure LoadEBIBlast(queryid,filename:string; TrimToQuery:Boolean = False);
     procedure ImportEBIBlastOrgIDs(queryid,filename:string);
-      // imports only the organism ids from the EBI blast file into a previously loaded msa
+      // imports only the organism ids from the EBI blast xml file
+      // into a previously loaded msa
+    procedure ImportEBIFastaOrgIDs(QueryId,Filename:string);
+      // imports only the organism ids from the EBI fasta file
+      // into a previously loaded msa
+
     procedure SelfMutualInf(seqid:string);
     procedure SelfDistance(seqid:string);
     procedure SelfPlot(seqid:string; sl:TStringList);
@@ -120,6 +129,10 @@ type
     procedure LowestAndCount(sid1,sid2:string;low,count:Integer;
       countmin,countmax:Real;sl:TStringList);
     procedure PlotData(sid1,sid2:string;datax,datay:Integer;bmp:TBitmap);
+    function GetMSA(Id:string):TMSA;
+    function MergeAsMSA(Id1,ID2:string):TMSA;
+      //merges by organism id, concatenating the sequences
+
   end;
 
 implementation
@@ -144,8 +157,6 @@ begin
     for g:=0 to 19 do
       FInteractionPropensities[f-1,g]:=StrToFloat(s[g]);
     end;
-  DebugReport(FInteractionPropensitiesAAs);
-  DebugReport(FInteractionPropensities);
   sl.Free;
 end;
 
@@ -333,7 +344,7 @@ begin
   Result:=nil;
   for f:=0 to High(FResults) do
     if (FResults[f].ID1=id1) and (FResults[f].ID2=id2) then
-      AddInteger(f,Result);
+      AddToArray(f,Result);
 end;
 
 function TComparer.FindFirstMatrix(id1, id2: string; dt: Integer): TOCMatrix;
@@ -430,7 +441,7 @@ begin
   AddQuery(nq);
 end;
 
-procedure TComparer.LoadClustalMSA(queryid, alnfile: string);
+procedure TComparer.LoadClustalMSA(queryid, alnfile: string; TrimToQuery:Boolean = False);
 
 var
   msa:TMSA;
@@ -439,13 +450,14 @@ begin
   ix:=QueryIxById(queryid);
   if ix>=0 then
     begin
-    msa:=TrimMSA(ReadClustal(alnfile),queryid);
+    msa:=ReadClustal(alnfile);
+    if TrimToQuery then msa:=TrimMSA(msa,queryid);
     FQueries[ix].MultiAlign:=msa.Alignment;
     FQueries[ix].SeqIDs:=msa.SequenceIDs;
     end;
 end;
 
-procedure TComparer.LoadEBIBlast(queryid, filename: string);
+procedure TComparer.LoadEBIBlast(queryid, filename: string; TrimToQuery:Boolean=False);
 
 var
   blast:TBlastPData;
@@ -482,9 +494,13 @@ begin
     begin
     blast:=ReadBlastPFile(filename);
     SetLength(FQueries[six].OrganismIDs,Length(FQueries[six].SeqIDs));
+
+    //remove this part after fixing the unknown organism check.
+    //this is a quick fix for forcing mismatches between unknown organisms
     for f:=0 to High(FQueries[six].OrganismIDs) do
       FQueries[six].OrganismIDs[f]:=OrganismUnknown+
-        queryid+IntToStr(f);  //remove this part after fixing the unknown organism check.
+        queryid+IntToStr(f);
+
     for f:=0 to High(blast.Alignments) do
       begin
       oix:=LastIndexOf(blast.SequenceInfo[f].ID,FQueries[six].SeqIDs);
@@ -492,6 +508,34 @@ begin
         FQueries[six].OrganismIDs[oix]:=blast.SequenceInfo[f].Organism;
       end;
     end;
+end;
+
+procedure TComparer.ImportEBIFastaOrgIDs(QueryId, Filename: string);
+
+var
+  seqs:TOCSequences;
+  f,six,oix:Integer;
+
+begin
+  six:=QueryIxById(QueryId);
+  if six>=0 then
+    begin
+    seqs:=ReadEBIFasta(FileName);
+    SetLength(FQueries[six].OrganismIDs,Length(FQueries[six].SeqIDs));
+
+      //remove this part after fixing the unknown organism check.
+      //this is a quick fix for forcing mismatches between unknown organisms
+      for f:=0 to High(FQueries[six].OrganismIDs) do
+        FQueries[six].OrganismIDs[f]:=OrganismUnknown+
+          queryid+IntToStr(f);
+
+    for f:=0 to High(seqs) do
+      begin
+      oix:=LastIndexOf(seqs[f].ID,FQueries[six].SeqIDs);
+      if oix>=0 then
+        FQueries[six].OrganismIDs[oix]:=seqs[f].Organism;
+      end;
+  end;
 end;
 
 procedure TComparer.SelfMutualInf(seqid: string);
@@ -684,13 +728,16 @@ begin
 
   seqs1:=nil;
   seqs2:=nil;
+
+  //TO DO: This is duplicated in MergeAsMSA. Use that method instead
+
   for f:=0 to High(FQueries[six1].OrganismIDs) do
     begin
     ix:=LastIndexOf(FQueries[six1].OrganismIDs[f],FQueries[six2].OrganismIDs);
     if ix>=0 then
       begin
-      AddString(FQueries[six1].MultiAlign[f],seqs1);
-      AddString(FQueries[six2].MultiAlign[ix],seqs2);
+      AddToArray(FQueries[six1].MultiAlign[f],seqs1);
+      AddToArray(FQueries[six2].MultiAlign[ix],seqs2);
       end;
     end;
   seqs1:=Transpose(seqs1);
@@ -764,8 +811,8 @@ begin
     ix:=LastIndexOf(FQueries[six1].OrganismIDs[f],FQueries[six2].OrganismIDs);
     if ix>=0 then
       begin
-      AddString(FQueries[six1].MultiAlign[f],seqs1);
-      AddString(FQueries[six2].MultiAlign[ix],seqs2);
+      AddToArray(FQueries[six1].MultiAlign[f],seqs1);
+      AddToArray(FQueries[six2].MultiAlign[ix],seqs2);
       end;
     end;
   seqs1:=Transpose(seqs1);
@@ -927,6 +974,43 @@ begin
     r:=Rect(0,0,bmp.Width-1,bmp.Height-1);
     for f:=0 to High(xm) do
       PlotXY(xm[f],ym[f],minx,maxx,miny,maxy,bmp,r,clBlue);
+    end;
+end;
+
+function TComparer.GetMSA(Id: string): TMSA;
+var
+  queryix:Integer;
+
+begin
+  queryix:=QueryIxById(Id);
+  if queryix>=0 then
+    with FQueries[queryix] do
+      begin
+      Result.Alignment:=Copy(MultiAlign,0,High(MultiAlign));
+      Result.SequenceIDs:=Copy(SeqIDs,0,High(SeqIDs));
+      end;
+end;
+
+function TComparer.MergeAsMSA(Id1, Id2: string): TMSA;
+var
+  f,six,qix1,qix2:Integer;
+
+begin
+  qix1:=QueryIxById(Id1);
+  qix2:=QueryIxById(Id2);
+  Result.Alignment:=nil;
+  Result.SequenceIds:=nil;
+  if (qix1>=0) and (qix2>=0) then
+  for f:=0 to High(FQueries[qix1].OrganismIDs) do
+    begin
+    six:=LastIndexOf(FQueries[qix1].OrganismIDs[f],FQueries[qix2].OrganismIDs);
+    if six>=0 then
+      begin
+      AddToArray(FQueries[qix1].MultiAlign[f]+FQueries[qix2].MultiAlign[six],
+        Result.Alignment);
+      AddToArray(FQueries[qix1].SeqIds[f]+'+'+FQueries[qix2].SeqIds[six],
+        Result.SequenceIds);
+      end;
     end;
 end;
 

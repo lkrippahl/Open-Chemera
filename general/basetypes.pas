@@ -5,7 +5,7 @@ This work is public domain (see README.TXT).
 Author: Ludwig Krippahl
 Date: 9.1.2011
 Purpose:
-  Base data types (string arrays, coords, etc)
+  Base data types (string arrays, coords, etc) and utility functions
 
 Requirements:
 Revisions:
@@ -21,9 +21,13 @@ interface
 uses
   Classes, SysUtils;
 
+const
+  OCTinyFloat=1e-10;  //for testing zero, differences, etc
+                      //make it 1e6 larger than epsilon for TOCFloat
+
 type
   TOCStrings = array of string;
-  TOCFloat = Real; //can be changed for different precision
+  TOCFloat = Double; //can be changed for different precision
   TOCFloats = array of TOCFloat;
   TOCDoubles = array of Double;
   TOCSingles = array of Single;
@@ -32,18 +36,25 @@ type
   TOCCoords = array of TOCCoord;
   TOCIntegers = array of Integer;
 
-  procedure AddString(s:string;var a:TOCStrings); // add a string to an array
-  procedure AddCoord(c:TOCCoord; var a:TOCCoords); // add a coord to an array
-  function AddVectors(c1,c2:TOCCoord):TOCCoord;  // sum of two vectors (as coord)
-  function ScaleVector(c:TOCCoord;s:TOCFloat):TOCCoord; // multiply vector (as coord)
-  procedure AddInteger(i:Integer; var a:TOCIntegers); // adds an integer to an array
-  function IndexOf(const i:Integer; const a:TOCIntegers):Integer;
+  procedure AddToArray(i:Integer; var a:TOCIntegers); overload;
+  procedure AddToArray(s:string; var a:TOCStrings); overload;
+  procedure AddToArray(c:TOCCoord; var a:TOCCoords); overload;
+  procedure AddToArray(f:TOCFLoat; var a:TOCFloats); overload;
+
+  procedure AddUniqueToArray(s:string; var a:TOCStrings); overload;
+
+  function IndexOf(const i:Integer; const a:TOCIntegers):Integer;overload;
+  function IndexOf(const s:string; const a:TOCStrings):Integer;overload;
   function Distance(c1,c2:TOCCoord):TOCFloat;
   function Min(vals:TOCFLoats):TOCFLoat;overload;
   function Max(vals:TOCFLoats):TOCFLoat;overload;
   function Min(vals:TOCMatrix):TOCFLoat;overload;
   function Max(vals:TOCMatrix):TOCFLoat;overload;
+  function Min(const C1,C2:TOCCoord):TOCCoord;overload;
+  function Max(const C1,C2:TOCCoord):TOCCoord;overload;
   function Coord(X,Y,Z:TOCFloat):TOCCoord;
+  function StringToFloats(S:string):TOCFloats;
+    //converts a string of numbers, separated by white spaces
 
   // Array generation utils
   function FilledInts(Len,Val: Integer): TOCIntegers;
@@ -55,38 +66,36 @@ const
 
 implementation
 
-procedure AddString(s:string;var a:TOCStrings);
+procedure AddToArray(s:string; var a:TOCStrings); overload;
 
 begin
   SetLength(a,Length(a)+1);
   a[High(a)]:=s;
 end;
 
-procedure AddCoord(c:TOCCoord; var a:TOCCoords);
+procedure AddToArray(c:TOCCoord; var a:TOCCoords); overload;
 
 begin
   SetLength(a,Length(a)+1);
   a[High(a)]:=c;
 end;
 
-function AddVectors(c1, c2: TOCCoord): TOCCoord;
-begin
-  Result[1]:=c1[1]+c2[1];
-  Result[2]:=c1[2]+c2[2];
-  Result[0]:=c1[0]+c2[0];
-end;
-
-function ScaleVector(c: TOCCoord; s: TOCFloat): TOCCoord;
-begin
-  Result[1]:=c[1]*s;
-  Result[2]:=c[2]*s;
-  Result[0]:=c[0]*s;
-end;
-
-procedure AddInteger(i: Integer; var a: TOCIntegers);
+procedure AddToArray(i:Integer; var a:TOCIntegers); overload;
 begin
   SetLength(a,Length(a)+1);
   a[High(a)]:=i;
+end;
+
+procedure AddToArray(f:TOCFloat; var a:TOCFloats); overload;
+begin
+  SetLength(a,Length(a)+1);
+  a[High(a)]:=f;
+end;
+
+procedure AddUniqueToArray(s:string; var a:TOCStrings); overload;
+
+begin
+  if IndexOf(s,a)<0 then AddToArray(s,a);
 end;
 
 function IndexOf(const i:Integer; const a:TOCIntegers):Integer;
@@ -96,6 +105,15 @@ begin
   while (Result>=0) and (a[Result]<>i) do
     Dec(Result);
 end;
+
+function IndexOf(const s:string; const a:TOCStrings):Integer;
+
+begin
+  Result:=High(a);
+  while (Result>=0) and (a[Result]<>s) do
+    Dec(Result);
+end;
+
 
 function Distance(c1, c2: TOCCoord): TOCFloat;
 begin
@@ -161,6 +179,22 @@ begin
     end;
 end;
 
+function Min(const C1,C2:TOCCoord):TOCCoord;overload;
+
+begin
+  if C1[0]<C2[0] then Result[0]:=C1[0] else Result[0]:=C2[0];
+  if C1[1]<C2[1] then Result[0]:=C1[1] else Result[1]:=C2[1];
+  if C1[2]<C2[2] then Result[0]:=C1[2] else Result[2]:=C2[2];
+end;
+
+function Max(const C1,C2:TOCCoord):TOCCoord;overload;
+
+begin
+  if C1[0]>C2[0] then Result[0]:=C1[0] else Result[0]:=C2[0];
+  if C1[1]>C2[1] then Result[0]:=C1[1] else Result[1]:=C2[1];
+  if C1[2]>C2[2] then Result[0]:=C1[2] else Result[2]:=C2[2];
+end;
+
 function Coord(X,Y,Z:TOCFloat):TOCCoord;
 
 begin
@@ -176,6 +210,28 @@ var f:Integer;
 begin
   SetLength(Result,Len);
   for f:=0 to Len-1 do Result[f]:=Val
+end;
+
+function StringToFloats(S:string):TOCFloats;
+
+var
+  f:Integer;
+  t:string;
+
+begin
+  t:='';
+  Result:=nil;
+  for f:=1 to Length(S) do
+    begin
+    if S[f]>' ' then
+      t:=t+s[f]
+    else
+      if t<>'' then
+        begin
+        AddToArray(StrToFloat(t),Result);
+        t:='';
+        end;
+    end;
 end;
 
 end.

@@ -62,7 +62,7 @@ procedure TCmMainForm.OpenMnClick(Sender: TObject);
 
 
 begin
-  OpenDlg.Filter:='Pdb file|*.pdb';
+  OpenDlg.Filter:='';//Pdb file|*.pdb;GZipped PDB file|*.gz';
   if OpenDlg.Execute then
     begin
     FDispMan.Attach(

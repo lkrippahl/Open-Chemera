@@ -1,9 +1,19 @@
-unit ebixmlparser;
-
-{
+{*******************************************************************************
+This file is part of the Open Chemera Library.
+This work is public domain (see README.TXT).
+********************************************************************************
+Author: Ludwig Krippahl
+Date: 9.1.2011
+Purpose:
   Parser for XML data from the European Bioinformatics Institute
     http://www.ebi.ac.uk/
-}
+Requirements:
+Revisions:
+To do:
+*******************************************************************************}
+
+unit ebixmlparser;
+
 
 {$mode objfpc}{$H+}
 
