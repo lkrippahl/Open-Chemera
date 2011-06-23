@@ -1,16 +1,27 @@
-unit progress;
-
-{
-  to report progress of running tasks. Should be used by all units running
-  lengthy processes to help display progress and cancel
+{*******************************************************************************
+This file is part of the Open Chemera Library.
+This work is public domain (see README.TXT).
+********************************************************************************
+Author: Ludwig Krippahl
+Date: 9.1.2011
+Purpose:
+  Reports progress of running tasks. Should be used by all units running
+  lengthy processes to help display progress and cancel tasks.
 
   All memory management of taks is run in this unit. Units outside should not use
   constructors from these classes, nor free the objects.
 
   All event processing, such as Application.Processmessages, must be called from
-  the registered hooks. Not called from this unit
-}
+  the registered hooks. They are not called from this unit.
 
+Requirements:
+Revisions:
+To do:
+  SinglesToMSA is ignoring the TrimToQuery parameter. Rewrite
+  SumOfPairScores is not calculating gap scores
+*******************************************************************************}
+
+unit progress;
 
 {$mode objfpc}{$H+}
 
@@ -30,29 +41,25 @@ type
   TRunningTask=class
   private
     FCanCancel:Boolean;
-    FAborted:Boolean;
     FTitle:string;
     FStartTime:TDateTime;
     FProgress:Real; // from 0 to 1
-    {Not sure if abort hooks are useful...
-    FAbortHook:TProgressHook;
-    FAbortOHook:TProgressHook_Object;}
   public
+    AbortRequested:Boolean;
     property CanCancel:Boolean read FCanCancel;
     property Progress:Real read FProgress;
     property Title:string read FTitle;
-    constructor Create(acancel:Boolean;atitle:string);
-    procedure Abort;
+    constructor Create(ACancel:Boolean;ATitle:string);
     procedure Step(s:Real);
-      // StepBy also calls CallHooks to call all hooks
+      // Step calls ll hooks
   end;
   TTasks=array of TRunningTask;
 
   procedure AddObjectHook(hook:TProgressHook_Object);
-    // for hooks inside objects
+    // for hooks that are methods of objects
   procedure AddHook(hook:TProgressHook);
-    // for hooks outside objects
-  function NewTask(cancancel:Boolean;title:string):TRunningTask;
+    // for other hooks
+  function NewTask(Cancancel:Boolean;Title:string):TRunningTask;
   procedure FreeTask(task:TRunningTask);
   procedure CallHooks;
   procedure RemoveObjectHook(hook:TProgressHook_Object);
@@ -66,29 +73,29 @@ var
   Hooks:THooks;
   ObjectHooks:TOHooks;
 
-function TaskIndex(task:TRunningTask):Integer;
+function TaskIndex(Task:TRunningTask):Integer;
 
 begin
   Result:=High(RunningTasks);
-  while (Result>=0) and (RunningTasks[Result]<>task) do
+  while (Result>=0) and (RunningTasks[Result]<>Task) do
     Dec(Result);
 end;
 
-procedure AddObjectHook(hook: TProgressHook_Object);
+procedure AddObjectHook(Hook: TProgressHook_Object);
 begin
   SetLength(ObjectHooks,Length(ObjectHooks)+1);
-  ObjectHooks[High(ObjectHooks)]:=hook;
+  ObjectHooks[High(ObjectHooks)]:=Hook;
 end;
 
-procedure AddHook(hook: TProgressHook);
+procedure AddHook(Hook: TProgressHook);
 begin
   SetLength(Hooks,Length(ObjectHooks)+1);
-  Hooks[High(Hooks)]:=hook;
+  Hooks[High(Hooks)]:=Hook;
 end;
 
-function NewTask(cancancel: Boolean; title: string): TRunningTask;
+function NewTask(CanCancel: Boolean; Title: string): TRunningTask;
 begin
-  Result:=TRunningTask.Create(cancancel,title);
+  Result:=TRunningTask.Create(CanCancel,Title);
   SetLength(RunningTasks,Length(RunningTasks)+1);
   RunningTasks[High(RunningTasks)]:=Result;
   CallHooks;
@@ -155,19 +162,14 @@ end;
 
 { TRunningTask }
 
-constructor TRunningTask.Create(acancel: Boolean; atitle: string);
+constructor TRunningTask.Create(ACancel: Boolean; ATitle: string);
 begin
   inherited Create;
-  FCanCancel:=acancel;
-  FTitle:=atitle;
+  FCanCancel:=ACancel;
+  FTitle:=ATitle;
   FStartTime:=Now;
   FProgress:=0;
-  FAborted:=False;
-end;
-
-procedure TRunningTask.Abort;
-begin
-  FAborted:=True;
+  AbortRequested:=False;
 end;
 
 procedure TRunningTask.Step(s: Real);

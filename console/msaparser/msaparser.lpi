@@ -1,0 +1,244 @@
+<?xml version="1.0"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="9"/>
+    <PathDelim Value="\"/>
+    <General>
+      <Flags>
+        <MainUnitHasCreateFormStatements Value="False"/>
+      </Flags>
+      <MainUnit Value="0"/>
+      <ResourceType Value="res"/>
+      <UseXPManifest Value="True"/>
+      <Icon Value="0"/>
+      <ActiveWindowIndexAtStart Value="0"/>
+    </General>
+    <i18n>
+      <EnableI18N LFM="False"/>
+    </i18n>
+    <VersionInfo>
+      <StringTable ProductVersion=""/>
+    </VersionInfo>
+    <BuildModes Count="1" Active="Default">
+      <Item1 Name="Default" Default="True"/>
+    </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+      <IncludeFileFilter Value="*.(pas|pp|inc|lfm|lpr|lrs|lpi|lpk|sh|xml)"/>
+      <ExcludeFileFilter Value="*.(bak|ppu|o|so);*~;backup"/>
+    </PublishOptions>
+    <RunParams>
+      <local>
+        <FormatVersion Value="1"/>
+      </local>
+    </RunParams>
+    <Units Count="9">
+      <Unit0>
+        <Filename Value="msaparser.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="msaparser"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="0"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="45"/>
+        <CursorPos X="24" Y="60"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="..\..\parsing\msfparser.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="msfparser"/>
+        <EditorIndex Value="3"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="72"/>
+        <CursorPos X="23" Y="91"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="..\..\sequence\alignment.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="alignment"/>
+        <EditorIndex Value="5"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="27"/>
+        <CursorPos X="3" Y="39"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="C:\lazarus\fpc\2.4.3\source\packages\fcl-base\src\custapp.pp"/>
+        <UnitName Value="CustApp"/>
+        <EditorIndex Value="2"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="14" Y="63"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="..\..\general\ocstringutils.pas"/>
+        <UnitName Value="ocstringutils"/>
+        <EditorIndex Value="4"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="9"/>
+        <CursorPos X="31" Y="21"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="C:\lazarus\lcl\lclproc.pas"/>
+        <UnitName Value="LCLProc"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="2420"/>
+        <CursorPos X="18" Y="2432"/>
+        <UsageCount Value="10"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="..\..\utils\debugutils.pas"/>
+        <UnitName Value="debugutils"/>
+        <EditorIndex Value="7"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="117"/>
+        <CursorPos X="15" Y="75"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="..\..\parsing\clustalparser.pas"/>
+        <UnitName Value="clustalparser"/>
+        <EditorIndex Value="1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="43"/>
+        <CursorPos X="3" Y="74"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="..\..\parsing\msablocksparser.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="msablocksparser"/>
+        <EditorIndex Value="6"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="80"/>
+        <CursorPos X="31" Y="94"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+      </Unit8>
+    </Units>
+    <JumpHistory Count="20" HistoryIndex="19">
+      <Position1>
+        <Filename Value="..\..\utils\debugutils.pas"/>
+        <Caret Line="21" Column="71" TopLine="1"/>
+      </Position1>
+      <Position2>
+        <Filename Value="..\..\parsing\msfparser.pas"/>
+        <Caret Line="22" Column="57" TopLine="10"/>
+      </Position2>
+      <Position3>
+        <Filename Value="..\..\parsing\msfparser.pas"/>
+        <Caret Line="50" Column="7" TopLine="34"/>
+      </Position3>
+      <Position4>
+        <Filename Value="..\..\parsing\msfparser.pas"/>
+        <Caret Line="62" Column="32" TopLine="51"/>
+      </Position4>
+      <Position5>
+        <Filename Value="..\..\parsing\msfparser.pas"/>
+        <Caret Line="98" Column="47" TopLine="86"/>
+      </Position5>
+      <Position6>
+        <Filename Value="..\..\parsing\msfparser.pas"/>
+        <Caret Line="108" Column="13" TopLine="96"/>
+      </Position6>
+      <Position7>
+        <Filename Value="..\..\parsing\msfparser.pas"/>
+        <Caret Line="87" Column="59" TopLine="75"/>
+      </Position7>
+      <Position8>
+        <Filename Value="..\..\parsing\msfparser.pas"/>
+        <Caret Line="120" Column="36" TopLine="100"/>
+      </Position8>
+      <Position9>
+        <Filename Value="..\..\parsing\msfparser.pas"/>
+        <Caret Line="26" Column="49" TopLine="9"/>
+      </Position9>
+      <Position10>
+        <Filename Value="..\..\parsing\msfparser.pas"/>
+        <Caret Line="111" Column="9" TopLine="99"/>
+      </Position10>
+      <Position11>
+        <Filename Value="msaparser.lpr"/>
+        <Caret Line="23" Column="37" TopLine="20"/>
+      </Position11>
+      <Position12>
+        <Filename Value="..\..\parsing\clustalparser.pas"/>
+        <Caret Line="24" Column="21" TopLine="13"/>
+      </Position12>
+      <Position13>
+        <Filename Value="msaparser.lpr"/>
+        <Caret Line="58" Column="24" TopLine="44"/>
+      </Position13>
+      <Position14>
+        <Filename Value="..\..\parsing\msablocksparser.pas"/>
+        <Caret Line="72" Column="30" TopLine="68"/>
+      </Position14>
+      <Position15>
+        <Filename Value="..\..\parsing\msablocksparser.pas"/>
+        <Caret Line="53" Column="24" TopLine="41"/>
+      </Position15>
+      <Position16>
+        <Filename Value="..\..\parsing\msablocksparser.pas"/>
+        <Caret Line="63" Column="43" TopLine="52"/>
+      </Position16>
+      <Position17>
+        <Filename Value="..\..\parsing\msablocksparser.pas"/>
+        <Caret Line="64" Column="35" TopLine="55"/>
+      </Position17>
+      <Position18>
+        <Filename Value="..\..\parsing\msablocksparser.pas"/>
+        <Caret Line="66" Column="64" TopLine="54"/>
+      </Position18>
+      <Position19>
+        <Filename Value="..\..\parsing\msablocksparser.pas"/>
+        <Caret Line="72" Column="48" TopLine="60"/>
+      </Position19>
+      <Position20>
+        <Filename Value="msaparser.lpr"/>
+        <Caret Line="96" Column="48" TopLine="88"/>
+      </Position20>
+    </JumpHistory>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="10"/>
+    <PathDelim Value="\"/>
+    <Target>
+      <Filename Value="msaparser"/>
+    </Target>
+    <SearchPaths>
+      <IncludeFiles Value="$(ProjOutDir)"/>
+      <OtherUnitFiles Value="..\..\parsing;..\..\sequence;..\..\general;..\..\molecule;..\..\utils;..\..\display;..\..\forms"/>
+      <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+    <Other>
+      <CompilerMessages>
+        <UseMsgFile Value="True"/>
+      </CompilerMessages>
+      <CompilerPath Value="$(CompPath)"/>
+    </Other>
+  </CompilerOptions>
+  <Debugging>
+    <Exceptions Count="3">
+      <Item1>
+        <Name Value="EAbort"/>
+      </Item1>
+      <Item2>
+        <Name Value="ECodetoolError"/>
+      </Item2>
+      <Item3>
+        <Name Value="EFOpenError"/>
+      </Item3>
+    </Exceptions>
+  </Debugging>
+</CONFIG>

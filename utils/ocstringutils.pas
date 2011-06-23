@@ -38,6 +38,7 @@ function FlattenStrings(SS:TOCStrings;Sep:string):string;
 function SnipString(var S:string;const Spacer:string):string;
   //cuts S to first spacer, removing spacer, returns part before spacer
   //returns empty string and leaves S if spacer is not found
+function CountChar(const S:string; const C:Char):Integer;
 
 
 implementation
@@ -218,6 +219,16 @@ begin
 
   if ix2>=ix1 then Result:=Copy(s,ix1,ix2-ix1+1)
   else Result:='';
+end;
+
+function CountChar(const S:string; const C:Char):Integer;
+
+var f:Integer;
+
+begin
+  Result:=0;
+  for f:=1 to Length(S) do
+    if S[f]=C then Inc(Result);
 end;
 
 end.

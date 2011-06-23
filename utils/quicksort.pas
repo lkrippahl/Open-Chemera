@@ -1,3 +1,13 @@
+{*******************************************************************************
+This file is part of the Open Chemera Library.
+This work is public domain (see README.TXT).
+********************************************************************************
+Author: Ludwig Krippahl
+Date: 31.3.2011
+Purpose:
+  Sorting
+Revisions:
+*******************************************************************************}
 unit quicksort;
 
 {$mode objfpc}{$H+}
@@ -5,25 +15,22 @@ unit quicksort;
 interface
 
 uses
-  Classes, SysUtils; 
+  Classes, SysUtils, basetypes;
 
 type
-  TQSIndex=array of Integer;
-  TQSValues=array of Double;
   TQSInt64Vals=array of Int64;
 
-function QSAscendingIndex(const Values:TQSValues):TQSIndex;overload;
-function QSAscendingIndex(const Values:TQSInt64Vals):TQSIndex;overload;
-procedure AddToIndex(var Index:TQSIndex;Value:Integer);
-procedure AddToValues(var Values:TQSValues; Value:Double);
-function QSIntsAsVals(Ints:array of Integer):TQSValues;
-function QSIndexAsRanking(Ix:TQSIndex):TQSIndex;
+function QSAscendingIndex(const Values:TOCFloats):TOCIntegers;overload;
+function QSAscendingIndex(const Values:TQSInt64Vals):TOCIntegers;overload;
+function QSIntsAsVals(Ints:array of Integer):TOCFloats;
+function QSIndexAsRanking(Ix:TOCIntegers):TOCIntegers;
+function QSZeroBasedIndex(Count:Integer):TOCIntegers;
 
 implementation
 
 Uses forms;
 
-function QSIndexAsRanking(Ix:TQSIndex):TQSIndex;
+function QSIndexAsRanking(Ix:TOCIntegers):TOCIntegers;
 
 var f:Integer;
 
@@ -33,7 +40,7 @@ begin
     Result[Ix[f]]:=f;
 end;
 
-function QSIntsAsVals(Ints:array of Integer):TQSValues;
+function QSIntsAsVals(Ints:array of Integer):TOCFloats;
 
 var f:Integer;
 
@@ -43,22 +50,7 @@ begin
     Result[f]:=Ints[f]
 end;
 
-procedure AddToIndex(var Index:TQSIndex;Value:Integer);
-
-begin
-  SetLength(Index,Length(Index)+1);
-  Index[High(Index)]:=Value;
-end;
-
-procedure AddToValues(var Values:TQSValues; Value:Double);
-
-begin
-  SetLength(Values,Length(Values)+1);
-  Values[High(Values)]:=Value;
-end;
-
-
-function QSAscendingIndex(const Values:TQSValues):TQSIndex;
+function QSAscendingIndex(const Values:TOCFloats):TOCIntegers;
 
 var
   t:Integer;
@@ -100,7 +92,7 @@ begin
     Quick(0,High(Values));
 end;
 
-function QSAscendingIndex(const Values:TQSInt64Vals):TQSIndex;overload;
+function QSAscendingIndex(const Values:TQSInt64Vals):TOCIntegers;overload;
 
 var
   t:Integer;
@@ -142,6 +134,15 @@ begin
     Quick(0,High(Values));
 end;
 
+function QSZeroBasedIndex(Count:Integer):TOCIntegers;
+
+var f:Integer;
+
+begin
+  SetLength(Result,Count);
+  for f:=0 to Count-1 do
+    Result[f]:=f;
+end;
 
 end.
 

@@ -10,6 +10,8 @@ Requirements:
 Revisions:
 To do:
   SinglesToMSA is ignoring the TrimToQuery parameter. Rewrite
+  SumOfPairScores is not calculating gap scores
+  NeedlemanWunschAlign raises exception on invalid residues (like CA HOH, etc)
 *******************************************************************************}
 
 unit alignment;
@@ -19,7 +21,7 @@ unit alignment;
 interface
 
 uses
-  Classes, SysUtils,basetypes, ocstringutils, debugutils, LCLProc;
+  Classes, SysUtils,basetypes, ocstringutils, progress, debugutils;
 
 const
 
@@ -58,7 +60,9 @@ type
     //Substitution matrices
     MonomerIndex:string;      //one letter code for monomers, same length as matrix
     Matrix:TOCMatrix;         //substitution values
+    //NOTE: MonomerIndex is 1 based. Must subtract 1 to obtain index in Matrix
     Comments:TOCStrings;
+    GapPenalty,GapExtension:TOCFloat;
   end;
 
 function TrimMSA(msa:TMSA; seqid:string):TMSA;
@@ -83,6 +87,22 @@ function ReadBLASTMatrix(FileName:string):TSubMatrix;
   //see ftp://ftp.ncbi.nih.gov/blast/matrices for examples
 
 procedure SaveMSAToFile(MSA:TMSA; FileName:string);
+function SumOfPairScores(const MSA:TMSA;const SubMat:TSubMatrix):TOCFLoats;
+function GetSubScore(const SubMat:TSubMatrix;A1,A2:Char):TOCFloat;
+
+function GapPenalty(const SubMat:TSubMatrix; GapLen: Integer): TOCFloat;
+function NeedlemanWunschAlign(Seq1Ix, Seq2Ix: TOCIntegers; const SubMat:TSubMatrix):TOCIntegers;
+  //Sequences are the indexes in the SubMatrix scores.
+  // Result is the mapping from Sequence 1 to 2
+
+function IndexSequence(Seq:string;SubMat:TSubMatrix):TOCIntegers;
+  //Returns 0 based array with indexes for SubMat. -1 for not found
+
+function AlignmentToSequence(const Align,Seq:string; GapMarker:Char):TOCIntegers;
+  //Indexes alignment to sequence, starting at index 1 (not index 0), for indexing strings
+
+function SequenceFromIndex(Seq:string; Filter:TOCIntegers):string;
+
 
 implementation
 
@@ -127,7 +147,6 @@ begin
       begin
       Result.SequenceIDs[f]:=msa.SequenceIDs[f];
       Result.Alignment[f]:=FromList(msa.Alignment[f]);
-      if f<10 then DebugLn(Result.Alignment[f]);
       end;
     end;
 end;
@@ -197,6 +216,10 @@ begin
   Result.Comments:=nil;
   Result.Matrix:=nil;
   Result.MonomerIndex:='';
+  //TO DO: gap penalties should come from the file...
+  Result.GapPenalty:=-10;
+  Result.GapExtension:=-1;
+
   buf:=TStringList.Create;
   buf.LoadFromFile(FileName);
   for f:=0 to buf.Count-1 do
@@ -254,5 +277,242 @@ begin
   buf.Free;
 end;
 
+function SumOfPairScores(const MSA:TMSA;const SubMat:TSubMatrix):TOCFLoats;
+
+// TO DO: Calculate gap scores
+
+
+var
+  col,l1,l2:Integer;
+begin
+  Result:=nil;
+  if MSA.Alignment<>nil then
+      begin
+
+      SetLength(Result,Length(MSA.Alignment[0]));
+      for col:=0 to High(Result) do
+        begin
+        Result[col]:=0;
+        for l1:=1 to High(MSA.Alignment)-1 do
+          for l2:=l1+1 to High(MSA.Alignment) do
+              Result[col]:=Result[col]+GetSubScore(SubMat,
+                MSA.Alignment[l1,col+1],MSA.Alignment[l2,col+1]);
+        end;
+      end;
+
+end;
+
+function GetSubScore(const SubMat:TSubMatrix;A1,A2:Char):TOCFloat;
+
+var i1,i2:Integer;
+
+begin
+  i1:=Pos(A1,SubMat.MonomerIndex)-1;
+  i2:=Pos(A2,SubMat.MonomerIndex)-1;
+  if (i1>=0) and (i2>=0) then
+    Result:=SubMat.Matrix[i1,i2]
+  else Result:=0;
+end;
+
+function GapPenalty(const SubMat:TSubMatrix; GapLen: Integer): TOCFloat;
+begin
+  if GapLen<=0 then Result:=0
+  else Result:=SubMat.GapPenalty+GapLen*SubMat.GapExtension;
+end;
+
+function IndexSequence(Seq:string;SubMat:TSubMatrix):TOCIntegers;
+
+var f:Integer;
+
+begin
+  SetLength(Result,Length(Seq));
+  for f:=0 to High(Result) do
+    Result[f]:=Pos(Seq[f+1],SubMat.MonomerIndex)-1;
+end;
+
+function NeedlemanWunschAlign(Seq1Ix, Seq2Ix: TOCIntegers; const SubMat:TSubMatrix):TOCIntegers;
+
+
+var
+  scoremat:TOCMatrix;
+  total:Integer;
+  task:TRunningTask;   //for progress report
+  taskstep:Single;
+
+function TotalVal(S1,E1,S2,E2:Integer):TOCFloat;
+
+var
+  f:Integer;
+  foundgap:Boolean;
+
+begin
+  task.Step(taskstep);
+  Result:=scoremat[E1,E2];
+  if (S1<E1) and (S1>=0) then
+    Result:=Result+GapPenalty(SubMat,E1-S1-1);
+  if (S2<E2) and (S2>=0) then
+    Result:=Result+GapPenalty(SubMat,E2-S2-1);
+end;
+
+procedure EvalMat(I1,I2:Integer);
+// indexes are for the matrix, starting at 0
+
+var
+  x,y:Integer;
+  t,tot,max:TOCFLoat;
+
+begin
+  if (Seq1Ix[I1]>=0) and (Seq1Ix[I1]>=0) then
+    tot:=SubMat.Matrix[Seq1Ix[I1],Seq2Ix[I2]]
+  //if one residue is not present in the substitution matrix
+  //then the score starts at 0.
+  else tot:=0;
+  if (I1<High(Seq1Ix)) and (I2<High(Seq2Ix)) then
+    begin
+    max:=-10000;
+    for x:=I1+1 to High(Seq1Ix) do
+      begin
+      t:=TotalVal(I1,x,I2+1,I2+1);
+      if t>max then max:=t;
+      end;
+    for y:=I2+1 to High(Seq2Ix) do
+      begin
+      t:=TotalVal(I1+1,I1+1,I2,y);
+      if t>max then max:=t;
+      end;
+    tot:=tot+max;
+    end;
+  ScoreMat[I1,I2]:=tot;
+end;
+
+procedure CalcLines(I1,I2:Integer);
+
+var f:Integer;
+
+begin
+  for f:=0 to I1 do EvalMat(f,I2);
+  for f:=0 to I2-1 do EvalMat(I1,f);
+end;
+
+procedure BuildMat;
+
+var i1,i2:Integer;
+
+begin
+  SetLength(ScoreMat,Length(Seq1Ix),Length(Seq2Ix));
+  i1:=High(ScoreMat);
+  i2:=High(ScoreMat[0]);
+  repeat
+    CalcLines(i1,i2);
+    Dec(i1);
+    Dec(i2);
+  until(i1<0) or (i2<0);
+end;
+
+procedure Align;
+
+var
+  I1,I2,NI1,NI2,f:Integer;
+
+procedure NextLine(var I1,I2:Integer);
+
+var
+  x,y,s1,s2:Integer;
+  t,max:TOCFLoat;
+
+begin
+  Max:=0;
+  s1:=I1+1;
+  s2:=I2+1;
+  I1:=Length(ScoreMat);
+  I2:=Length(ScoreMat[0]);
+  for x:=s1 to High(ScoreMat) do
+    begin
+    t:=TotalVal(s1-1,x,s2,s2);
+    if Max<t then
+      begin
+      max:=t;
+      I1:=x;
+      I2:=s2;
+      end;
+    end;
+  for y:=s2 to High(ScoreMat[0]) do
+    begin
+    t:=TotalVal(s1,s1,s2-1,y);
+    if Max<t then
+      begin
+      max:=t;
+      I1:=s1;
+      I2:=y;
+      end;
+    end;
+end;
+
+
+begin
+  NI1:=-1;
+  NI2:=-1;
+  repeat
+    // DebugReport('1'+IntToStr(NI1)+':'+IntToStr(High(Seq1Ix)));
+    // DebugReport('2'+IntToStr(NI2)+':'+IntToStr(High(Seq2Ix)));
+    NextLine(NI1,NI2);
+    if (NI1<=High(Seq1Ix)) and (NI2<=High(Seq2Ix)) then
+      Result[NI1]:=NI2;
+  until (NI1>=High(Seq1Ix)) or (NI2>High(Seq2Ix));
+end;
+
+var f:Integer;
+
+begin
+  SetLength(Result,Length(Seq1Ix));
+  if (Seq1Ix<>nil) and (Seq2Ix<>nil) then
+    begin
+    try
+      for f:=0 to High(Result) do Result[f]:=-1;
+      taskstep:=2/Length(Seq1Ix)/Length(Seq2Ix)/(Length(Seq1Ix)+Length(Seq2Ix));
+      task:=NewTask(False,'Aligning');
+      BuildMat;
+      Align;
+    finally
+      FreeTask(task);
+    end;
+    ScoreMat:=nil;
+    end;
+end;
+
+function AlignmentToSequence(const Align,Seq:string; GapMarker:Char):TOCIntegers;
+
+var c,f:Integer;
+    tmp:string; //debug
+begin
+  c:=0;
+  tmp:='';
+  SetLength(Result,Length(Align));
+  for f:=1 to Length(Align) do
+    if Align[f]<>GapMarker then
+      begin
+      Inc(c);
+      Result[f-1]:=c;
+      tmp:=tmp+Align[f]
+      end
+    else
+      Result[f-1]:=-1;
+  DebugReport('AlignToSequence');
+  DebugReport(Seq);
+  DebugReport(tmp);
+end;
+
+function SequenceFromIndex(Seq:string; Filter:TOCIntegers):string;
+
+var f:Integer;
+
+begin
+  Result:='';
+  for f:=0 to High(Filter) do
+    if Filter[f]>0 then
+      Result:=Result+Seq[Filter[f]];
+end;
+
 end.
+
 

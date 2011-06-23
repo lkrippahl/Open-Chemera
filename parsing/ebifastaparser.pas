@@ -20,7 +20,7 @@ unit ebifastaparser;
 interface
 
 uses
-  Classes, SysUtils, sequence, alignment, stringutils;
+  Classes, SysUtils, sequence, alignment, ocstringutils,fasta, lclproc;
 
 function ReadEBIFasta(Filename:string):TOCSequences;
 
@@ -29,10 +29,10 @@ implementation
 function ReadEBIFasta(Filename:string):TOCSequences;
 
 var
-  sl:TStringList;
   f:Integer;
   s:string;
   tmp:TOCSequence;
+  freader:TFastaReader;
 
 procedure ParseDescription;
 
@@ -46,32 +46,32 @@ begin
     Code:=SnipString(s,'|');
     ID:=SnipString(s,' ');
     Description:=SnipString(S,'OS=');
-    Organism:=TrimmedBlanks(SnipString(S,'GN='));
-    Gene:=TrimmedBlanks(SnipString(S,'PE='));
+    if Pos('GN=',S)>0 then              //in some cases there is no gene info...
+      begin
+      Organism:=TrimmedBlanks(SnipString(S,'GN='));
+      Gene:=TrimmedBlanks(SnipString(S,'PE='));
+      end
+    else
+      begin
+      Organism:=TrimmedBlanks(SnipString(S,'PE='));
+      Gene:='';
+      end;
     Evidence:=TrimmedBlanks(SnipString(S,'SV='));
     end;
 end;
 
 begin
+  freader:=TFastaReader.Create(FileName);
   Result:=nil;
   tmp:=EmptySequence;
-  sl:=TStringList.Create;
-  sl.LoadFromFile(FileName);
-  for f:=0 to sl.Count-1 do
+  for f:=0 to High(freader.Seqs) do
     begin
-    s:=sl.Strings[f];
-    if Pos('>',s)=1 then  //new sequence found
-      begin
-      if tmp.Sequence<>'' then
-        AddSequence(tmp,Result);
-      tmp:=EmptySequence;
-      ParseDescription;
-      end
-    else tmp.Sequence:=tmp.Sequence+TrimmedBlanks(s);
-    end;
-  if tmp.Sequence<>'' then
+    s:=freader.Seqs[f].Id;
+    ParseDescription;
+    tmp.Sequence:=freader.Seqs[f].Sequence;
     AddSequence(tmp,Result);
-  sl.Free;
+    end;
+  freader.Free;
 end;
 
 end.
