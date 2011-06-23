@@ -1,10 +1,19 @@
+{*******************************************************************************
+This file is part of the Open Chemera Library.
+This work is public domain (see README.TXT).
+********************************************************************************
+Author: Ludwig Krippahl
+Date: 9.1.2011
+Purpose:
+  Displays progress reports
+
+Requirements:
+Revisions:
+To do:
+  Currently only working on first task on the list. Change ProgressCallback
+*******************************************************************************}
+
 unit progressframe;
-
-{
-  frame to display progress reports
-  TODO: currently only working on first task on the list.
-
-}
 
 {$mode objfpc}{$H+}
 
@@ -53,6 +62,7 @@ begin
     FLastRefresh:=n;
     FLastTaskCount:=Length(tasks);
     tasks:=ListTasks;
+    //TODO: add support for multiple tasks
     if tasks<>nil then
       begin
       TaskTitleLbl.Caption:=tasks[0].Title;

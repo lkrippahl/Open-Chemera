@@ -1,8 +1,11 @@
 object ProgressFrame: TProgressFrame
+  Left = 0
   Height = 83
+  Top = 0
   Width = 397
   ClientHeight = 83
   ClientWidth = 397
+  LCLVersion = '0.9.31'
   TabOrder = 0
   Visible = False
   DesignLeft = 195
@@ -24,6 +27,7 @@ object ProgressFrame: TProgressFrame
     ParentColor = False
   end
   object TaskPBar: TProgressBar
+    Left = 0
     Height = 20
     Top = 24
     Width = 392

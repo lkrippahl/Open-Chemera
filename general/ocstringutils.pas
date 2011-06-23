@@ -18,7 +18,7 @@ unit ocstringutils;
 interface
 
 uses
-  Classes, SysUtils, basetypes,LCLProc;
+  Classes, SysUtils, basetypes;
 
 function SplitString(AString:string;Separator:string):TOCStrings;
 function GetInteger(AString:string;Start,Finish:Integer; out Val:Integer):Boolean;overload;
@@ -38,6 +38,11 @@ function FlattenStrings(SS:TOCStrings;Sep:string):string;
 function SnipString(var S:string;const Spacer:string):string;
   //cuts S to first spacer, removing spacer, returns part before spacer
   //returns empty string and leaves S if spacer is not found
+function CountInString(const S:string; const C:Char):Integer;
+function CleanString(const S:string; const C:Char):string;
+  //returns S minus all instances of C
+function AppendToLength(const S:string; const C:Char; const Len:Integer):string;
+  //returns S filled with C until length Len
 
 
 implementation
@@ -200,6 +205,16 @@ begin
     end;
 end;
 
+function CountInString(const S: string; const C: Char): Integer;
+
+var f:Integer;
+
+begin
+  Result:=0;
+  for f:=1 to Length(S) do
+    if S[f]=C then Inc(Result);
+end;
+
 function TrimmedBlanks(const S:string):string;
 
 var
@@ -218,6 +233,36 @@ begin
 
   if ix2>=ix1 then Result:=Copy(s,ix1,ix2-ix1+1)
   else Result:='';
+end;
+
+function CleanString(const S:string; const C:Char):string;
+
+var f,count:Integer;
+
+begin
+  SetLength(Result,Length(S));
+  count:=0;
+  for f:=1 to Length(S) do
+    if S[f]<>C then
+      begin
+      Inc(count);
+      Result[count]:=S[f];
+      end;
+  SetLength(Result,count);
+end;
+
+function AppendToLength(const S:string; const C:Char; const Len:Integer):string;
+
+var f,lens:Integer;
+
+begin
+  lens:=Length(S);
+  if lens>=Len then Exit(S); //nothing to append
+  SetLength(Result,Len);
+  for f:=1 to lens do
+    Result[f]:=S[f];
+  for f:=lens+1 to Len do
+    Result[f]:=C;
 end;
 
 end.

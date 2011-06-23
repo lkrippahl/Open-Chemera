@@ -41,6 +41,9 @@ type
   procedure AddToArray(c:TOCCoord; var a:TOCCoords); overload;
   procedure AddToArray(f:TOCFLoat; var a:TOCFloats); overload;
 
+  function Concatenate(Coords1,Coords2:TOCCoords):TOCCoords;overload;
+  function Concatenate(A1,A2:TOCStrings):TOCStrings;overload;
+
   procedure AddUniqueToArray(s:string; var a:TOCStrings); overload;
 
   function IndexOf(const i:Integer; const a:TOCIntegers):Integer;overload;
@@ -90,6 +93,32 @@ procedure AddToArray(f:TOCFloat; var a:TOCFloats); overload;
 begin
   SetLength(a,Length(a)+1);
   a[High(a)]:=f;
+end;
+
+function Concatenate(Coords1,Coords2:TOCCoords):TOCCoords;overload;
+
+var f,len1:Integer;
+
+begin
+  len1:=Length(Coords1);
+  SetLength(Result,len1+Length(Coords2));
+  for f:=0 to High(Coords1) do
+    Result[f]:=Coords1[f];
+  for f:=len1 to High(Result) do
+    Result[f]:=Coords2[f-len1];
+end;
+
+function Concatenate(A1,A2:TOCStrings):TOCStrings;overload;
+
+var f,len1:Integer;
+
+begin
+  len1:=Length(A1);
+  SetLength(Result,len1+Length(A2));
+  for f:=0 to High(A1) do
+    Result[f]:=A1[f];
+  for f:=len1 to High(Result) do
+    Result[f]:=A2[f-len1];
 end;
 
 procedure AddUniqueToArray(s:string; var a:TOCStrings); overload;
