@@ -21,7 +21,7 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Classes, SysUtils, msfparser, clustalparser, alignment, CustApp, debugutils,
-  msablocksparser
+  msablocksparser, msaconstraints
   { you can add units after this };
 
 type
@@ -43,6 +43,7 @@ procedure TMSAParser.DoRun;
 var
   infile,outfile, blockfile,command:string;
   MSA:TMSA;
+  cpmsa:TCPMSA;
 
 begin
   // Check arguments
@@ -70,7 +71,19 @@ begin
     MergeBlocks(MSA,blockfile);
     SaveMSF(outfile,MSA);
     WriteLn('Merge OK');
-
+    end
+  else if command='CP' then
+    begin
+    cpmsa:=TCPMSA.Create;
+    infile:=ParamStr(2);
+    outfile:=ParamStr(3);
+    MSA:=ReadMSF(infile);
+    cpmsa.AssignMSA(MSA);
+    if ParamStr(4)<>'' then
+      cpmsa.MinShiftable:=StrToInt(ParamStr(4));
+    cpmsa.GenerateBlocks(outfile+'.blocks');
+    SaveMSAToFile(MSA,outfile+'.msa');
+    cpmsa.Free;
     end;
 
   // stop program loop
@@ -96,6 +109,11 @@ begin
   WriteLn('Params: infile.aln outfile.msf (MSA formats are determined by the extension)');
   WriteLn('Command: m (merge blocks into a .msf file)');
   WriteLn('Params: infile.aln blockfile outfile.msf');
+  WriteLn('Command: cp (create blocks and alignment file)');
+  WriteLn('Params: infile.msf outfile minshiftable');
+  WriteLn('(outfile has no extension, will be used for .blocs and .msa;');
+  WriteLn('minshiftable is the minimum number of lines that can be shifted,');
+  WriteLn('default is 20% of number of sequences)');
 
 end;
 

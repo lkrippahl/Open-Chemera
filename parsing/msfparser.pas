@@ -68,7 +68,8 @@ begin
                              // identifiers
     if nam<>'' then
       begin
-      seq:=TrimmedBlanks(s);
+      seq:=Deblank(s);
+      WriteLn(Seq);
       Ix:=LastIndexOf(nam,Result.SequenceIDs);
       if Ix<0 then
         begin

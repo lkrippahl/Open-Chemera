@@ -32,7 +32,7 @@
         <FormatVersion Value="1"/>
       </local>
     </RunParams>
-    <Units Count="9">
+    <Units Count="10">
       <Unit0>
         <Filename Value="msaparser.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -40,8 +40,8 @@
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="45"/>
-        <CursorPos X="24" Y="60"/>
+        <TopLine Value="71"/>
+        <CursorPos X="41" Y="83"/>
         <UsageCount Value="20"/>
         <Loaded Value="True"/>
       </Unit0>
@@ -49,10 +49,10 @@
         <Filename Value="..\..\parsing\msfparser.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="msfparser"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="4"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="72"/>
-        <CursorPos X="23" Y="91"/>
+        <TopLine Value="60"/>
+        <CursorPos X="19" Y="71"/>
         <UsageCount Value="20"/>
         <Loaded Value="True"/>
       </Unit1>
@@ -60,7 +60,7 @@
         <Filename Value="..\..\sequence\alignment.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="alignment"/>
-        <EditorIndex Value="5"/>
+        <EditorIndex Value="6"/>
         <WindowIndex Value="0"/>
         <TopLine Value="27"/>
         <CursorPos X="3" Y="39"/>
@@ -70,7 +70,7 @@
       <Unit3>
         <Filename Value="C:\lazarus\fpc\2.4.3\source\packages\fcl-base\src\custapp.pp"/>
         <UnitName Value="CustApp"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="3"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="14" Y="63"/>
@@ -80,10 +80,10 @@
       <Unit4>
         <Filename Value="..\..\general\ocstringutils.pas"/>
         <UnitName Value="ocstringutils"/>
-        <EditorIndex Value="4"/>
+        <EditorIndex Value="5"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="9"/>
-        <CursorPos X="31" Y="21"/>
+        <TopLine Value="27"/>
+        <CursorPos X="3" Y="223"/>
         <UsageCount Value="10"/>
         <Loaded Value="True"/>
       </Unit4>
@@ -98,7 +98,7 @@
       <Unit6>
         <Filename Value="..\..\utils\debugutils.pas"/>
         <UnitName Value="debugutils"/>
-        <EditorIndex Value="7"/>
+        <EditorIndex Value="8"/>
         <WindowIndex Value="0"/>
         <TopLine Value="117"/>
         <CursorPos X="15" Y="75"/>
@@ -108,7 +108,7 @@
       <Unit7>
         <Filename Value="..\..\parsing\clustalparser.pas"/>
         <UnitName Value="clustalparser"/>
-        <EditorIndex Value="1"/>
+        <EditorIndex Value="2"/>
         <WindowIndex Value="0"/>
         <TopLine Value="43"/>
         <CursorPos X="3" Y="74"/>
@@ -119,15 +119,26 @@
         <Filename Value="..\..\parsing\msablocksparser.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="msablocksparser"/>
-        <EditorIndex Value="6"/>
+        <EditorIndex Value="7"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="80"/>
-        <CursorPos X="31" Y="94"/>
+        <TopLine Value="16"/>
+        <CursorPos X="29" Y="12"/>
         <UsageCount Value="20"/>
         <Loaded Value="True"/>
       </Unit8>
+      <Unit9>
+        <Filename Value="..\..\parsing\msaconstraints.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="msaconstraints"/>
+        <EditorIndex Value="1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="60"/>
+        <CursorPos X="49" Y="63"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+      </Unit9>
     </Units>
-    <JumpHistory Count="20" HistoryIndex="19">
+    <JumpHistory Count="24" HistoryIndex="23">
       <Position1>
         <Filename Value="..\..\utils\debugutils.pas"/>
         <Caret Line="21" Column="71" TopLine="1"/>
@@ -208,6 +219,22 @@
         <Filename Value="msaparser.lpr"/>
         <Caret Line="96" Column="48" TopLine="88"/>
       </Position20>
+      <Position21>
+        <Filename Value="msaparser.lpr"/>
+        <Caret Line="84" Column="16" TopLine="65"/>
+      </Position21>
+      <Position22>
+        <Filename Value="msaparser.lpr"/>
+        <Caret Line="46" Column="16" TopLine="36"/>
+      </Position22>
+      <Position23>
+        <Filename Value="..\..\parsing\msfparser.pas"/>
+        <Caret Line="71" Column="21" TopLine="60"/>
+      </Position23>
+      <Position24>
+        <Filename Value="msaparser.lpr"/>
+        <Caret Line="83" Column="26" TopLine="74"/>
+      </Position24>
     </JumpHistory>
   </ProjectOptions>
   <CompilerOptions>
