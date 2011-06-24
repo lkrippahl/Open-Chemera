@@ -86,7 +86,23 @@ end;
 
 
 procedure SaveMSF(const ToFile:string; const MSA:TMSA);
-//TO DO: add header data
+
+procedure WriteHeader(Sl:TStringList);
+
+var
+  f:Integer;
+  s,t:string;
+
+begin
+  t:=IntToStr(Length(MSA.Alignment[0]));
+  Sl.Add('MSF: '+t+'Type: P  Check: 0 ..');
+  Sl.Add('');
+  for f:=0 to High(MSA.SequenceIDs) do
+    begin
+    Sl.Add('Name: '+MSA.SequenceIDs[f]+' Length: '+t+' Check: 0 Weight: 1.00');
+    end;
+  Sl.Add('//');
+end;
 
 function MaxIdLength:Integer;
 
@@ -109,6 +125,7 @@ begin
   if MSA.Alignment=nil then
     Exit;
   sl:=TStringList.Create;
+  WriteHeader(sl);
   idlen:=MaxIdLength+1; //length of string for id, including spaces at the end
   seqlen:=Length(MSA.Alignment[0]);
   cix:=1;              //current column in alignment

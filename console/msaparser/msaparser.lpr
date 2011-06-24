@@ -62,12 +62,19 @@ begin
     MSA:=ReadClustal(infile);
     SaveMSF(outfile,MSA);
     end
+  else if command='H' then
+    begin
+    infile:=ParamStr(2);
+    outfile:=ParamStr(3);
+    MSA:=ReadMSF(infile);
+    SaveMSF(outfile,MSA);
+    end
   else if command='M' then
     begin
     infile:=ParamStr(2);
     blockfile:=ParamStr(3);
     outfile:=ParamStr(4);
-    MSA:=ReadClustal(infile);
+    MSA:=ReadMSF(infile);
     MergeBlocks(MSA,blockfile);
     SaveMSF(outfile,MSA);
     WriteLn('Merge OK');
@@ -106,9 +113,11 @@ begin
   { add your help code here }
   WriteLn('Usage: ',ExtractFileName(ExeName),'command params');
   WriteLn('Command: c (convert MSA files)');
-  WriteLn('Params: infile.aln outfile.msf (MSA formats are determined by the extension)');
+  WriteLn('Params: infile.aln outfile.msf ');
+  WriteLn('Command: h (add header to msf file)');
+  WriteLn('Params: infile.msf outfile.msf');
   WriteLn('Command: m (merge blocks into a .msf file)');
-  WriteLn('Params: infile.aln blockfile outfile.msf');
+  WriteLn('Params: infile.msf blockfile outfile.msf');
   WriteLn('Command: cp (create blocks and alignment file)');
   WriteLn('Params: infile.msf outfile minshiftable');
   WriteLn('(outfile has no extension, will be used for .blocs and .msa;');
