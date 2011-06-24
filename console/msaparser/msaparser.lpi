@@ -41,19 +41,18 @@
         <WindowIndex Value="0"/>
         <TopLine Value="53"/>
         <CursorPos X="23" Y="71"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="51"/>
         <Loaded Value="True"/>
       </Unit0>
       <Unit1>
         <Filename Value="..\..\parsing\msfparser.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="msfparser"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="4"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="89"/>
-        <CursorPos X="50" Y="102"/>
-        <UsageCount Value="21"/>
+        <TopLine Value="24"/>
+        <CursorPos X="35" Y="78"/>
+        <UsageCount Value="51"/>
         <Loaded Value="True"/>
       </Unit1>
       <Unit2>
@@ -64,7 +63,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="27"/>
         <CursorPos X="3" Y="39"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="51"/>
         <Loaded Value="True"/>
       </Unit2>
       <Unit3>
@@ -74,7 +73,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="14" Y="63"/>
-        <UsageCount Value="11"/>
+        <UsageCount Value="26"/>
         <Loaded Value="True"/>
       </Unit3>
       <Unit4>
@@ -82,9 +81,9 @@
         <UnitName Value="ocstringutils"/>
         <EditorIndex Value="5"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="27"/>
+        <TopLine Value="30"/>
         <CursorPos X="3" Y="223"/>
-        <UsageCount Value="11"/>
+        <UsageCount Value="26"/>
         <Loaded Value="True"/>
       </Unit4>
       <Unit5>
@@ -93,7 +92,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="2420"/>
         <CursorPos X="18" Y="2432"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="7"/>
       </Unit5>
       <Unit6>
         <Filename Value="..\..\utils\debugutils.pas"/>
@@ -102,17 +101,18 @@
         <WindowIndex Value="0"/>
         <TopLine Value="117"/>
         <CursorPos X="15" Y="75"/>
-        <UsageCount Value="11"/>
+        <UsageCount Value="26"/>
         <Loaded Value="True"/>
       </Unit6>
       <Unit7>
         <Filename Value="..\..\parsing\clustalparser.pas"/>
         <UnitName Value="clustalparser"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
         <WindowIndex Value="0"/>
         <TopLine Value="43"/>
-        <CursorPos X="3" Y="74"/>
-        <UsageCount Value="11"/>
+        <CursorPos X="89" Y="57"/>
+        <UsageCount Value="26"/>
         <Loaded Value="True"/>
       </Unit7>
       <Unit8>
@@ -123,7 +123,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="16"/>
         <CursorPos X="29" Y="12"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="51"/>
         <Loaded Value="True"/>
       </Unit8>
       <Unit9>
@@ -134,7 +134,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="60"/>
         <CursorPos X="49" Y="63"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="51"/>
         <Loaded Value="True"/>
       </Unit9>
     </Units>

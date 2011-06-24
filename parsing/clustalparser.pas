@@ -53,7 +53,8 @@ begin
 
       while Pos('|',nam)>0 do  // EBI clustal has accession code etc before ide
         accesscode:=SnipString(nam,'|');
-      nam:=accesscode+'|'+nam; // compose name with accession code to prevent duplicates
+      if accesscode<>'' then   // compose name with accession code to prevent duplicates
+        nam:=accesscode+'|'+nam;
       Ix:=LastIndexOf(nam,Result.SequenceIDs);
       if Ix<0 then
         begin

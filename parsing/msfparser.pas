@@ -50,7 +50,7 @@ var
   end;
 
 var
-  f,Ix:Integer;
+  f,Ix,g:Integer;
   nam,seq,s,accesscode:string;
 
 
@@ -69,7 +69,10 @@ begin
     if nam<>'' then
       begin
       seq:=Deblank(s);
-      WriteLn(Seq);
+      for g:=1 to Length(seq) do
+        //TO DO: improve this to convert all gaps used in mds
+        if seq[g]='.' then seq[g]:=Result.GapMarker;
+
       Ix:=LastIndexOf(nam,Result.SequenceIDs);
       if Ix<0 then
         begin
