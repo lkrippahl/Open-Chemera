@@ -10,7 +10,6 @@ Requirements:
 Revisions:
 To do:
 *******************************************************************************}
-
 unit geomhash;
 
 {$mode objfpc}
@@ -25,95 +24,83 @@ type
   { TGeomHasher }
 
   TGeomHasher=class
-  //TO USE: create, AssignCoords, Hash. Then use NeighbourWithin to query
+  //The size of the grid cell must be > 1e-6 and the points array must not
+  //be empty
   private
-    FHashGrid:array of array of array of TOCIntegers; //indexes of hashed coords
-    FCoords:TOCCoords;
-    FMinC,FMaxC,FMinusMinc:TOCCoord;
-    FGridStep,FOneOverGridStep:TOCFloat;
-    FHighX,FHighY,FHighZ:Integer;                     //High values for hashgrid
-    procedure FindMaxMin;
-    procedure AddToGrid(C:TOCCoord;Ix:Integer);
+    FHashGrid:array of array of array of TOCIntegers;  //indexes of hashed points
+    FShiftToGrid:TOCCoord;
+    FInvGridStep:TOCFloat;                             // 1/gridstep
+    FHighX,FHighY,FHighZ:Integer;                      //max grid cells
   public
-    property Coords:TOCCoords read FCoords;
-    procedure AssignCoords(const ACoords:TOCCoords);   //copies coordinates array
-    procedure Hash(AGridStep:TOCFloat);
-    function NeighboursWithin(C:TOCCoord; Dist:TOCFloat):TOCIntegers;
+    constructor Create(Points:TOCCoords;GridStep:TOCFloat);
+    function ListNeighours(C:TOCCoord):TOCIntegers;
+      //Returns all indexes in the 27 grid cells belonging to the neighbourhood
+      //of the cell corresponding to C
   end;
 
 implementation
 
 { TGeomHasher }
 
-procedure TGeomHasher.FindMaxMin;
+constructor TGeomHasher.Create(Points:TOCCoords;GridStep:TOCFloat);
 
-var f:Integer;
+  procedure Setup;
+
+  var
+    f:Integer;
+    minc,maxc:TOCCoord;
+
+  begin
+  maxc:=Points[0];
+  minc:=maxc;
+  for f:=1 to High(Points) do
+    begin
+    minc:=Min(minc,Points[f]);
+    maxc:=Max(maxc,Points[f]);
+    end;
+  FShiftToGrid:=ScaleVector(minc,-1);
+  FHighX:=Trunc((maxc[0]-minc[0])/GridStep);
+  FHighY:=Trunc((maxc[1]-minc[1])/GridStep);
+  FHighZ:=Trunc((maxc[2]-minc[2])/GridStep);
+  SetLength(FHashGrid,FHighX+1,FHighY+1,FHighZ+1);
+  end;
+
+var
+  f,x,y,z:Integer;
+  c:TOCCoord;
 
 begin
-  if FCoords<>nil then
+  inherited Create;
+  Assert(Points<>nil,'Empty points array for hashing');
+  Assert(GridStep>1e-6,'GridStep too small');
+  GridStep:=1/GridStep;
+  FInvGridStep:=GridStep;
+  Setup;
+  for x:=0 to FHighX do
+    for y:=0 to FHighY do
+      for z:=0 to FHighZ do
+        FHashGrid[x,y,z]:=nil;
+  for f:=0 to High(Points) do
     begin
-    FMaxC:=FCoords[0];
-    FMinC:=FMaxC;
-    for f:=1 to High(FCoords) do
-      begin
-      FMinC:=Min(FMinC,FCoords[f]);
-      FMaxC:=Max(FMaxC,FCoords[f]);
-      end;
-    FMinusMinC:=ScaleVector(FMinC,-1);
+    c:=AddVectors(Points[f],FShiftToGrid);
+    x:=Trunc(c[0]*GridStep);
+    y:=Trunc(c[1]*GridStep);
+    z:=Trunc(c[2]*GridStep);
+    AddToArray(f, FHashGrid[x,y,z]);
     end;
 end;
 
-procedure TGeomHasher.AddToGrid(C: TOCCoord; Ix: Integer);
+function TGeomHasher.ListNeighours(C:TOCCoord):TOCIntegers;
 
-var x,y,z:Integer;
-
-begin
-  C:=AddVectors(ScaleVector(C,FOneOverGridStep),FMinusMinC);
-  x:=Trunc(C[0]);
-  y:=Trunc(C[1]);
-  z:=Trunc(C[2]);
-  Assert((x>=0) and (x<=FHighX) and
-         (y>=0) and (y<=FHighX) and
-         (z>=0) and (z<=FHighX),'Out of hasgrid bounds');
-  AddToArray(Ix, FHashGrid[x,y,z]);
-end;
-
-procedure TGeomHasher.AssignCoords(const ACoords: TOCCoords);
-begin
-  FCoords:=Copy(ACoords, 0, Length(ACoords));
-  FHashGrid:=nil;
-end;
-
-procedure TGeomHasher.Hash(AGridStep: TOCFloat);
-
-var f,g,h:Integer;
-
-begin
-  FindMaxMin;
-  FGridStep:=AGridStep;
-  FOneOverGridStep:=1/AGridStep;
-  FHighX:=Trunc((FMaxC[0]-FMinC[0])/FGridStep);
-  FHighY:=Trunc((FMaxC[1]-FMinC[1])/FGridStep);
-  FHighZ:=Trunc((FMaxC[2]-FMinC[2])/FGridStep);
-  SetLength(FHashGrid,FHighX+1,FHighY+1,FHighZ+1);
-  for f:=0 to FHighX do
-    for g:=0 to FHighY do
-      for h:=0 to FHighZ do
-        FHashGrid[f,g,h]:=nil;
-  for f:=0 to High(FCoords) do
-    AddToGrid(FCoords[f],f);
-end;
-
-function TGeomHasher.NeighboursWithin(C:TOCCoord; Dist: TOCFloat): TOCIntegers;
 
 var
-  x,y,z,x1,x2,y1,y2,z1,z2,f:Integer;
+  count,x,y,z,x1,x2,y1,y2,z1,z2,f:Integer;
 
-procedure Bounds(out B1,B2:Integer; const Val,Min:TOCFloat; const Hi:Integer);
+procedure Bounds(out B1,B2:Integer; const Val:TOCFloat; const Hi:Integer);
 
 begin
-  B1:=Trunc(Val-Min-Dist);
-  B2:=Trunc(Val-Min+Dist);
+  B1:=Trunc(Val)-1;
+  B2:=Trunc(Val)+1;
   if B1>Hi then B1:=Hi;
   if B1<0 then B1:=0;
   if B2>Hi then B2:=Hi;
@@ -121,16 +108,26 @@ begin
 end;
 
 begin
+  C:=ScaleVector(AddVectors(C,FShiftToGrid),FInvGridStep);
   Result:=nil;
-  Bounds(x1,x2,C[0],FMinC[0],FHighX);
-  Bounds(y1,y2,C[1],FMinC[1],FHighY);
-  Bounds(z1,z2,C[2],FMinC[2],FHighZ);
+  Bounds(x1,x2,C[0],FHighX);
+  Bounds(y1,y2,C[1],FHighY);
+  Bounds(z1,z2,C[2],FHighZ);
+  count:=0;
   for x:=x1 to x2 do
     for y:=y1 to y2 do
       for z:=z1 to z2 do
-       for f:=0 to High(FHashGrid[x,y,z]) do
-        if Distance(FCoords[FHashGrid[x,y,z,f]],C)<=Dist then
-          AddToArray(FHashGrid[x,y,z,f],Result);
+       count:=count+Length(FHashGrid[x,y,z]);
+  SetLength(Result,count);
+  count:=0;
+  for x:=x1 to x2 do
+    for y:=y1 to y2 do
+      for z:=z1 to z2 do
+        for f:=0 to High(FHashGrid[x,y,z]) do
+          begin
+          Result[count]:=FHashGrid[x,y,z,f];
+          Inc(count);
+          end;
 end;
 
 end.

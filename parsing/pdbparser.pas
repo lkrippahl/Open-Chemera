@@ -24,7 +24,7 @@ unit pdbparser;
 interface
 
 uses
-  Classes, SysUtils, basetypes, ocstringutils, zstream, LCLProc;
+  Classes, SysUtils, basetypes, ocstringutils, zstream;
 
 type
   TPDBAtom = record

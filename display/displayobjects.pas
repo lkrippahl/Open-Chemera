@@ -146,6 +146,7 @@ begin
         begin
         ol.Objects[g].ObjectType:=otSphere;
         ol.Objects[g].sphC:=al[g].Coords;
+        //TODO: add radius information...
         ol.Objects[g].Rad:=1;
         end;
     FDisplay.AddObjectList(ol);

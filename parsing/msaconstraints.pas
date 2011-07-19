@@ -239,9 +239,6 @@ var
   pref,suf:string;
 
 begin
-  sl.Add('***Block***');
-  sl.Add('Start:'+IntToStr(Start));
-  sl.Add('Count:'+IntToStr(Count));
   if Start<1 then
     begin
       pref:=FMSA.GapMarker;
@@ -251,12 +248,17 @@ begin
   if Count+Start>Length(FMSA.Alignment[0]) then
     begin
       suf:=FMSA.GapMarker;
-      Count:=Count-1;
+      Count:=Length(FMSA.Alignment[0])-Start-1;
     end
     else suf:='';
-
-  for f:=0 to High(FMSA.Alignment) do
-    sl.Add(pref+Copy(FMSA.Alignment[f],Start,Count)+suf);
+  if Count>0 then
+    begin
+    sl.Add('***Block***');
+    sl.Add('Start:'+IntToStr(Start));
+    sl.Add('Count:'+IntToStr(Count));
+    for f:=0 to High(FMSA.Alignment) do
+      sl.Add(pref+Copy(FMSA.Alignment[f],Start,Count)+suf);
+    end;
 end;
 
 procedure BuildList;

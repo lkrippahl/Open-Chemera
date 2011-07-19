@@ -212,16 +212,16 @@ function Min(const C1,C2:TOCCoord):TOCCoord;overload;
 
 begin
   if C1[0]<C2[0] then Result[0]:=C1[0] else Result[0]:=C2[0];
-  if C1[1]<C2[1] then Result[0]:=C1[1] else Result[1]:=C2[1];
-  if C1[2]<C2[2] then Result[0]:=C1[2] else Result[2]:=C2[2];
+  if C1[1]<C2[1] then Result[1]:=C1[1] else Result[1]:=C2[1];
+  if C1[2]<C2[2] then Result[2]:=C1[2] else Result[2]:=C2[2];
 end;
 
 function Max(const C1,C2:TOCCoord):TOCCoord;overload;
 
 begin
   if C1[0]>C2[0] then Result[0]:=C1[0] else Result[0]:=C2[0];
-  if C1[1]>C2[1] then Result[0]:=C1[1] else Result[1]:=C2[1];
-  if C1[2]>C2[2] then Result[0]:=C1[2] else Result[2]:=C2[2];
+  if C1[1]>C2[1] then Result[1]:=C1[1] else Result[1]:=C2[1];
+  if C1[2]>C2[2] then Result[2]:=C1[2] else Result[2]:=C2[2];
 end;
 
 function Coord(X,Y,Z:TOCFloat):TOCCoord;
