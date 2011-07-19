@@ -23,7 +23,7 @@ unit molecules;
 interface
 
 uses
-  Classes, SysUtils, basetypes,LCLProc;
+  Classes, SysUtils, basetypes;
 
 const
   //bond types
@@ -73,6 +73,7 @@ type
     property Coords:TOCCoord read FCoord write FCoord;
     property Charge:TOCFloat read FCharge write FCharge;
     property ID:Integer read FID write FID;       //should be unique for each molecule
+    property Parent:TAbstractMolecule read FParent;
     constructor Create(AName:string; AID:Integer;AParent:TAbstractMolecule);
   end;
 
@@ -172,7 +173,6 @@ begin
   FID:=AID;
 end;
 
-
 { TMolecule }
 
 function TMolecule.AtomIndex(AAtom: TAtom): Integer;
@@ -254,14 +254,13 @@ begin
         tmp[i]:=FBondsTable[f];
         Inc(i);
         end;
-
   //resize and store
   SetLength(tmp,i);
   FBondsTable:=tmp;
   for f:=0 to High(FGroups) do
       //No more callbacks, as one should be enough to warn about all deletions
       //involving tagged atoms
-      RemoveTaggedAtomBonds(Tag);
+      FGroups[f].RemoveTaggedAtomBonds(Tag);
 end;
 
 procedure TMolecule.RemoveTaggedBonds(Tag: Integer;

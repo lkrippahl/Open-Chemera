@@ -18,12 +18,16 @@ Requirements:
 Revisions:
 To do:
   Comments
+
+  Adding H atoms
+
   add data from CCD
   http://www.wwpdb.org/ccd.html
   (need mmCIF first)
 
   Implement gromos force field (a separate unit for the force fields?)
   http://www.gromacs.org/Downloads/User_contributions/Force_fields
+
 *******************************************************************************}
 
 unit pdbmolecules;
@@ -33,7 +37,7 @@ unit pdbmolecules;
 interface
 
 uses
-  Classes, SysUtils, basetypes, molecules, pdbparser, FileUtil, LCLProc;
+  Classes, SysUtils, basetypes, molecules, pdbparser, FileUtil;
 
 type
 
@@ -58,6 +62,7 @@ type
     FInfo: TPDBLayerInfo;
   public
     property Info: TPDBLayerInfo read FInfo write FInfo;
+    property Molecule:TMolecule read FProtein;
     constructor Create(Templates: TTemplates;AID:Integer);
     procedure Free;
     procedure ClearChains;
@@ -88,7 +93,7 @@ type
     function LayerByIx(Ix: integer): TPDBLayer;
     function AddNewLayer: TPDBLayer;
     function LoadLayer(PdbFileName: string):TMolecule;
-
+    procedure ClearLayers;
   end;
 
 implementation
@@ -191,6 +196,7 @@ begin
       if ResSeq<>cr then                  //get new residue
         begin
         cres:=FProtein.GetGroup(cc).NewGroup(ResName,ResSeq);
+        cr:=ResSeq;
         end;
       atom:=cres.NewAtom(AtomName,Serial);
       atom.Coords:=Coords;
@@ -302,6 +308,16 @@ function TPDBLayerMan.LoadLayer(PdbFileName: string):TMolecule;
 
 begin
   Result:=AddNewLayer.LoadPDB(PdbFileName);
+end;
+
+procedure TPDBLayerMan.ClearLayers;
+
+var f:Integer;
+
+begin
+  for f:=0 to High(FLayers) do
+    FLayers[f].Free;
+  FLayers:=nil;
 end;
 
 end.

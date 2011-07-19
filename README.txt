@@ -4,14 +4,9 @@
 **************           Library             **************
 *****************                        ******************
 ***********************************************************
+       Open source library for Chemera and BiGGER
+                     Version: 0.1
 
-Version: 0.1
-
-Open source rewrite of Chemera and BiGGER, as a more useful
-library.
-
-Eventually, it will serve for molecular visualization, 
-moddelling and Protein-Protein docking.
 
 ***********************************************************
 ******                   DISCLAIMER                  ******
@@ -26,8 +21,8 @@ Use this software at your own risk.
 ******                   Copyright                   ******
 
 This software is public domain. You have the right to copy, 
-distribute, reuse, modify, improve and debug it. 
-Especially this last one.
+distribute, reuse, modify, improve and debug it. Especially
+this last one.
 
 The *.pdb files in the data/ligands folder are from the
 PDBeChem ligand dictionary. For more information, see

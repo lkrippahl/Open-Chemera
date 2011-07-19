@@ -27,47 +27,47 @@ const
   MCXYZRotation=0;
   MCRotationXYAxis=1;
 
-function AddToVector(v1:TOCCoord;r:TOCFloat):TOCCoord;
-function LargestVector(v1,v2:TOCCoord):TOCCoord;
-function SmallestVector(v1,v2:TOCCoord):TOCCoord;
-function DotProduct(v1,v2:TOCCoord):TOCFloat;
-function Normalise(v1: TOCCoord): TOCCoord;
-function CrossProduct(v1, v2: TOCCoord): TOCCoord;
-function BuildBase(v1, v2: TOCCoord): TMatrix;
-function RotMatrix(m1, m2: TMatrix): TMatrix;
-function InvertBase(m: TMatrix): TMatrix;
+function AddToVector(const v1:TOCCoord;r:TOCFloat):TOCCoord;
+function LargestVector(const v1,v2:TOCCoord):TOCCoord;
+function SmallestVector(const v1,v2:TOCCoord):TOCCoord;
+function DotProduct(const v1,v2:TOCCoord):TOCFloat;
+function Normalise(const v1: TOCCoord): TOCCoord;
+function CrossProduct(const v1, v2: TOCCoord): TOCCoord;
+function BuildBase(const v1, v2: TOCCoord): TMatrix;
+function RotMatrix(const m1, m2: TMatrix): TMatrix;
+function InvertBase(const m: TMatrix): TMatrix;
 function GetPlacementMatrix(f1, f2, m1, m2: TOCCoord): TMatrix; overload;
 function GetPlacementMatrix(f1, m1: TOCCoord): TMatrix; overload;
-function Distance(Point1,Point2:TOCCoord):Double;
-function RotVector(m: TMAtrix; v: TOCCoord): TOCCoord;
-function AddVectors(v1,v2:TOCCoord):TOCCoord;
-function PointsToVector(Origin,Destination:TOCCoord):TOCCoord;
-function SubtractVectors(Initial,Subtract:TOCCoord):TOCCoord;
-function ScaleVector(v1:TOCCoord; scale:TOCFloat):TOCCoord;
-function SimmetricVector(v1:TOCCoord):TOCCoord;
-function MidPoint(v1,v2:TOCCoord):TOCCoord;
-function BuildRotation(R1:TOCCoord;RotType:Integer):TMatrix;
-function OldBuildRotation(R1:TOCCoord):TMatrix; //for old cdock compatibility only
-function VectorSize(v:TOCCoord):Double;
-function EqualVectors(v1,v2:TOCCoord):Boolean;
-function RotateXToXY(v1:TOCCoord):TMatrix;
-function TransformVector(Pivot:TOCCoord;Rotation:TMatrix;Place,Vector:TOCCoord):TOCCoord;
-function RotAndPlace(Rotation:TMatrix;Place,Vector:TOCCoord):TOCCoord;overload;
-procedure RotAndPlace(Rotation:TMatrix;Place:TOCCoord;var Coords:TOCCoords);overload;
+function Distance(const Point1,Point2:TOCCoord):TOCFLoat;
+function RotVector(const m: TMAtrix; const v: TOCCoord): TOCCoord;
+function AddVectors(const v1,v2:TOCCoord):TOCCoord;
+function PointsToVector(const Origin,Destination:TOCCoord):TOCCoord;
+function SubtractVectors(const Initial,Subtract:TOCCoord):TOCCoord;
+function ScaleVector(const v1:TOCCoord; scale:TOCFloat):TOCCoord;
+function SimmetricVector(const v1:TOCCoord):TOCCoord;
+function MidPoint(const v1,v2:TOCCoord):TOCCoord;
+function BuildRotation(const R1:TOCCoord; RotType:Integer):TMatrix;
+function OldBuildRotation(const R1:TOCCoord):TMatrix; //for old cdock compatibility only
+function VectorSize(const v:TOCCoord):Double;
+function EqualVectors(const v1,v2:TOCCoord):Boolean;
+function RotateXToXY(const v1:TOCCoord):TMatrix;
+function TransformVector(const Pivot:TOCCoord;Rotation:TMatrix;Place,Vector:TOCCoord):TOCCoord;
+function RotAndPlace(const Rotation:TMatrix;const Place,Vector:TOCCoord):TOCCoord;overload;
+procedure RotAndPlace(const Rotation:TMatrix;const Place:TOCCoord;var Coords:TOCCoords);overload;
 function XRotation(Angle:TOCFloat):TMatrix;
 function YRotation(Angle:TOCFloat):TMatrix;
 function ZRotation(Angle:TOCFloat):TMatrix;
-function DihedralAngle(c1, c2, c3, c4: TOCCoord):TOCFloat;
+function DihedralAngle(const c1, c2, c3, c4: TOCCoord):TOCFloat;
 function RotationAngle(Axis,Pivot,P1,P2:TOCCoord):TOCFloat;
 function AxisRotationMatrix(Axis:TOCCoord;Angle:TOCFloat):TMatrix;
 function AngularDifference(A1,A2:TOCFloat):TOCFloat;
 function AngleIsBetween(Low,High,Angle:TOCFloat):Boolean;
 function FixAngle(Angle:TOCFloat):TOCFloat;
-function Foot(LinePoint,LineVector,Point:TOCCoord):TOCCoord;
-function TopCorner(c1,c2:TOCCoord):TOCCoord;
-function BottomCorner(c1,c2:TOCCoord):TOCCoord;
+function Foot(const LinePoint,LineVector,Point:TOCCoord):TOCCoord;
+function TopCorner(const c1,c2:TOCCoord):TOCCoord;
+function BottomCorner(const c1,c2:TOCCoord):TOCCoord;
 function SmallestAxis(c:TOCCoord):Integer;
-function LongestCoord(c:TOCCoord):TOCFloat;
+function LongestCoord(const c:TOCCoord):TOCFloat;
 
 implementation
 
@@ -75,7 +75,7 @@ uses Math;
 
 const TOL=0.00001;
 
-function AddToVector(v1:TOCCoord;r:TOCFLoat):TOCCoord;
+function AddToVector(const v1:TOCCoord;r:TOCFLoat):TOCCoord;
 
 begin
   Result[0]:=v1[0]+r;
@@ -83,7 +83,7 @@ begin
   Result[2]:=v1[2]+r;
 end;
 
-function LargestVector(v1,v2:TOCCoord):TOCCoord;
+function LargestVector(const v1,v2:TOCCoord):TOCCoord;
 
 begin
   if v1[0]>v2[0] then Result[0]:=v1[0] else Result[0]:=v2[0];
@@ -91,7 +91,7 @@ begin
   if v1[2]>v2[2] then Result[2]:=v1[2] else Result[2]:=v2[2];
 end;
 
-function SmallestVector(v1,v2:TOCCoord):TOCCoord;
+function SmallestVector(const v1,v2:TOCCoord):TOCCoord;
 
 begin
   if v1[0]<v2[0] then Result[0]:=v1[0] else Result[0]:=v2[0];
@@ -99,7 +99,7 @@ begin
   if v1[2]<v2[2] then Result[2]:=v1[2] else Result[2]:=v2[2];
 end;
 
-function DotProduct(v1,v2:TOCCoord):TOCFloat;
+function DotProduct(const v1,v2:TOCCoord):TOCFloat;
 
 begin
   Result:=v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2];
@@ -160,7 +160,7 @@ begin
 end;
 
 
-function EqualVectors(v1,v2:TOCCoord):Boolean;
+function EqualVectors(const v1,v2:TOCCoord):Boolean;
 
 begin
   Result:=(v1[0]=v2[0]) and
@@ -169,13 +169,13 @@ begin
 end;
 
 
-function VectorSize(v:TOCCoord):Double;
+function VectorSize(const v:TOCCoord):Double;
 
 begin
   Result:=sqrt(sqr(v[0])+sqr(v[1])+sqr(v[2]));
 end;
 
-function OldBuildRotation(R1:TOCCoord):TMatrix;
+function OldBuildRotation(const R1:TOCCoord):TMatrix;
 
 
 {Ú                                        ¿}
@@ -236,7 +236,7 @@ begin
      Result[2,2]:=(c1*c2);
 end;
 
-function BuildRotation(R1:TOCCoord;RotType:Integer):TMatrix;
+function BuildRotation(const R1:TOCCoord;RotType:Integer):TMatrix;
 
 begin
   case RotType of
@@ -250,28 +250,28 @@ begin
     end;
 end;
 
-function PointsToVector(Origin,Destination:TOCCoord):TOCCoord;
+function PointsToVector(const Origin,Destination:TOCCoord):TOCCoord;
 begin
   Result[0]:=Destination[0]-Origin[0];
   Result[1]:=Destination[1]-Origin[1];
   Result[2]:=Destination[2]-Origin[2];
 end;
 
-function SubtractVectors(Initial,Subtract:TOCCoord):TOCCoord;
+function SubtractVectors(const Initial,Subtract:TOCCoord):TOCCoord;
 begin
   Result[0]:=Initial[0]-Subtract[0];
   Result[1]:=Initial[1]-Subtract[1];
   Result[2]:=Initial[2]-Subtract[2];
 end;
 
-function RotVector(m: TMAtrix; v: TOCCoord): TOCCoord;
+function RotVector(const  m: TMAtrix; const v: TOCCoord): TOCCoord;
 begin
      result[0]:=m[0,0]*v[0]+m[0,1]*v[1]+m[0,2]*v[2];
      result[1]:=m[1,0]*v[0]+m[1,1]*v[1]+m[1,2]*v[2];
      result[2]:=m[2,0]*v[0]+m[2,1]*v[1]+m[2,2]*v[2];
 end;
 
-function AddVectors(v1,v2:TOCCoord):TOCCoord;
+function AddVectors(const v1,v2:TOCCoord):TOCCoord;
 
 begin
   Result[0]:=v1[0]+v2[0];
@@ -279,14 +279,14 @@ begin
   Result[2]:=v1[2]+v2[2];
 end;
 
-function MidPoint(v1,v2:TOCCoord):TOCCoord;
+function MidPoint(const v1,v2:TOCCoord):TOCCoord;
 
 begin
   Result:=ScaleVector(AddVectors(v1,v2),0.5);
 end;
 
 
-function ScaleVector(v1:TOCCoord; scale:TOCFloat):TOCCoord;
+function ScaleVector(const v1:TOCCoord; scale:TOCFloat):TOCCoord;
 
 begin
   Result[0]:=v1[0]*scale;
@@ -294,7 +294,7 @@ begin
   Result[2]:=v1[2]*scale;
 end;
 
-function SimmetricVector(v1:TOCCoord):TOCCoord;
+function SimmetricVector(const v1:TOCCoord):TOCCoord;
 
 begin
   Result[0]:=-v1[0];
@@ -302,7 +302,7 @@ begin
   Result[2]:=-v1[2];
 end;
 
-function Distance(Point1,Point2:TOCCoord):Double;
+function Distance(const Point1,Point2:TOCCoord):Double;
 
 begin
   Result:=Sqrt(Sqr(Point1[0]-Point2[0])+
@@ -310,7 +310,7 @@ begin
                Sqr(Point1[2]-Point2[2]));
 end;
 
-function Normalise(v1: TOCCoord): TOCCoord;
+function Normalise(const v1: TOCCoord): TOCCoord;
 
 var r:double;
     f:integer;
@@ -327,14 +327,14 @@ begin
             end;
 end;
 
-function CrossProduct(v1, v2: TOCCoord): TOCCoord;
+function CrossProduct(const v1, v2: TOCCoord): TOCCoord;
 begin
      Result[0]:=v1[1]*v2[2]-v1[2]*v2[1];
      Result[1]:=v1[2]*v2[0]-v1[0]*v2[2];
      Result[2]:=v1[0]*v2[1]-v1[1]*v2[0];
 end;
 
-function BuildBase(v1, v2: TOCCoord): TMatrix;
+function BuildBase(const v1, v2: TOCCoord): TMatrix;
 {v1 e v2 normalisados}
 var t,t2:TOCCoord;
     f:integer;
@@ -353,7 +353,7 @@ begin
          end;
 end;
 
-function RotMatrix(m1, m2: TMatrix): TMatrix;
+function RotMatrix(const m1, m2: TMatrix): TMatrix;
 
 var f,g:integer;
 
@@ -363,7 +363,7 @@ begin
      Result[f,g]:=m1[f,0]*m2[0,g]+m1[f,1]*m2[1,g]+m1[f,2]*m2[2,g];
 end;
 
-function InvertBase(m: TMatrix): TMatrix;
+function InvertBase(const m: TMatrix): TMatrix;
 
 var f,g:integer;
 
@@ -407,7 +407,7 @@ begin
       end;
 end;
 
-function RotateXToXY(v1:TOCCoord):TMatrix;
+function RotateXToXY(const v1:TOCCoord):TMatrix;
 
 var
   l,s,c:TOCFloat;
@@ -427,21 +427,21 @@ begin
   Result[2,2]:=c;
 end;
 
-function TransformVector(Pivot:TOCCoord;Rotation:TMatrix;Place,Vector:TOCCoord):TOCCoord;
+function TransformVector(const Pivot:TOCCoord;Rotation:TMatrix;Place,Vector:TOCCoord):TOCCoord;
 
 begin
   Result:=SubtractVectors(Vector,Pivot);
   Result:=RotAndPlace(Rotation,Place,Result);
 end;
 
-function RotAndPlace(Rotation:TMatrix;Place,Vector:TOCCoord):TOCCoord;
+function RotAndPlace(const Rotation:TMatrix;const Place,Vector:TOCCoord):TOCCoord;
 
 begin
   Result:=RotVector(Rotation,Vector);
   Result:=AddVectors(Result,Place);
 end;
 
-procedure RotAndPlace(Rotation:TMatrix;Place:TOCCoord;var Coords:TOCCoords);
+procedure RotAndPlace(const Rotation:TMatrix;const Place:TOCCoord;var Coords:TOCCoords);
 
 var f:Integer;
 
@@ -450,7 +450,7 @@ begin
     Coords[f]:=RotAndPlace(Rotation,Place,Coords[f]);
 end;
 
-function DihedralAngle(c1, c2, c3, c4: TOCCoord):TOCFloat;
+function DihedralAngle(const c1, c2, c3, c4: TOCCoord):TOCFloat;
 
 var m:TMatrix;
     v1,v2,v3:TOCCoord;
@@ -511,7 +511,6 @@ function AngularDifference(A1,A2:TOCFloat):TOCFloat;
 
 begin
   Result:=FixAngle(A2-A1);
-
 end;
 
 function AngleIsBetween(Low,High,Angle:TOCFloat):Boolean;
@@ -528,7 +527,7 @@ begin
   Result:=Result+2*PI;
 end;
 
-function Foot(LinePoint,LineVector,Point:TOCCoord):TOCCoord;
+function Foot(const LinePoint,LineVector,Point:TOCCoord):TOCCoord;
 
 begin
   Result:=AddVectors(LinePoint,ScaleVector(LineVector,
@@ -536,7 +535,7 @@ begin
     Sqr(VectorSize(LineVector))));
 end;
 
-function TopCorner(c1,c2:TOCCoord):TOCCoord;
+function TopCorner(const c1,c2:TOCCoord):TOCCoord;
 
 begin
   if c1[0]>c2[0] then Result[0]:=c1[0] else Result[0]:=c2[0];
@@ -544,7 +543,7 @@ begin
   if c1[2]>c2[2] then Result[2]:=c1[2] else Result[2]:=c2[2];
 end;
 
-function BottomCorner(c1,c2:TOCCoord):TOCCoord;
+function BottomCorner(const c1,c2:TOCCoord):TOCCoord;
 
 begin
   if c1[0]<c2[0] then Result[0]:=c1[0] else Result[0]:=c2[0];
@@ -562,7 +561,7 @@ begin
   if c[2]<c[Result] then Result:=3;
 end;
 
-function LongestCoord(c:TOCCoord):TOCFloat;
+function LongestCoord(const c:TOCCoord):TOCFloat;
 
 begin
   Result:=Abs(c[0]);
