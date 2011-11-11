@@ -74,6 +74,8 @@ type
     function GetAtom(ChainIx, ResIx, AtomIx: integer): TAtom;
     function LoadPDB(FileName: string):TMolecule;
     procedure ResetTemplates(ATemplates:TTemplates);
+    function ChainCount:Integer;
+    function ResidueCount(ChainIx:Integer):Integer;
   end;
 
   TPDBLayers = array of TPDBLayer;
@@ -214,6 +216,16 @@ end;
 procedure TPDBLayer.ResetTemplates(ATemplates: TTemplates);
 begin
   FTemplates:=ATemplates;
+end;
+
+function TPDBLayer.ChainCount: Integer;
+begin
+  Result:=FProtein.GroupCount;
+end;
+
+function TPDBLayer.ResidueCount(ChainIx: Integer): Integer;
+begin
+  Result:=FProtein.GetGroup(ChainIx).GroupCount;
 end;
 
 { TPDBLayerMan }

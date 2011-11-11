@@ -126,6 +126,7 @@ type
     function NewAtom(AName:string; AID:integer):TAtom; //creates and adds atom;
     function AllAtoms:TAtoms;
     function AllBonds:TAtomBonds;
+    function GroupCount:Integer;
     function GetGroup(GroupIx:Integer):TMolecule;
     function GetAtom(AtomIx:Integer):TAtom;
     procedure TagAllAtoms(Tag:Integer);
@@ -361,6 +362,11 @@ begin
     for g:=0 to High(tmp) do
       Result[g+i]:=tmp[g];
     end;
+end;
+
+function TMolecule.GroupCount: Integer;
+begin
+  Result:=Length(FGroups);
 end;
 
 
