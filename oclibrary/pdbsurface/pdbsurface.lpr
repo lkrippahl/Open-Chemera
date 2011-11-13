@@ -47,6 +47,7 @@ var
   srec:TSearchRec;
   sphere:TCoords;
   rescontact:Boolean;
+  minhashcell:Single;
 
 function CalcASAs(Atoms:TAtoms):TFloats;
 
@@ -63,7 +64,7 @@ begin
     points[f]:=Atoms[f].Coords;
     radii[f]:=3; //TODO: use correct atomic radii + 1.4
     end;
-  Result:=SRSurface(points,radii,sphere);
+  Result:=SRSurface(points,radii,sphere,minhashcell);
 end;
 
 procedure SaveResidueASAs(Atoms:TAtoms; FileName:string);
@@ -178,7 +179,12 @@ begin
 
   if HasOption('c','contacts') then rescontact:=True
     else rescontact:=False;
-
+  if HasOption('w','width') then
+    begin
+    WriteLn('Hashing cell width of ',GetOptionValue('w','width'),'A cells');
+    minhashcell:=StrToFloat(GetOptionValue('w','width'));
+    end
+  else minhashcell:=2;
   pdblayerman:=TPdbLayerMan.Create(ParamStr(1));
   sphere:=GoldenSpiralPoints(100);
   if FindFirst('*.pdb',faAnyFile,srec)=0 then
@@ -209,9 +215,9 @@ end;
 procedure TPdbSurface.WriteHelp;
 begin
   { add your help code here }
-  writeln('Usage: pdbsurface ligands');
-  writeln('Where ligands is the path to the ligands folder containing the pdb');
-  writeln('files with the PDBeChem data for residues');
+  writeln('Arguments (optional)');
+  writeln('-c --contacts: report inter-chain residue contact surfaces instead of SAS');
+  writeln('-w --width: set the minimum width of hashing grid cells (e.g. -w 5 for a 5A width).');
 end;
 
 var

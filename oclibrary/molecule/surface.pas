@@ -26,10 +26,12 @@ function GoldenSpiralPoints(Num:Integer):TCoords;
   //uses the Golden Section spiral algorithm, based on an implementation by
   //Patrick Boucher at http://www.softimageblog.com/archives/115
 
-function SRSurface(Points:TCoords;Radii:TFloats;SpherePoints:TCoords):TFloats;
+function SRSurface(Points:TCoords;Radii:TFloats;SpherePoints:TCoords;MinHashCell:Single=0):TFloats;
   //Based on the Shrake-Rupley ASA algorithm. SpherePoints is the base set of points
   //at the surface of a radius 1 sphere, centered at the origin, to estimate
   //surface area. Returns the surface area for each sphere defined by Points and Radii
+  //MinHashCell is the minimum size of the geometric hash grid cells, which is also
+  //at least as large as twice the largest atomic radius
   //NOTE: for ASA add probe radius to radius of each atom.
 
 
@@ -56,7 +58,7 @@ begin
     end;
 end;
 
-function SRSurface(Points:TCoords;Radii:TFloats;SpherePoints:TCoords):TFloats;
+function SRSurface(Points:TCoords;Radii:TFloats;SpherePoints:TCoords;MinHashCell:Single=0):TFloats;
 
 function LargestRadius:TFloat;
 
@@ -97,6 +99,7 @@ begin
       end;
     Result[f]:=4*Pi*Sqr(Radii[f])/Length(SpherePoints)*countouts;
     end;
+  ghash.Free;
 end;
 
 end.
