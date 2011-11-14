@@ -76,6 +76,7 @@ type
   function Min(const C1,C2:TCoord):TCoord;overload;
   function Max(const C1,C2:TCoord):TCoord;overload;
   function Coord(X,Y,Z:TFloat):TCoord;
+
   function StringToFloats(S:string):TFloats;
     //converts a string of numbers, separated by white spaces
 

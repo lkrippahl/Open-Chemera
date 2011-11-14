@@ -99,60 +99,121 @@ begin
   sl.Free;
 end;
 
+procedure CalcHull(Atoms:TAtoms;out C1,C2:TCoord;Rad:TFloat);
+
+var f:Integer;
+
+begin
+  if Atoms=nil then
+    begin
+    C1:=NullVector;
+    C2:=NullVector;
+    end
+  else
+    begin
+    C1:=Atoms[0].Coords;
+    C2:=C1;
+    for f:=1 to High(Atoms) do
+      begin
+      C1:=Min(C1,Atoms[f].Coords);
+      C2:=Max(C2,Atoms[f].Coords);
+      end;
+    for f:=0 to 2 do
+      begin
+      C1[f]:=C1[f]-Rad;
+      C2[f]:=C2[f]+Rad;
+      end;
+    end;
+end;
+
 procedure ContactTable(FileName:string);
 
-//TODO: inefficient to repeat surface calculation for each individual residue
-// ?? but may not amount to much compared to the quadratic combinations...
+type
+  TCuboid=array[0..1] of TCoord;
+  TResidueRec=record
+    Residue:TMolecule;
+    ContactHull:TCuboid;
+    Surface:TFloat;
+  end;
+  TChain=array of TResidueRec;
 
 var
-  atoms1,atoms2:TAtoms;
+  chains:array of TChain;
+
+procedure BuildChains;
+
+var
+  c,r:Integer;
+  mol,chain:TMolecule;
+
+begin
+  mol:=pdblayerman.LayerByIx(0).Molecule;
+  SetLength(chains,mol.GroupCount);
+  for c:=0 to High(chains) do
+    begin
+    chain:=mol.GetGroup(c);
+    SetLength(chains[c],chain.GroupCount);
+    for r:=0 to High(chains[c]) do
+      begin
+      chains[c,r].Residue:=chain.GetGroup(r);
+      //TODO: radius added to contact hull should not be fixed
+      CalcHull(chains[c,r].Residue.AllAtoms,chains[c,r].ContactHull[0],
+                chains[c,r].ContactHull[1],1.6);
+      chains[c,r].Surface:=Sum(CalcASAS(chains[c,r].Residue.AllAtoms));
+      end;
+    end;
+end;
+
+function Intersect(Cuboid1,Cuboid2:TCuboid):Boolean;
+
+var c1,c2:TCoord;
+
+begin
+  c1:=Max(Cuboid1[0],Cuboid2[0]);
+  c2:=Min(Cuboid1[1],Cuboid2[1]);
+  Result:=(c1[0]<=c2[0]) and (c1[1]<=c2[1]) and (c1[2]<=c2[2]);
+end;
+
+var
+  f,c1,c2,r1,r2:Integer;
   mol:TMolecule;
-  f,len2,chainc,resc:Integer;
-  c1,c2,r1,r2,contactpercentage:Integer;
-  chain1,chain2:TMolecule;
-  sr1,sr2,srboth:Single;
+  sr,sr1,sr2:TFloat;
+  len1,contactpercentage:Integer;
+  atoms1,atoms2,allatoms:TAtoms;
   sl:TStringList;
 
 begin
   sl:=TStringList.Create;
+  BuildChains;
   mol:=pdblayerman.LayerByIx(0).Molecule;
-  chainc:=mol.GroupCount-1;
-  for c1:=0 to chainc-1 do
-    begin
-    chain1:=mol.GetGroup(c1);
-    for c2:=c1+1 to chainc do
-      begin
-      chain2:=mol.GetGroup(c2);
-      for r1:=0 to chain1.GroupCount-1 do
-        if chain2.GetGroup(r1).Name<>'HOH' then
-        begin
-        atoms1:=chain1.GetGroup(r1).AllAtoms;
-        sr1:=Sum(CalcAsas(atoms1));
-        for r2:=0 to chain2.GroupCount-1 do
-          if chain2.GetGroup(r2).Name<>'HOH' then
+  for c1:=0 to High(chains)-1 do
+    for c2:=c1+1 to High(chains) do
+      for r1:=0 to High(chains[c1]) do
+        for r2:=0 to High(chains[c2]) do
+          if Intersect(chains[c1,r1].ContactHull,chains[c2,r2].ContactHull) then
           begin
-          atoms2:=chain2.GetGroup(r2).AllAtoms;
-          sr2:=Sum(CalcAsas(atoms2));
-
-          //calculate both residues together
-          len2:=Length(atoms2);
-          SetLength(atoms2,len2+Length(atoms1));
-          for f:=0 to High(atoms1) do
-            atoms2[f+len2]:=atoms1[f];
-          srboth:=Sum(CalcAsas(atoms2));
-          contactpercentage:=100-Round(100*srboth/(sr2+sr1));
+          atoms1:=chains[c1,r1].Residue.AllAtoms;
+          atoms2:=chains[c2,r2].Residue.AllAtoms;
+          SetLength(allatoms,Length(atoms1)+Length(atoms2));
+          for f:=0 to High(atoms1) do allatoms[f]:=atoms1[f];
+          len1:=Length(atoms1);
+          for f:=0 to High(atoms2) do allatoms[f+len1]:=atoms2[f];
+          sr:=Sum(CalcASAs(allatoms));
+          sr1:=chains[c1,r1].Surface;
+          sr2:=chains[c2,r2].Surface;
+          contactpercentage:=100-Round(100*sr/(sr1+sr2));
           if contactpercentage>1 then
             begin
-            sl.Add(chain1.Name+#9+IntToStr(chain1.GetGroup(r1).ID)+#9+chain1.GetGroup(r1).Name+
-                #9+chain2.Name+#9+IntToStr(chain2.GetGroup(r2).ID)+#9+chain2.GetGroup(r2).Name+
-                #9+IntToStr(contactpercentage)+#9+FloatToStr(sr2+sr1-srboth));
+            sl.Add(mol.GetGroup(c1).Name+#9+
+                   IntToStr(chains[c1,r1].Residue.ID)+#9+
+                   chains[c1,r1].Residue.Name+#9+
+                   mol.GetGroup(c2).Name+#9+
+                   IntToStr(chains[c2,r2].Residue.ID)+#9+
+                   chains[c2,r2].Residue.Name+#9+
+                   #9+IntToStr(contactpercentage)+#9+FloatToStr(sr2+sr1-sr));
             WriteLn(sl.Strings[sl.Count-1]);
             end;
-
           end;
-        end;
-      end;
-    end;
   sl.SaveToFile(FileName);
   sl.Free;
 end;
