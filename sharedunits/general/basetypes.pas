@@ -22,8 +22,8 @@ uses
   Classes, SysUtils;
 
 const
-  OCTinyFloat=1e-10;  //for testing zero, differences, etc
-                      //make it 1e6 larger than epsilon for TFloat
+  TinyFloat=1e-10;  //for testing zero, differences, etc
+                    //make it 1e6 larger than epsilon for TFloat
 
 type
   TSimpleStrings = array of string;
@@ -47,6 +47,13 @@ type
   procedure AddToArray(f:TFLoat; var a:TFloats); overload;
   procedure AddToArray(c:Cardinal; var a:TCardinals); overload;
 
+  //Warning: removing does not preserve ordering (exchanges with last element)
+  procedure RemoveFromArray(Ix:Integer;var A:TIntegers);overload;
+  procedure RemoveFromArray(Ix:Integer;var A:TCoords);overload;
+  procedure RemoveFromArray(Ix:Integer;var A:TFloats);overload;
+  procedure RemoveFromArray(Ix:Integer;var A:TCardinals);overload;
+  procedure RemoveFromArray(Ix:Integer;var A:TSimpleStrings);overload;
+
   function IndexOf(const i:Integer; const a:TIntegers):Integer;overload;
   function IndexOf(const C:Cardinal; const A:TCardinals):Integer;overload;
   function IndexOf(const s:string; const a:TSimpleStrings):Integer;overload;
@@ -69,6 +76,10 @@ type
   function Max(vals:TFLoats):TFLoat;overload;
   function Min(vals:TMatrix):TFLoat;overload;
   function Max(vals:TMatrix):TFLoat;overload;
+
+  function MinIx(vals:TFLoats):Integer;overload;
+  function MaxIx(vals:TFLoats):Integer;overload;
+
   function Sum(vals:TFloats):TFloat;overload;
   function Sum(vals:TIntegers):Integer;overload;
 
@@ -121,6 +132,41 @@ procedure AddToArray(c:Cardinal; var a:TCardinals); overload;
 begin
   SetLength(a,Length(a)+1);
   a[High(a)]:=c;
+end;
+
+procedure RemoveFromArray(Ix:Integer;var A:TIntegers);overload;
+
+begin
+  A[Ix]:=A[High(A)];
+  SetLength(A,Length(A)-1);
+end;
+
+procedure RemoveFromArray(Ix:Integer;var A:TFloats);overload;
+
+begin
+  A[Ix]:=A[High(A)];
+  SetLength(A,Length(A)-1);
+end;
+
+procedure RemoveFromArray(Ix:Integer;var A:TCardinals);overload;
+
+begin
+  A[Ix]:=A[High(A)];
+  SetLength(A,Length(A)-1);
+end;
+
+procedure RemoveFromArray(Ix:Integer;var A:TCoords);overload;
+
+begin
+  A[Ix]:=A[High(A)];
+  SetLength(A,Length(A)-1);
+end;
+
+procedure RemoveFromArray(Ix:Integer;var A:TSimpleStrings);overload;
+
+begin
+  A[Ix]:=A[High(A)];
+  SetLength(A,Length(A)-1);
 end;
 
 function Concatenate(Coords1,Coords2:TCoords):TCoords;overload;
@@ -333,6 +379,48 @@ begin
   if C1[0]>C2[0] then Result[0]:=C1[0] else Result[0]:=C2[0];
   if C1[1]>C2[1] then Result[1]:=C1[1] else Result[1]:=C2[1];
   if C1[2]>C2[2] then Result[2]:=C1[2] else Result[2]:=C2[2];
+end;
+
+function MinIx(vals:TFLoats):Integer;overload;
+
+var
+  f:Integer;
+  mi:TFloat;
+
+begin
+  Result:=-1;
+  if vals<>nil then
+    begin
+    Result:=0;
+    mi:=vals[0];
+    for f:=1 to High(vals) do
+      if vals[f]<mi then
+        begin
+        mi:=vals[f];
+        Result:=f;
+        end;
+    end;
+end;
+
+function MaxIx(vals:TFLoats):Integer;overload;
+
+var
+  f:Integer;
+  mi:TFloat;
+
+begin
+  Result:=-1;
+  if vals<>nil then
+    begin
+    Result:=0;
+    mi:=vals[0];
+    for f:=1 to High(vals) do
+      if vals[f]>mi then
+        begin
+        mi:=vals[f];
+        Result:=f;
+        end;
+    end;
 end;
 
 function Sum(vals:TFloats):TFloat;overload;
