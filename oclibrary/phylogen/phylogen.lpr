@@ -21,7 +21,8 @@ uses
   {$IFDEF UNIX}{$IFDEF UseCThreads}
   cthreads,
   {$ENDIF}{$ENDIF}
-  Classes, SysUtils, CustApp, statistics, basetypes, stringutils;
+  Classes, SysUtils, CustApp, statistics, basetypes, stringutils, quicksort,
+  coevolution;
 
 type
 
@@ -34,6 +35,7 @@ type
     function CorrelationSqr(M1,M2:TMatrix;Columns:TIntegers):TFLoats;
     function FindMinimum(M1,M2:TMatrix;Columns:TIntegers; out CVec:TFloats):Integer;
     procedure CompareTrees(FileName:string);
+    procedure TheilSen(FileName:string);
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
@@ -48,7 +50,7 @@ var
 
 begin
   // quick check parameters
-  ErrorMsg:=CheckOptions('h','help');
+  ErrorMsg:=CheckOptions('h f t','help file theilesen');
   if ErrorMsg<>'' then begin
     ShowException(Exception.Create(ErrorMsg));
     Terminate;
@@ -68,6 +70,14 @@ begin
     fn:=GetOptionValue('f','file');
     CompareTrees(fn);
     end;
+
+  if HasOption('t','theilsen') then
+    begin
+    fn:=GetOptionValue('t','theilsen');
+    TheilSen(fn);
+    end;
+
+
   // stop program loop
   Terminate;
 end;
@@ -83,7 +93,7 @@ var
 
 begin
   DecimalSeparator:='.';
-  ss:=SplitString(Line,' '+#9);
+  ss:=SplitString(Line,#9);
   Ix1:=StrToInt(ss[0]);
   Ix2:=StrToInt(ss[1]);
   F1:=StrToFloat(ss[2]);
@@ -168,6 +178,25 @@ begin
     end;
 end;
 
+procedure TPhylogen.TheilSen(FileName: string);
+
+var
+  mat1,mat2:TMatrix;
+  correlator:TTwoProteinCorrelation;
+  distances:TFloats;
+  slope:TFloat;
+  f:Integer;
+
+begin
+  LoadMatrices(FileName,mat1,mat2);
+  correlator:=TTwoProteinCorrelation.Create(mat1,mat2);
+  correlator.TheilSenToQuery(0,slope,distances);
+  WriteLn('Slope:'#9,slope);
+  WriteLn('Distances:');
+  for f:=0 to High(distances) do
+      WriteLn(f,#9,distances[f]);
+end;
+
 constructor TPhylogen.Create(TheOwner: TComponent);
 begin
   inherited Create(TheOwner);
@@ -196,4 +225,4 @@ begin
   Application.Run;
   Application.Free;
 end.
-
+
