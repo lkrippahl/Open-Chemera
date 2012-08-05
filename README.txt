@@ -22,7 +22,7 @@ Use this software at your own risk.
 
 This software is public domain. You have the right to copy, 
 distribute, reuse, modify, improve and debug it. Especially
-this last one.
+the last one.
 
 The *.pdb files in the data/ligands folder are from the
 PDBeChem ligand dictionary. For more information, see
@@ -41,16 +41,26 @@ Using the Lazarus IDE:
     lazarus/components/opengl/lazopenglcontext.lpk
 	(in the Lazarus IDE, select "Package->Install/uninstall
 	packages")
+	Note for Debian distributions: these distros do not 
+	include this package precompiled. Please compile 
+	Lazarus from source on Debian systems.
 
-3-  Open the project file chemera/chemera.lpi
+3-  Open the project file (e.g. chemera/chemera.lpi)
 
 4-  Press F9
 		
 ***********************************************************
 ******                   Installing                  ******
 
-TBA...
+Copy the files and subfolders in the oclibrary/data folder
+to your configuration folder.
 
+Windows 7
+  [user]\AppData\Local\oclibrary
+
+Ubuntu
+  ~/.oclibrary
+  
 ***********************************************************
 
 Source code available at:

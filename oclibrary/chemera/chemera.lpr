@@ -8,7 +8,8 @@ uses
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms, chemeramain, displayobjects, molecules, pdbmolecules, basetypes, selections, base3ddisplay,
-displaysettings, oglform, pdbparser, lazopenglcontext, chemeraconfig, geomhash;
+displaysettings, oglform, pdbparser, lazopenglcontext,
+oclconfiguration, geomhash;
 
 {$R *.res}
 

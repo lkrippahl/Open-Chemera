@@ -236,6 +236,7 @@ var
 
  begin
   // Check arguments
+  ErrorMsg:=CheckOptions('h','help');
   if HasOption('h','help') or (ParamCount<1) then begin
     WriteHelp;
     Terminate;

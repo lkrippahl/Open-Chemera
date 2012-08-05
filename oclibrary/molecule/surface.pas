@@ -76,11 +76,15 @@ var
   f,g,h,countouts:Integer;
   ixs:TIntegers;
   intersect:Boolean;
+  hashcell:Single;
 
 begin
   SetLength(Result,Length(Points));
   if Points=nil then Exit;
-  ghash:=TGeomHasher.Create(Points,LargestRadius*2);
+  hashcell:=LargestRadius*2;
+  if hashcell<MinHashCell then hashcell:=MinHashCell;
+
+  ghash:=TGeomHasher.Create(Points,hashcell);
   for f:=0 to High(Points) do
     begin
     ixs:=ghash.ListNeighours(Points[f]);

@@ -19,7 +19,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Menus,
-  pdbmolecules, oglform, displayobjects, LCLProc, chemeraconfig;
+  pdbmolecules, oglform, displayobjects, LCLProc, oclconfiguration;
 
 type
 
@@ -74,6 +74,10 @@ end;
 procedure TCmMainForm.InitChemera;
 begin
   FInitializing:=False;
+
+  //Load configuration data
+  LoadAtomData;
+
   FDisplay:=TOpenGLForm.Create(Self);
   FDisplay.Show;
   FDispMan:=TDisplayManager.Create(FDisplay);
@@ -81,7 +85,7 @@ begin
   //DEBUG
   //FDispMan.Test;
 
-  FMolecules:=TPdbLayerMan.Create(Config.LigandsFolder);
+  FMolecules:=TPdbLayerMan.Create(Config.MonomersPath);
 end;
 
 procedure TCmMainForm.FormActivate(Sender: TObject);

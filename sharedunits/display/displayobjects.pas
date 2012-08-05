@@ -20,7 +20,7 @@ unit displayobjects;
 interface
 
 uses
-  Classes, SysUtils, basetypes, base3ddisplay,LCLProc, molecules;
+  Classes, SysUtils, basetypes, base3ddisplay,LCLProc, molecules, oclconfiguration;
 
 type
   TAtomSettings=record
@@ -127,6 +127,7 @@ end;
 procedure TDisplayManager.Render;
 //TO DO: mostly everything. Still just for testing
 //TO DO: should check which have changed
+//TO DO: group objects by material
 
 var
   f,g:Integer;
@@ -134,22 +135,26 @@ var
   ol:T3DObjectList;
 
 begin
-  DebugLn('Rendering');
   FDisplay.ClearObjectLists;
   for f:=0 to High(FLayers) do
     begin
     al:=FLayers[f].AllAtoms;
-    SetLength(ol.Objects,Length(al));
+    SetLength(ol.Objects,1);
     ol.Material:=DefaultMaterial;
-    ol.Material.Ambient:=RGBAColor(0.7,0.8,0.3,1);
     for g:=0 to High(al) do
         begin
-        ol.Objects[g].ObjectType:=otSphere;
-        ol.Objects[g].sphC:=al[g].Coords;
-        //TODO: add radius information...
-        ol.Objects[g].Rad:=1;
+        if al[g].AtomicNumber>=0 then
+          with AtomData[al[g].AtomicNumber-1] do
+            begin
+            ol.Material.Ambient:=RGBAColor(CPKColor[0],CPKColor[1],CPKColor[2],1);
+            end
+          else
+            ol.Material:=DefaultMaterial;
+        ol.Objects[0].ObjectType:=otSphere;
+        ol.Objects[0].sphC:=al[g].Coords;
+        ol.Objects[0].Rad:=al[g].Radius;
+        FDisplay.AddObjectList(ol);
         end;
-    FDisplay.AddObjectList(ol);
     end;
   FDisplay.Compile;
 end;

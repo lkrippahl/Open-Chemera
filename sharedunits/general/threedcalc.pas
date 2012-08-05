@@ -485,7 +485,7 @@ begin
   P1:=SubtractVectors(P1,Pivot);
   P2:=SubtractVectors(P2,Pivot);
   vs:=VectorSize(P1)*VectorSize(P2);
-  if vs>OCTinyFloat then
+  if vs>TinyFloat then
     begin
     Result:=DotProduct(P1,P2)/vs;
     Result:=ArcCos(Result);

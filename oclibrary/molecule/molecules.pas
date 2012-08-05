@@ -8,6 +8,7 @@ Purpose:
   Classes for atoms and groups of atoms (residues) or groups of grups (chains).
 Requirements:
 Revisions:
+  30-4-2012 added Parent property to TMolecule
 To do:
   RemoveTaggedBonds is only for bonds with atoms that will be deleted
   Do another one for removing bonds alone. Needs another callback, and bonds need
@@ -39,13 +40,7 @@ const
 
 type
   TOnDeleteCallback=procedure(Tag:Integer) of object;
-  TAbstractMolecule=class
-    {placeholder class so that atoms molecules can be nested hierarchies}
-
-    protected
-
-    public
-    end;
+  TMolecule=class;
 
   { TAtom }
 
@@ -54,7 +49,7 @@ type
     //Data for each atom in molecule. Bond data is in parent group
     FAtomicNumber:Integer;
     FName:string;
-    FParent:TAbstractMolecule;
+    FParent:TMolecule;
 
     //Atom properties
     FCoord:TCoord;
@@ -69,12 +64,15 @@ type
     //Should not be relied on to store persistent information. It is meant
     //to be used and discarded in the same function (such as deleting atoms)
     Tag:Integer;
+    property AtomicNumber:Integer read FAtomicNumber write FAtomicNumber;
+      //AtomicNumber<=0 means undetermined
     property Name:string read FName write FName;
     property Coords:TCoord read FCoord write FCoord;
     property Charge:TFloat read FCharge write FCharge;
+    property Radius:TFloat read FRadius write FRadius;
     property ID:Integer read FID write FID;       //should be unique for each molecule
-    property Parent:TAbstractMolecule read FParent;
-    constructor Create(AName:string; AID:Integer;AParent:TAbstractMolecule);
+    property Parent:TMolecule read FParent;
+    constructor Create(AName:string; AID:Integer;AParent:TMolecule);
   end;
 
   TAtoms=array of TAtom;
@@ -86,10 +84,11 @@ type
   end;
   TAtomBonds=array of TAtomBond;
 
+  TMolecules=array of TMolecule;
 
   { TMolecule }
 
-  TMolecule=class(TAbstractMolecule)
+  TMolecule=class
     {Class for nested hierarchy of molecular fragments.
     It can have both atoms (e.g a residue) or groups (e.g. a chain)
     though, chemically, it doesn't make sense to have both}
@@ -97,7 +96,7 @@ type
   protected
     FAtoms:TAtoms;              //Atoms that do not belong in groups
 
-    FGroups:array of TMolecule; //Groups such as monomers. If molecule has
+    FGroups:TMolecules;         //Groups such as monomers. If molecule has
                                 //groups it should not have atoms.
                                 //Will not assume that it only
                                 //can have atoms or groups, but
@@ -121,13 +120,15 @@ type
     property MolType:string read FType write FType;
     property Name:string read FName write FName;
     property ID:Integer read FID write FID;
+    property Parent:TMolecule read FParent;
+    property Groups:TMolecules read FGroups;
     constructor Create(AName:string; AID:Integer; AParent:TMolecule);
     function NewGroup(GName:string; GID:Integer):TMolecule;// creates and adds group
     function NewAtom(AName:string; AID:integer):TAtom; //creates and adds atom;
     function AllAtoms:TAtoms;
     function AllBonds:TAtomBonds;
     function GroupCount:Integer;
-    function GetGroup(GroupIx:Integer):TMolecule;
+    function GetGroup(GroupIx:Integer):TMolecule;overload;
     function GetAtom(AtomIx:Integer):TAtom;
     procedure TagAllAtoms(Tag:Integer);
     procedure TagAllBonds(Tag:Integer);
@@ -159,19 +160,19 @@ type
     procedure Free;
 
   end;
-  TMolecules=array of TMolecule;
 
 
 implementation
 
 { TAtom }
 
-constructor TAtom.Create(AName: string;AID:Integer;AParent:TAbstractMolecule);
+constructor TAtom.Create(AName: string;AID:Integer;AParent:TMolecule);
 begin
   inherited Create;
   FName:=AName;
   FParent:=AParent;
   FID:=AID;
+  FAtomicNumber:=-1; //undetermined
 end;
 
 { TMolecule }
