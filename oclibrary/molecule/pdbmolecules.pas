@@ -195,7 +195,7 @@ var
   parser: TPDBReader;
   cr,f,cc: integer;
   cres:TMolecule;
-  atom,atom2:TAtom;
+  atom:TAtom;
 
 begin
   ClearChains;

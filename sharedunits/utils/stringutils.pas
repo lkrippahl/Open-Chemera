@@ -39,9 +39,11 @@ function GetInteger(AString:string;Start,Finish:Integer):Integer;overload;
 function GetFloat(AString:string;Start,Finish:Integer; out Val:Double):Boolean;overload;
 function GetFloat(AString:string;Start,Finish:Integer):Double;overload;
 function GetString(AString:string;Start,Finish:Integer):string;
-function LastIndexOf(s:string;a:TSimpleStrings):Integer;
+function LastIndexOf(s:string;a:TSimpleStrings):Integer;overload;
+function LastIndexOf(I:Integer;a:TIntegers):Integer;overload;
   // returns last index of string, -1 if not found
-function FirstIndexOf(s:string;a:TSimpleStrings):Integer;
+function FirstIndexOf(s:string;a:TSimpleStrings):Integer;overload;
+function FirstIndexOf(I:Integer;a:TIntegers):Integer;overload;
   // -1 if not found
 
 function FirstByPrefix(Prefix:string;SStrings:TSimpleStrings):Integer;
@@ -101,6 +103,7 @@ function DecodeQP(const Text:string):string;
 function HtmltoAscii(const Text:string):string;
   //converts special & html chars to ascii
 function BasicASCII(const Text:string):string;
+function ReadAsSimpleStrings(const FileName:string):TSimpleStrings;
 
 implementation
 
@@ -235,6 +238,13 @@ begin
     Dec(Result);
 end;
 
+function LastIndexOf(I:Integer;a:TIntegers):Integer;overload;
+begin
+  Result:=High(a);
+  while (Result>=0) and (a[Result]<>I) do
+    Dec(Result);
+end;
+
 function FirstIndexOf(s:string;a:TSimpleStrings):Integer;
 
 var f:Integer;
@@ -248,6 +258,21 @@ begin
       Break;
       end;
 end;
+
+function FirstIndexOf(I:Integer;a:TIntegers):Integer;
+
+var f:Integer;
+
+begin
+  Result:=-1;
+  for f:=0 to High(a) do
+    if I=a[f] then
+      begin
+      Result:=f;
+      Break;
+      end;
+end;
+
 
 function FirstByPrefix(Prefix:string;SStrings:TSimpleStrings):Integer;
 
@@ -719,6 +744,17 @@ begin
       Result[c]:=Text[f];
       end;
   SetLength(Result,c);
+end;
+
+function ReadAsSimpleStrings(const FileName: string): TSimpleStrings;
+
+var tmp:TStringList;
+
+begin
+  tmp:=TStringList.Create;
+  tmp.LoadFromFile(FileName);
+  Result:=AsSimpleStrings(tmp);
+  tmp.Free;
 end;
 
 end.

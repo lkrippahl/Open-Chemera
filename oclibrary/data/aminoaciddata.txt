@@ -1,0 +1,24 @@
+#From http://en.wikipedia.org/wiki/Amino_acid				
+#Hausman, Robert E.; Cooper, Geoffrey M. (2004). The cell: a molecular approach. Washington, D.C: ASM Press. p. 51.				
+#Kyte J, Doolittle RF (May 1982). "A simple method for displaying the hydropathic character of a protein". Journal of Molecular Biology 157 (1): 105–32.				
+#Name	3-Letter	1-Letter	Class	Hydropathy index
+Alanine	ALA	A	H	1.8
+Arginine	ARG	R	+	-4.5
+Asparagine	ASN	N	P	-3.5
+Aspartic acid	ASP	D	-	-3.5
+Cysteine	CYS	C	P	2.5
+Glutamic acid	GLU	E	-	-3.5
+Glutamine	GLN	Q	P	-3.5
+Glycine	GLY	G	H	-0.4
+Histidine	HIS	H	+	-3.2
+Isoleucine	ILE	I	H	4.5
+Leucine	LEU	L	H	3.8
+Lysine	LYS	K	+	-3.9
+Methionine	MET	M	H	1.9
+Phenylalanine	PHE	F	H	2.8
+Proline	PRO	P	H	-1.6
+Serine	SER	S	P	-0.8
+Threonine	THR	T	P	-0.7
+Tryptophan	TRP	W	H	-0.9
+Tyrosine	TYR	Y	H	-1.3
+Valine	VAL	V	H	4.2

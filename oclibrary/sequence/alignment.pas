@@ -21,7 +21,7 @@ unit alignment;
 interface
 
 uses
-  Classes, SysUtils,basetypes, stringutils, progress, debugutils;
+  Classes, SysUtils,basetypes, stringutils, progress, debugutils, fasta;
 
 const
 
@@ -103,6 +103,11 @@ function AlignmentToSequence(const Align,Seq:string; GapMarker:Char):TIntegers;
 
 function SequenceFromIndex(Seq:string; Filter:TIntegers):string;
 
+function ReadMSA(FileName:string):TMSA;
+  //Fasta only. TODO:detect file types
+
+function MapSequenceToMSA(Seq, MSASeq: string; GapMarker: char): TIntegers;
+function FindMatch(Seq: string; MSA: TMSA; out Map:TIntegers): Integer;
 
 implementation
 
@@ -511,6 +516,70 @@ begin
   for f:=0 to High(Filter) do
     if Filter[f]>0 then
       Result:=Result+Seq[Filter[f]];
+end;
+
+function ReadMSA(FileName: string): TMSA;
+
+var
+  reader:TFastaReader;
+  f:Integer;
+
+begin
+  Result.GapMarker:=DefaultGapMarker;
+  reader:=TFastaReader.Create(FileName);
+  SetLength(Result.Alignment,Length(Reader.Seqs));
+  SetLength(Result.SequenceIds,Length(Reader.Seqs));
+  for f:=0 to High(Reader.Seqs) do
+    begin
+    Result.Alignment[f]:=Reader.Seqs[f].Sequence;
+    Result.SequenceIds[f]:=Reader.Seqs[f].ID;
+    end;
+end;
+
+function MapSequenceToMSA(Seq, MSASeq: string; GapMarker: char): TIntegers;
+
+var
+  s,m,ls,lm:Integer;
+
+
+begin
+  lm:=Length(MSASeq);
+  ls:=Length(Seq);
+  SetLength(Result,ls);
+  s:=1;
+  m:=1;
+  while (s<=ls) and (m<=lm) do
+    begin
+    if Seq[s]=MSASeq[m] then
+      begin
+      Result[s-1]:=m;
+      Inc(s);
+      Inc(m);
+      end
+    else if MSASeq[m]=GapMarker then Inc(m)
+    else
+      begin
+      Result:=nil;
+      Break;
+      end;
+    end;
+end;
+
+function FindMatch(Seq: string; MSA: TMSA; out Map:TIntegers): Integer;
+
+var f:Integer;
+
+begin
+  Result:=-1;
+  for f:=0 to High(MSA.Alignment) do
+    begin
+    Map:=MapSequenceToMsa(Seq,MSA.Alignment[f],MSA.GapMarker);
+    if Map<>nil then
+      begin
+      Result:=f;
+      Break
+      end;
+    end;
 end;
 
 end.

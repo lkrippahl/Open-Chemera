@@ -1,0 +1,345 @@
+<?xml version="1.0"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="9"/>
+    <PathDelim Value="\"/>
+    <General>
+      <Flags>
+        <MainUnitHasCreateFormStatements Value="False"/>
+      </Flags>
+      <MainUnit Value="0"/>
+      <Title Value="pdbtools"/>
+      <UseXPManifest Value="True"/>
+      <ActiveWindowIndexAtStart Value="0"/>
+    </General>
+    <BuildModes Count="1">
+      <Item1 Name="default" Default="True"/>
+    </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+      <DestinationDirectory Value="C:\My Documents\programs\fpc\oclibrary\pdbtools"/>
+      <IncludeFileFilter Value="*.(pas|pp|inc|lfm|lpr|lrs|lpi|lpk|sh|xml)"/>
+      <ExcludeFileFilter Value="*.(bak|ppu|o|so);*~;backup"/>
+    </PublishOptions>
+    <RunParams>
+      <local>
+        <FormatVersion Value="1"/>
+        <CommandLineParams Value="pdbtools 2pcc.pdb.gz --msa=2pcc_Breplaced.msa --organisms=2pcc.forgs -m B"/>
+        <LaunchingApplication PathPlusParams="\usr\bin\xterm -T 'Lazarus Run Output' -e $(LazarusDir)\tools\runwait.sh $(TargetCmdLine)"/>
+      </local>
+    </RunParams>
+    <RequiredPackages Count="1">
+      <Item1>
+        <PackageName Value="LCL"/>
+      </Item1>
+    </RequiredPackages>
+    <Units Count="20">
+      <Unit0>
+        <Filename Value="pdbtools.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="pdbtools"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="0"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="81" Y="14"/>
+        <UsageCount Value="43"/>
+        <Loaded Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="..\..\molecule\pdbloader.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="pdbloader"/>
+        <UsageCount Value="43"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="..\..\general\basetypes.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="basetypes"/>
+        <UsageCount Value="43"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="..\..\utils\geomhash.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="geomhash"/>
+        <UsageCount Value="43"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="..\..\molecule\surface.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="surface"/>
+        <UsageCount Value="43"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="..\..\molecule\pdbmolecules.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="pdbmolecules"/>
+        <UsageCount Value="43"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="..\..\parsing\pdbparser.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="pdbparser"/>
+        <UsageCount Value="43"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="..\molecule\mmcifparser.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="mmcifparser"/>
+        <UsageCount Value="43"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="..\base\oclconfiguration.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="oclconfiguration"/>
+        <EditorIndex Value="1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="1" Y="1"/>
+        <UsageCount Value="43"/>
+        <Loaded Value="True"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="..\..\sharedunits\utils\quicksort.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="quicksort"/>
+        <UsageCount Value="43"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="..\..\sharedunits\utils\stringutils.pas"/>
+        <UnitName Value="stringutils"/>
+        <EditorIndex Value="8"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="254"/>
+        <CursorPos X="9" Y="269"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="C:\lazarus\fpc\2.6.0\source\rtl\objpas\sysutils\sysinth.inc"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="119"/>
+        <CursorPos X="32" Y="128"/>
+        <UsageCount Value="8"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="..\pdbsequence\pdbsequence.lpr"/>
+        <UnitName Value="pdbsequence"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="141"/>
+        <CursorPos X="57" Y="198"/>
+        <UsageCount Value="8"/>
+      </Unit12>
+      <Unit13>
+        <Filename Value="..\sequence\fasta.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="fasta"/>
+        <EditorIndex Value="5"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="74"/>
+        <CursorPos X="11" Y="4"/>
+        <UsageCount Value="43"/>
+        <Loaded Value="True"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="..\sequence\alignment.pas"/>
+        <UnitName Value="alignment"/>
+        <EditorIndex Value="6"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="2" Y="491"/>
+        <UsageCount Value="21"/>
+        <Loaded Value="True"/>
+      </Unit14>
+      <Unit15>
+        <Filename Value="..\molecule\molecules.pas"/>
+        <UnitName Value="molecules"/>
+        <EditorIndex Value="4"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="148"/>
+        <CursorPos X="3" Y="91"/>
+        <UsageCount Value="21"/>
+        <Loaded Value="True"/>
+      </Unit15>
+      <Unit16>
+        <Filename Value="..\..\sharedunits\forms\progress.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="progress"/>
+        <EditorIndex Value="7"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="1"/>
+        <CursorPos X="1" Y="1"/>
+        <UsageCount Value="38"/>
+        <Loaded Value="True"/>
+      </Unit16>
+      <Unit17>
+        <Filename Value="..\molecule\pdbmolecules.pas"/>
+        <UnitName Value="pdbmolecules"/>
+        <EditorIndex Value="2"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="186"/>
+        <CursorPos X="28" Y="192"/>
+        <UsageCount Value="18"/>
+        <Loaded Value="True"/>
+      </Unit17>
+      <Unit18>
+        <Filename Value="C:\lazarus\fpc\2.6.0\source\packages\fcl-base\src\custapp.pp"/>
+        <UnitName Value="CustApp"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="533"/>
+        <CursorPos X="3" Y="563"/>
+        <UsageCount Value="9"/>
+      </Unit18>
+      <Unit19>
+        <Filename Value="..\molecule\pdbparser.pas"/>
+        <UnitName Value="pdbparser"/>
+        <EditorIndex Value="3"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="82"/>
+        <CursorPos X="10" Y="119"/>
+        <UsageCount Value="14"/>
+        <Loaded Value="True"/>
+      </Unit19>
+    </Units>
+    <JumpHistory Count="30" HistoryIndex="29">
+      <Position1>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="543" Column="3" TopLine="528"/>
+      </Position1>
+      <Position2>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="687" Column="59" TopLine="669"/>
+      </Position2>
+      <Position3>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="691" Column="5" TopLine="667"/>
+      </Position3>
+      <Position4>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="574" Column="26" TopLine="561"/>
+      </Position4>
+      <Position5>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="751" Column="42" TopLine="687"/>
+      </Position5>
+      <Position6>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="682" Column="18" TopLine="669"/>
+      </Position6>
+      <Position7>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="515" Column="37" TopLine="494"/>
+      </Position7>
+      <Position8>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="530" Column="22" TopLine="515"/>
+      </Position8>
+      <Position9>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="520" Column="32" TopLine="500"/>
+      </Position9>
+      <Position10>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="516" Column="26" TopLine="501"/>
+      </Position10>
+      <Position11>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="515" Column="10" TopLine="501"/>
+      </Position11>
+      <Position12>
+        <Filename Value="..\..\sharedunits\utils\stringutils.pas"/>
+        <Caret Line="118" Column="66" TopLine="102"/>
+      </Position12>
+      <Position13>
+        <Filename Value="..\..\sharedunits\utils\stringutils.pas"/>
+        <Caret Line="42" Column="19" TopLine="27"/>
+      </Position13>
+      <Position14>
+        <Filename Value="..\..\sharedunits\utils\stringutils.pas"/>
+        <Caret Line="43" Column="43" TopLine="33"/>
+      </Position14>
+      <Position15>
+        <Filename Value="..\..\sharedunits\utils\stringutils.pas"/>
+        <Caret Line="46" Column="63" TopLine="34"/>
+      </Position15>
+      <Position16>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="515" Column="10" TopLine="501"/>
+      </Position16>
+      <Position17>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="5" Column="80" TopLine="1"/>
+      </Position17>
+      <Position18>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="492" Column="1" TopLine="465"/>
+      </Position18>
+      <Position19>
+        <Filename Value="..\molecule\pdbmolecules.pas"/>
+        <Caret Line="388" Column="3" TopLine="355"/>
+      </Position19>
+      <Position20>
+        <Filename Value="..\molecule\pdbmolecules.pas"/>
+        <Caret Line="201" Column="3" TopLine="192"/>
+      </Position20>
+      <Position21>
+        <Filename Value="..\molecule\pdbmolecules.pas"/>
+        <Caret Line="192" Column="28" TopLine="177"/>
+      </Position21>
+      <Position22>
+        <Filename Value="..\molecule\pdbparser.pas"/>
+        <Caret Line="95" Column="3" TopLine="93"/>
+      </Position22>
+      <Position23>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="545" Column="20" TopLine="531"/>
+      </Position23>
+      <Position24>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="546" Column="53" TopLine="527"/>
+      </Position24>
+      <Position25>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="499" Column="8" TopLine="492"/>
+      </Position25>
+      <Position26>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="713" Column="14" TopLine="688"/>
+      </Position26>
+      <Position27>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="734" Column="10" TopLine="709"/>
+      </Position27>
+      <Position28>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="7" Column="67" TopLine="1"/>
+      </Position28>
+      <Position29>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="713" Column="14" TopLine="688"/>
+      </Position29>
+      <Position30>
+        <Filename Value="pdbtools.lpr"/>
+        <Caret Line="14" Column="81" TopLine="1"/>
+      </Position30>
+    </JumpHistory>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <PathDelim Value="\"/>
+    <Target>
+      <Filename Value="pdbtools"/>
+    </Target>
+    <SearchPaths>
+      <IncludeFiles Value="$(ProjOutDir)"/>
+      <OtherUnitFiles Value="..\molecule;..\..\sharedunits\general;..\..\sharedunits\utils;..\base;..\sequence;..\..\sharedunits\forms"/>
+      <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+    <Other>
+      <CompilerMessages>
+        <UseMsgFile Value="True"/>
+      </CompilerMessages>
+      <CompilerPath Value="$(CompPath)"/>
+    </Other>
+  </CompilerOptions>
+</CONFIG>

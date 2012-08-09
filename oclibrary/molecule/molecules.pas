@@ -421,8 +421,8 @@ procedure TMolecule.TagBonds(Bonds: TAtomBonds; Tag: Integer);
 var f:Integer;
 
 begin
-  for f:=0 to High(FBondsTable) do
-      FBondsTable[f].Tag:=Tag;
+  for f:=0 to High(Bonds) do
+      Bonds[f].Tag:=Tag;
 end;
 
 procedure TMolecule.DeleteAtoms(Atoms: TAtoms;OnDelete:TOnDeleteCallback=nil);

@@ -225,9 +225,12 @@ begin
   SetLength(FAtoms,Buf.Count);//maximum number of atoms is number of lines in buffer;
   ReadLines;
   SetLength(FAtoms,FAtomCount);
-  FChainCount:=FAtoms[High(FAtoms)].ChainNum+1; // in case one TER was missing
-  FModelCount:=FAtoms[High(FAtoms)].ModelNum+1; // 0 if no models. This may be redundant, but with PDB files one never knows...
-  IndexChains;
+  if FAtomCount>0 then
+    begin
+    FChainCount:=FAtoms[High(FAtoms)].ChainNum+1; // in case one TER was missing
+    FModelCount:=FAtoms[High(FAtoms)].ModelNum+1; // 0 if no models. This may be redundant, but with PDB files one never knows...
+    IndexChains;
+    end;
 end;
 
 procedure TPDBReader.Clear;

@@ -1,0 +1,186 @@
+data_LLP
+# 
+_chem_comp.id                                    LLP 
+_chem_comp.name                                  "2-LYSINE(3-HYDROXY-2-METHYL-5-PHOSPHONOOXYMETHYL-PYRIDIN-4-YLMETHANE)" 
+_chem_comp.type                                  "L-PEPTIDE LINKING" 
+_chem_comp.pdbx_type                             ATOMP 
+_chem_comp.formula                               "C14 H24 N3 O7 P" 
+_chem_comp.mon_nstd_parent_comp_id               LYS 
+_chem_comp.pdbx_synonyms                         "N'-PYRIDOXYL-LYSINE-5'-MONOPHOSPHATE" 
+_chem_comp.pdbx_formal_charge                    0 
+_chem_comp.pdbx_initial_date                     1999-07-08 
+_chem_comp.pdbx_modified_date                    2012-04-12 
+_chem_comp.pdbx_ambiguous_flag                   N 
+_chem_comp.pdbx_release_status                   REL 
+_chem_comp.pdbx_replaced_by                      ? 
+_chem_comp.pdbx_replaces                         ? 
+_chem_comp.formula_weight                        377.330 
+_chem_comp.one_letter_code                       K 
+_chem_comp.three_letter_code                     LLP 
+_chem_comp.pdbx_model_coordinates_details        ? 
+_chem_comp.pdbx_model_coordinates_missing_flag   N 
+_chem_comp.pdbx_ideal_coordinates_details        Corina 
+_chem_comp.pdbx_ideal_coordinates_missing_flag   N 
+_chem_comp.pdbx_model_coordinates_db_code        ? 
+_chem_comp.pdbx_subcomponent_list                ? 
+_chem_comp.pdbx_processing_site                  RCSB 
+# 
+loop_
+_chem_comp_atom.comp_id 
+_chem_comp_atom.atom_id 
+_chem_comp_atom.alt_atom_id 
+_chem_comp_atom.type_symbol 
+_chem_comp_atom.charge 
+_chem_comp_atom.pdbx_align 
+_chem_comp_atom.pdbx_aromatic_flag 
+_chem_comp_atom.pdbx_leaving_atom_flag 
+_chem_comp_atom.pdbx_stereo_config 
+_chem_comp_atom.model_Cartn_x 
+_chem_comp_atom.model_Cartn_y 
+_chem_comp_atom.model_Cartn_z 
+_chem_comp_atom.pdbx_model_Cartn_x_ideal 
+_chem_comp_atom.pdbx_model_Cartn_y_ideal 
+_chem_comp_atom.pdbx_model_Cartn_z_ideal 
+_chem_comp_atom.pdbx_component_atom_id 
+_chem_comp_atom.pdbx_component_comp_id 
+_chem_comp_atom.pdbx_ordinal 
+LLP N1     N1   N 0 1 Y N N -28.372 -11.409 2.891  -4.309 -2.388 -0.884 N1     LLP 1  
+LLP C2     C2   C 0 1 Y N N -27.708 -12.569 3.117  -3.504 -3.357 -0.495 C2     LLP 2  
+LLP "C2'"  C2A  C 0 1 N N N -28.142 -13.864 2.427  -3.851 -4.788 -0.814 "C2'"  LLP 3  
+LLP C3     C3   C 0 1 Y N N -26.633 -12.454 3.984  -2.339 -3.072 0.203  C3     LLP 4  
+LLP O3     O3   O 0 1 N N N -25.895 -13.477 4.286  -1.512 -4.074 0.601  O3     LLP 5  
+LLP C4     C4   C 0 1 Y N N -26.278 -11.219 4.588  -2.031 -1.747 0.491  C4     LLP 6  
+LLP "C4'"  C4A  C 0 1 N N N -25.128 -11.145 5.497  -0.776 -1.393 1.247  "C4'"  LLP 7  
+LLP C5     C5   C 0 1 Y N N -27.029 -10.061 4.305  -2.905 -0.760 0.064  C5     LLP 8  
+LLP C6     C6   C 0 1 Y N N -28.093 -10.208 3.430  -4.046 -1.121 -0.627 C6     LLP 9  
+LLP "C5'"  C5A  C 0 1 N N N -26.695 -8.720  4.922  -2.615 0.691  0.352  "C5'"  LLP 10 
+LLP OP4    O4P  O 0 1 N N N -25.333 -8.322  4.650  -3.661 1.502  -0.189 OP4    LLP 11 
+LLP P      P    P 0 1 N N N -24.616 -7.426  5.781  -3.678 3.107  -0.067 P      LLP 12 
+LLP OP1    O1P  O 0 1 N N N -23.323 -6.868  5.254  -3.563 3.495  1.357  OP1    LLP 13 
+LLP OP2    O2P  O 0 1 N N N -24.392 -8.287  6.992  -2.440 3.721  -0.892 OP2    LLP 14 
+LLP OP3    O3P  O 0 1 N N N -25.517 -6.267  6.129  -5.059 3.676  -0.668 OP3    LLP 15 
+LLP N      N    N 0 1 N N N -18.964 -10.492 3.189  6.230  1.615  1.098  N      LLP 16 
+LLP CA     CA   C 0 1 N N S -18.994 -11.931 2.901  6.395  0.320  0.425  CA     LLP 17 
+LLP CB     CB   C 0 1 N N N -20.427 -12.401 2.903  5.101  -0.042 -0.307 CB     LLP 18 
+LLP CG     CG   C 0 1 N N N -20.942 -12.716 4.318  3.980  -0.256 0.712  CG     LLP 19 
+LLP CD     CD   C 0 1 N N N -21.833 -11.664 4.928  2.687  -0.618 -0.020 CD     LLP 20 
+LLP CE     CE   C 0 1 N N N -22.902 -12.244 5.836  1.566  -0.832 1.000  CE     LLP 21 
+LLP NZ     NZ   N 0 1 N N N -24.273 -12.098 5.273  0.324  -1.180 0.297  NZ     LLP 22 
+LLP C      C    C 0 1 N N N -18.063 -12.161 1.735  7.525  0.410  -0.568 C      LLP 23 
+LLP O      O    O 0 1 N N N -16.826 -12.095 2.005  7.891  1.489  -0.970 O      LLP 24 
+LLP OXT    OXT  O 0 1 N Y N -18.442 -12.261 0.464  8.125  -0.708 -1.005 OXT    LLP 25 
+LLP "H2'1" H2A1 H 0 0 N N N -29.011 -13.664 1.783  -3.421 -5.061 -1.778 "H2'1" LLP 26 
+LLP "H2'2" H2A2 H 0 0 N N N -27.313 -14.249 1.815  -3.450 -5.441 -0.039 "H2'2" LLP 27 
+LLP "H2'3" H2A3 H 0 0 N N N -28.414 -14.611 3.187  -4.935 -4.898 -0.857 "H2'3" LLP 28 
+LLP HO3    HO3  H 0 1 N N N -25.212 -13.208 4.889  -0.830 -4.302 -0.047 HO3    LLP 29 
+LLP "H4'1" H4A1 H 0 0 N N N -24.626 -10.176 5.358  -0.943 -0.481 1.820  "H4'1" LLP 30 
+LLP "H4'2" H4A2 H 0 0 N N N -25.488 -11.226 6.533  -0.519 -2.206 1.925  "H4'2" LLP 31 
+LLP H6     H6   H 0 1 N N N -28.703 -9.353  3.179  -4.730 -0.356 -0.963 H6     LLP 32 
+LLP "H5'1" H5A1 H 0 0 N N N -27.376 -7.960  4.510  -2.558 0.844  1.429  "H5'1" LLP 33 
+LLP "H5'2" H5A2 H 0 0 N N N -26.835 -8.786  6.011  -1.666 0.970  -0.106 "H5'2" LLP 34 
+LLP HOP2   HOP2 H 0 0 N N N -23.464 -8.314  7.195  -2.451 3.506  -1.835 HOP2   LLP 35 
+LLP HOP3   HOP3 H 0 0 N N N -25.071 -5.450  5.939  -5.139 4.639  -0.627 HOP3   LLP 36 
+LLP H      HN1  H 0 1 N N N -18.017 -10.171 3.190  6.019  2.344  0.433  H      LLP 37 
+LLP HN2    HN2  H 0 1 N Y N -19.481 -10.001 2.488  5.521  1.563  1.814  HN2    LLP 38 
+LLP HA     HA   H 0 1 N N N -18.519 -12.424 3.762  6.621  -0.448 1.164  HA     LLP 39 
+LLP HB2    HB1  H 0 1 N N N -21.057 -11.613 2.466  4.827  0.768  -0.984 HB2    LLP 40 
+LLP HB3    HB2  H 0 1 N N N -20.500 -13.311 2.290  5.251  -0.958 -0.879 HB3    LLP 41 
+LLP HG2    HG1  H 0 1 N N N -21.510 -13.657 4.271  4.254  -1.066 1.389  HG2    LLP 42 
+LLP HG3    HG2  H 0 1 N N N -20.070 -12.846 4.976  3.830  0.660  1.284  HG3    LLP 43 
+LLP HD2    HD1  H 0 1 N N N -21.209 -10.975 5.517  2.413  0.192  -0.696 HD2    LLP 44 
+LLP HD3    HD2  H 0 1 N N N -22.326 -11.109 4.116  2.837  -1.534 -0.591 HD3    LLP 45 
+LLP HE2    HE1  H 0 1 N N N -22.695 -13.314 5.985  1.840  -1.642 1.676  HE2    LLP 46 
+LLP HE3    HE2  H 0 1 N N N -22.862 -11.724 6.804  1.416  0.084  1.572  HE3    LLP 47 
+LLP HZ1    HNZ  H 0 1 N N N -24.749 -12.935 5.543  0.456  -1.989 -0.291 HZ1    LLP 48 
+LLP HXT    HXT  H 0 1 N Y N -17.675 -12.269 -0.096 8.845  -0.600 -1.641 HXT    LLP 49 
+# 
+loop_
+_chem_comp_bond.comp_id 
+_chem_comp_bond.atom_id_1 
+_chem_comp_bond.atom_id_2 
+_chem_comp_bond.value_order 
+_chem_comp_bond.pdbx_aromatic_flag 
+_chem_comp_bond.pdbx_stereo_config 
+_chem_comp_bond.pdbx_ordinal 
+LLP N1    C2     DOUB Y N 1  
+LLP N1    C6     SING Y N 2  
+LLP C2    "C2'"  SING N N 3  
+LLP C2    C3     SING Y N 4  
+LLP "C2'" "H2'1" SING N N 5  
+LLP "C2'" "H2'2" SING N N 6  
+LLP "C2'" "H2'3" SING N N 7  
+LLP C3    O3     SING N N 8  
+LLP C3    C4     DOUB Y N 9  
+LLP O3    HO3    SING N N 10 
+LLP C4    "C4'"  SING N N 11 
+LLP C4    C5     SING Y N 12 
+LLP "C4'" NZ     SING N N 13 
+LLP "C4'" "H4'1" SING N N 14 
+LLP "C4'" "H4'2" SING N N 15 
+LLP C5    C6     DOUB Y N 16 
+LLP C5    "C5'"  SING N N 17 
+LLP C6    H6     SING N N 18 
+LLP "C5'" OP4    SING N N 19 
+LLP "C5'" "H5'1" SING N N 20 
+LLP "C5'" "H5'2" SING N N 21 
+LLP OP4   P      SING N N 22 
+LLP P     OP1    DOUB N N 23 
+LLP P     OP2    SING N N 24 
+LLP P     OP3    SING N N 25 
+LLP OP2   HOP2   SING N N 26 
+LLP OP3   HOP3   SING N N 27 
+LLP N     CA     SING N N 28 
+LLP N     H      SING N N 29 
+LLP N     HN2    SING N N 30 
+LLP CA    CB     SING N N 31 
+LLP CA    C      SING N N 32 
+LLP CA    HA     SING N N 33 
+LLP CB    CG     SING N N 34 
+LLP CB    HB2    SING N N 35 
+LLP CB    HB3    SING N N 36 
+LLP CG    CD     SING N N 37 
+LLP CG    HG2    SING N N 38 
+LLP CG    HG3    SING N N 39 
+LLP CD    CE     SING N N 40 
+LLP CD    HD2    SING N N 41 
+LLP CD    HD3    SING N N 42 
+LLP CE    NZ     SING N N 43 
+LLP CE    HE2    SING N N 44 
+LLP CE    HE3    SING N N 45 
+LLP NZ    HZ1    SING N N 46 
+LLP C     O      DOUB N N 47 
+LLP C     OXT    SING N N 48 
+LLP OXT   HXT    SING N N 49 
+# 
+loop_
+_pdbx_chem_comp_descriptor.comp_id 
+_pdbx_chem_comp_descriptor.type 
+_pdbx_chem_comp_descriptor.program 
+_pdbx_chem_comp_descriptor.program_version 
+_pdbx_chem_comp_descriptor.descriptor 
+LLP SMILES           ACDLabs              12.01 "O=C(O)C(N)CCCCNCc1c(cnc(c1O)C)COP(=O)(O)O"                                                                                                                 
+LLP InChI            InChI                1.03  "InChI=1S/C14H24N3O7P/c1-9-13(18)11(10(6-17-9)8-24-25(21,22)23)7-16-5-3-2-4-12(15)14(19)20/h6,12,16,18H,2-5,7-8,15H2,1H3,(H,19,20)(H2,21,22,23)/t12-/m0/s1" 
+LLP InChIKey         InChI                1.03  FIXMYVJXXYQYGI-LBPRGKRZSA-N                                                                                                                                 
+LLP SMILES_CANONICAL CACTVS               3.370 "Cc1ncc(CO[P](O)(O)=O)c(CNCCCC[C@H](N)C(O)=O)c1O"                                                                                                           
+LLP SMILES           CACTVS               3.370 "Cc1ncc(CO[P](O)(O)=O)c(CNCCCC[CH](N)C(O)=O)c1O"                                                                                                            
+LLP SMILES_CANONICAL "OpenEye OEToolkits" 1.7.6 "Cc1c(c(c(cn1)COP(=O)(O)O)CNCCCC[C@@H](C(=O)O)N)O"                                                                                                          
+LLP SMILES           "OpenEye OEToolkits" 1.7.6 "Cc1c(c(c(cn1)COP(=O)(O)O)CNCCCCC(C(=O)O)N)O"                                                                                                               
+# 
+loop_
+_pdbx_chem_comp_identifier.comp_id 
+_pdbx_chem_comp_identifier.type 
+_pdbx_chem_comp_identifier.program 
+_pdbx_chem_comp_identifier.program_version 
+_pdbx_chem_comp_identifier.identifier 
+LLP "SYSTEMATIC NAME" ACDLabs              12.01 "N~6~-({3-hydroxy-2-methyl-5-[(phosphonooxy)methyl]pyridin-4-yl}methyl)-L-lysine"                    
+LLP "SYSTEMATIC NAME" "OpenEye OEToolkits" 1.7.6 "(2S)-2-azanyl-6-[[2-methyl-3-oxidanyl-5-(phosphonooxymethyl)pyridin-4-yl]methylamino]hexanoic acid" 
+# 
+loop_
+_pdbx_chem_comp_audit.comp_id 
+_pdbx_chem_comp_audit.action_type 
+_pdbx_chem_comp_audit.date 
+_pdbx_chem_comp_audit.processing_site 
+LLP "Create component"         1999-07-08 RCSB 
+LLP "Modify descriptor"        2011-06-04 RCSB 
+LLP "Modify leaving atom flag" 2012-04-12 RCSB 
+# 
