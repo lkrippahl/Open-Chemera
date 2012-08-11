@@ -248,12 +248,32 @@ function Intersect(Cuboid1,Cuboid2:TCuboid):Boolean;
     Result:=(c1[0]<=c2[0]) and (c1[1]<=c2[1]) and (c1[2]<=c2[2]);
   end;
 
+function CalcResidueContact(Res1,Res2:TResidueRec;Rad:TFloat):TFloat;
+
+var
+  sr1,sr2,sr:TFloat;
+  atoms1,atoms2:TAtoms;
+  len,f:Integer;
+
+begin
+  atoms1:=Res1.Residue.AllAtoms;
+  atoms2:=Res2.Residue.AllAtoms;
+  len:=Length(atoms1);
+  SetLength(atoms1,Length(atoms1)+Length(atoms2));
+  for f:=0 to High(atoms2) do atoms1[f+len]:=atoms1[f];
+  sr:=Sum(CalcASAs(atoms1,Rad));
+  sr1:=Res1.IsolatedASA;
+  sr2:=Res2.IsolatedASA;
+  //Contact area is half the lost ASA when in contact
+  Result:=(sr1+sr2-sr)/2;
+end;
+
+
 procedure CalcContacts(var Group1,Group2:TGroup;Rad:TFloat);
 
 var
-  f,r1,r2,len:Integer;
-  sr,sr1,sr2:TFloat;
-  atoms1,atoms2:TAtoms;
+  r1,r2:Integer;
+  sr:TFloat;
 
 begin
   SetupResiduesContact(Group1,Rad);
@@ -263,16 +283,8 @@ begin
       if Intersect(Group1.ResidueRecs[r1].ContactHull,
                    Group2.ResidueRecs[r2].ContactHull) then
         begin
-        atoms1:=Group1.ResidueRecs[r1].Residue.AllAtoms;
-        atoms2:=Group2.ResidueRecs[r2].Residue.AllAtoms;
-        len:=Length(atoms1);
-        SetLength(atoms1,Length(atoms1)+Length(atoms2));
-        for f:=0 to High(atoms2) do atoms1[f+len]:=atoms1[f];
-        sr:=Sum(CalcASAs(atoms1,Rad));
-        sr1:=Group1.ResidueRecs[r1].IsolatedASA;
-        sr2:=Group2.ResidueRecs[r2].IsolatedASA;
-        //Contact area is half the lost ASA when in contact
-        sr:=(sr1+sr2-sr)/2;
+        sr:=CalcResidueContact(Group1.ResidueRecs[r1],
+            Group2.ResidueRecs[r2],Rad);
         AddToArray(sr,Group1.ResidueRecs[r1].ContactSurfaces);
         AddToArray(r2,Group1.ResidueRecs[r1].ContactResidues);
         AddToArray(sr,Group2.ResidueRecs[r2].ContactSurfaces);
@@ -337,8 +349,55 @@ begin
 
 end;
 
-procedure ReportContacts(var Groups:TGroups;Rad:TFloat;Sl:TStringList);
+procedure CalcNeighbours(Group:TGroup;Rad:TFloat);
 
+var
+  r1,r2:Integer;
+  sr:TFloat;
+
+
+begin
+  SetupResiduesContact(Group,Rad);
+  with Group do
+    for r1:=0 to High(ResidueRecs)-1 do
+      for r2:=r1+1 to High(ResidueRecs) do
+         if Intersect(Group.ResidueRecs[r1].ContactHull,
+                      Group.ResidueRecs[r2].ContactHull) then
+          begin
+          sr:=CalcResidueContact(Group.ResidueRecs[r1],
+              Group.ResidueRecs[r2],Rad);
+          AddToArray(sr,Group.ResidueRecs[r1].ContactSurfaces);
+          AddToArray(r2,Group.ResidueRecs[r1].ContactResidues);
+          AddToArray(sr,Group.ResidueRecs[r2].ContactSurfaces);
+          AddToArray(r1,Group.ResidueRecs[r2].ContactResidues);
+          end;
+end;
+
+procedure ReportNeighbours(Groups:TGroups;Rad:TFloat;Sl:TStringList);
+
+var g,f,r1:Integer;
+    s:string;
+
+begin
+  for g:=0 to High(Groups) do
+    begin
+    CalcNeighbours(Groups[g],Rad);
+    Sl.Add('Neighbours: '+Groups[g].Name);
+
+    for r1:=0 to High(Groups[g].ResidueRecs) do
+      with Groups[g].ResidueRecs[r1] do
+        begin
+        s:=Residue.Name+#9+IntToStr(Residue.Id);
+        for f:=0 to High(ContactResidues) do
+          if ContactSurfaces[f]>MinSurf then
+            s:=s+#9+IntToStr(Groups[g].ResidueRecs[ContactResidues[f]].Residue.Id)
+                +#9+FloatToStrF(ContactSurfaces[f],ffFixed,1,1);
+        Sl.Add(s);
+        end;
+    end;
+end;
+
+procedure ReportContacts(var Groups:TGroups;Rad:TFloat;Sl:TStringList);
 
 function CalcJointASA(Ix1,Ix2:Integer):TFloat;
 
@@ -441,7 +500,6 @@ begin
     end;
   Result:=s;
 end;
-
 
 procedure ExtractSequence(Name:string;Groups:TGroups;Report:TStringList);
 
@@ -694,6 +752,7 @@ begin
 
     if HasOption('q','sequence') then
       ExtractSequence(pdblayer.Molecule.Name,groups,report);
+
     if HasOption('m','matchmsa') then
       begin
       c:=GetOptionValue('m','matchmsa');
@@ -702,6 +761,8 @@ begin
         report.Add('Match MSA: chain not found')
       else  MatchMsa(chain,MSAlignment,Organisms, report);
       end;
+    if HasOption('n','neighbours') then
+      ReportNeighbours(groups,proberadius,report);
 
     pdblayerman.ClearLayers;
     pdblayer:=nil;
@@ -754,8 +815,9 @@ begin
   writeln('             corresponding MSA column. Requires the chain ID and');
   writeln('             a loaded MSA file. E.g. --msa=msa.fasta -m A');
   writeln;
-  //writeln('-n --neighbours: report neighbour contacts between surface residues');
-  //writeln;
+  writeln('-n --neighbours: for each residue in each group, report all residues');
+  writeln('                 in the same group in contact, and contact area');
+  writeln;
   writeln('--file filename: save report to file (default: write to console)');
   writeln;
   writeln('--width value: set the minimum width of hashing grid cells');
