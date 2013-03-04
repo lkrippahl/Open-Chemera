@@ -77,7 +77,7 @@ begin
 
   //Load configuration data
   LoadAtomData;
-
+  LoadAAData;
   FDisplay:=TOpenGLForm.Create(Self);
   FDisplay.Show;
   FDispMan:=TDisplayManager.Create(FDisplay);

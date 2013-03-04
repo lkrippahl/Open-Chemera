@@ -33,6 +33,8 @@ function SplitString(Text:string;const Sep:string):TSimpleStrings;overload;
 procedure SplitString(Text:string;Words:TStringList;const Sep:string=' ');overload;
   //same as above, but adds result to the Words TStringList, which must have been
   //created by caller
+function SplitString(Text:string):TSimpleStrings;overload;
+  //splits on all whitespace (<=32)
 
 function GetInteger(AString:string;Start,Finish:Integer; out Val:Integer):Boolean;overload;
 function GetInteger(AString:string;Start,Finish:Integer):Integer;overload;
@@ -154,6 +156,27 @@ end;
 procedure SplitString(Text:string;Words:TStringList;const Sep:string=' ');overload;
 begin
   while Text<>'' do Words.Add(GrabWord(Text,Sep));
+end;
+
+function SplitString(Text: string): TSimpleStrings;
+
+var
+  f:Integer;
+  s:string;
+begin
+  s:='';
+  Result:=nil;
+  for f:=1 to Length(Text) do
+    if Text[f]>#32 then
+      s:=s+Text[f]
+    else
+      if s<>'' then
+        begin
+        AddToArray(s,Result);
+        s:='';
+        end;
+  if s<>'' then
+    AddToArray(s,Result);
 end;
 
 function GetInteger(AString:string;Start,Finish:Integer; out Val:Integer):Boolean;
@@ -687,6 +710,9 @@ begin
     //s:=StringReplace(s,#13+#10,'',[rfReplaceAll, rfIgnoreCase]);
     //s:=StringReplace(s,#13,'',[rfReplaceAll, rfIgnoreCase]);
     s:=StringReplace(s,'<br/>',#13+#10,[rfReplaceAll, rfIgnoreCase]);
+    s:=StringReplace(s,'</div><div>',#13+#10,[rfReplaceAll, rfIgnoreCase]);
+    s:=StringReplace(s,'</div>',#13+#10,[rfReplaceAll, rfIgnoreCase]);
+    s:=StringReplace(s,'<div>',#13+#10,[rfReplaceAll, rfIgnoreCase]);
     s:=StringReplace(s,'<br>',#13+#10,[rfReplaceAll, rfIgnoreCase]);
     s:=StringReplace(s,'&quot;','"',[rfReplaceAll, rfIgnoreCase]);
     s:=StringReplace(s,'&amp;','&',[rfReplaceAll, rfIgnoreCase]);
@@ -694,6 +720,7 @@ begin
     s:=StringReplace(s,'&nbsp;',' ',[rfReplaceAll, rfIgnoreCase]);
 end;
 
+var istag:Boolean;
 
 begin
   totlen:=Length(Text);
@@ -719,10 +746,28 @@ begin
       end;
       end
     else
+      if Text[f]='<' then
+        begin
+        istag:=true;
+        while Text[f]<>'>' do
+          begin
+          if Text[f]=' ' then istag:=False;
+          if istag then
+            begin
+            Result[current]:=Text[f];
+            Inc(current);
+            end;
+          Inc(f);
+          end;
+        Result[current]:=Text[f];
+        Inc(current);
+        Inc(f);
+        end
+      else
       begin
-      Result[current]:=Text[f];
-      Inc(f);
-      Inc(current);
+        Result[current]:=Text[f];
+        Inc(f);
+        Inc(current);
       end;
     end;
   SetLength(Result,current);

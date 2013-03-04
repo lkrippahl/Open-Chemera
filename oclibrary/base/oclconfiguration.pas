@@ -141,7 +141,7 @@ begin
   sl.Free;
   except
   sl.Free;
-  raise Exception.Create('Error loading '+AtomDataFile)
+  raise Exception.Create('Error loading '+Config.OCLPath+AtomDataFile)
   end;
 end;
 
@@ -156,6 +156,7 @@ begin
   AAData:=nil;
   sl:=TStringList.Create;
   sl.LoadFromFile(Config.OCLPath+AADataFile);
+  WriteLn(Config.OCLPath+AADataFile);
   RemoveComments(sl);
   SetLength(AAData,sl.Count);
   for f:=0 to sl.Count-1 do
@@ -173,7 +174,7 @@ begin
   sl.Free;
   except
   sl.Free;
-  raise Exception.Create('Error loading '+AADataFile)
+  raise Exception.Create('Error loading '+Config.OCLPath+AADataFile)
   end;
 end;
 

@@ -79,8 +79,8 @@ type
   function MinIx(vals:TFLoats):Integer;overload;
   function MaxIx(vals:TFLoats):Integer;overload;
 
-  function Sum(vals:TFloats):TFloat;overload;
   function Sum(vals:TIntegers):Integer;overload;
+  function Sum(vals:TFloats):TFloat;overload;
 
 
   function Min(const C1,C2:TCoord):TCoord;overload;
@@ -95,6 +95,8 @@ type
 
   function StringToFloat(const S:String): TFloat;
     //tries comma and point as decimal separator
+  function ScaleMatrix(Mat:TMatrix;Scale:TFloat):TMatrix;
+  function AddMatrices(Mat1,Mat2:TMatrix):TMatrix;
 
 
 
@@ -482,6 +484,36 @@ begin
   if Pos('.', S) > 0 then Result := StrToFloat(S,PointSeparator)
   else Result := StrToFloat(S,CommaSeparator);
 end;
+
+function ScaleMatrix(Mat: TMatrix; Scale: TFloat): TMatrix;
+
+var x,y:Integer;
+
+begin
+  SetLength(Result,Length(Mat),Length(Mat[0]));
+  for x:=0 to High(Mat) do
+    for y:=0 to High(Mat[x]) do
+      Result[x,y]:=Mat[x,y]*Scale;
+end;
+
+function AddMatrices(Mat1, Mat2: TMatrix): TMatrix;
+
+var x,y:Integer;
+
+begin
+  if (Mat1=nil) or (Mat2=nil) or (Length(Mat1)<>Length(Mat2))
+  or (Length(Mat1[0])<>Length(Mat2[0])) then
+    Result:=nil
+  else
+    begin
+    SetLength(Result,Length(Mat1),Length(Mat1[0]));
+    for x:=0 to High(Mat1) do
+      for y:=0 to High(Mat1[x]) do
+        Result[x,y]:=Mat1[x,y]+Mat2[x,y];
+    end;
+end;
+
+
 
 function StringToFloats(S:string):TFloats;
 
