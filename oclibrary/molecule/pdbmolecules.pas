@@ -6,8 +6,8 @@ Author: Ludwig Krippahl
 Date: 9.1.2011
 Purpose:
   Class for storing PDB-like file data.
-  TPDBLayer corresponds to a file. Contains chains, residues, etc.
-  TPDBLayerSet contains several layers.
+  TPDBModel corresponds to a model. Contains chains, residues, etc.
+  TPDBModelSet contains several models.
   This is the base organization for molecules. The assumption is that a pdb-like
   organization is sufficient for all (proteins, DNA, ligands, etc).
 Requirements:
@@ -27,6 +27,10 @@ To do:
 
   Implement gromos force field (a separate unit for the force fields?)
   http://www.gromacs.org/Downloads/User_contributions/Force_fields
+
+  TPDBInfo should belong to a TPDBFile (or TPDBLayer) intermediate class above
+  the TPDBModel, as one file can contain multiple models
+
 
 *******************************************************************************}
 
@@ -53,16 +57,16 @@ type
 
   TTemplates = array of TTemplate;
 
-  { TPDBLayer }
+  { TPDBModel }
 
-  TPDBLayer = class
+  TPDBModel = class
   protected
     FTemplates: TTemplates;
     FProtein: TMolecule;
     FFileName: string;
-    FInfo: TPDBLayerInfo;
+    FInfo: TPDBInfo;
   public
-    property Info: TPDBLayerInfo read FInfo write FInfo;
+    property Info: TPDBInfo read FInfo write FInfo;
     property Molecule:TMolecule read FProtein;
     constructor Create(Templates: TTemplates;AID:Integer);
     procedure Free;
@@ -82,38 +86,48 @@ type
     function TemplateIx(Name:string):Integer;
   end;
 
-  TPDBLayers = array of TPDBLayer;
+  TPDBModels = array of TPDBModel;
 
-  { TPDBLayerSet }
+  { TPDBModelSet }
 
-  { TPDBLayerMan }
+  { TPDBModelMan }
 
-  TPDBLayerMan = class
+  TPDBModelMan = class
   protected
-    FLayers: TPDBLayers;
+    FLayers: TPDBModels;
     FTemplates: TTemplates;
     procedure LoadTemplates(Path: string);
   public
     constructor Create(molCIFPath: string);
     function Count: integer;
-    function LayerByIx(Ix: integer): TPDBLayer;
-    function AddNewLayer: TPDBLayer;
+    function LayerByIx(Ix: integer): TPDBModel;
+    function AddNewLayer: TPDBModel;
     function LoadLayer(PdbFileName: string):TMolecule;
     procedure ClearLayers;
   end;
 
+  function AtomIsAABackbone(Atom:TAtom):Boolean;
+
 implementation
 
-{ TPDBLayer }
+function AtomIsAABackbone(Atom:TAtom):Boolean;
 
-constructor TPDBLayer.Create(Templates:TTemplates;AID:Integer);
+begin
+  with Atom do
+    Result:= (Name='N') or (Name='O') or (Name='CA') or (Name='C');
+end;
+
+
+{ TPDBModel }
+
+constructor TPDBModel.Create(Templates:TTemplates;AID:Integer);
 begin
   inherited Create;
   FTemplates:=Templates;
   FProtein:=TMolecule.Create('',AID,nil);
 end;
 
-procedure TPDBLayer.Free;
+procedure TPDBModel.Free;
 
 begin
   if Self <> nil then
@@ -123,14 +137,14 @@ begin
   end;
 end;
 
-procedure TPDBLayer.ClearChains;
+procedure TPDBModel.ClearChains;
 
 begin
   //TODO Add on delete callbacks
   FProtein.Cleanup;
 end;
 
-procedure TPDBLayer.CreateChains(const IDs: TSimpleStrings);
+procedure TPDBModel.CreateChains(const IDs: TSimpleStrings);
 
 var
   f:integer;
@@ -140,12 +154,12 @@ begin
     FProtein.NewGroup(IDs[f], f + 1);
 end;
 
-function TPDBLayer.NewEmptyChain(ChainName: string; ChainID: integer): TMolecule;
+function TPDBModel.NewEmptyChain(ChainName: string; ChainID: integer): TMolecule;
 begin
   Result:=FProtein.NewGroup(ChainName, ChainId);
 end;
 
-function TPDBLayer.NewChain(ChainName: string; ChainID, Size: integer): TMolecule;
+function TPDBModel.NewChain(ChainName: string; ChainID, Size: integer): TMolecule;
 
 begin
   Result := NewEmptyChain(ChainName, ChainId);
@@ -153,12 +167,12 @@ begin
 end;
 
 
-function TPDBLayer.GetChain(ChainIx: integer): TMolecule;
+function TPDBModel.GetChain(ChainIx: integer): TMolecule;
 begin
   Result := FProtein.GetGroup(ChainIx);
 end;
 
-function TPDBLayer.GetChain(ChainID: string): TMolecule;
+function TPDBModel.GetChain(ChainID: string): TMolecule;
 
 var f:Integer;
 
@@ -172,13 +186,13 @@ begin
       end;
 end;
 
-function TPDBLayer.GetResidue(ChainIx, ResIx: integer): TMolecule;
+function TPDBModel.GetResidue(ChainIx, ResIx: integer): TMolecule;
 begin
   Result := FProtein.GetGroup(ChainIx);
   if Result<>nil then Result:=Result.GetGroup(ResIx);
 end;
 
-function TPDBLayer.GetAtom(ChainIx, ResIx, AtomIx: integer): TAtom;
+function TPDBModel.GetAtom(ChainIx, ResIx, AtomIx: integer): TAtom;
 
 var mol:TMolecule;
 
@@ -189,7 +203,7 @@ begin
   if mol <>nil then Result := mol.GetAtom(AtomIx);
 end;
 
-function TPDBLayer.LoadPDB(FileName: string):TMolecule;
+function TPDBModel.LoadPDB(FileName: string):TMolecule;
 
 var
   parser: TPDBReader;
@@ -233,22 +247,22 @@ begin
   Result:=FProtein;
 end;
 
-procedure TPDBLayer.ResetTemplates(ATemplates: TTemplates);
+procedure TPDBModel.ResetTemplates(ATemplates: TTemplates);
 begin
   FTemplates:=ATemplates;
 end;
 
-function TPDBLayer.ChainCount: Integer;
+function TPDBModel.ChainCount: Integer;
 begin
   Result:=FProtein.GroupCount;
 end;
 
-function TPDBLayer.ResidueCount(ChainIx: Integer): Integer;
+function TPDBModel.ResidueCount(ChainIx: Integer): Integer;
 begin
   Result:=FProtein.GetGroup(ChainIx).GroupCount;
 end;
 
-procedure TPDBLayer.AssignAtomicData;
+procedure TPDBModel.AssignAtomicData;
 
 var
   atoms:TAtoms;
@@ -274,16 +288,16 @@ begin
     end;
 end;
 
-function TPDBLayer.TemplateIx(Name: string): Integer;
+function TPDBModel.TemplateIx(Name: string): Integer;
 begin
   Result:=High(FTemplates);
   while (Result>=0) and (Name<>FTemplates[Result].Name) do
     Dec(Result);
 end;
 
-{ TPDBLayerMan }
+{ TPDBModelMan }
 
-procedure TPDBLayerMan.LoadTemplates(Path: string);
+procedure TPDBModelMan.LoadTemplates(Path: string);
 //TODO: using pdb templates, change to molCIF
 
 
@@ -347,36 +361,36 @@ begin
     FLayers[f].ResetTemplates(FTemplates);
 end;
 
-constructor TPDBLayerMan.Create(molCIFPath:string);
+constructor TPDBModelMan.Create(molCIFPath:string);
 begin
   inherited Create;
   LoadTemplates(molCIFPath);
 end;
 
-function TPDBLayerMan.Count: integer;
+function TPDBModelMan.Count: integer;
 begin
   Result := Length(FLayers);
 end;
 
-function TPDBLayerMan.LayerByIx(Ix: integer): TPDBLayer;
+function TPDBModelMan.LayerByIx(Ix: integer): TPDBModel;
 begin
   Result := FLayers[Ix];
 end;
 
-function TPDBLayerMan.AddNewLayer: TPDBLayer;
+function TPDBModelMan.AddNewLayer: TPDBModel;
 begin
-  Result := TPDBLayer.Create(FTemplates,Length(FLayers));
+  Result := TPDBModel.Create(FTemplates,Length(FLayers));
   SetLength(FLayers, Length(FLayers) + 1);
   FLayers[High(FLayers)] := Result;
 end;
 
-function TPDBLayerMan.LoadLayer(PdbFileName: string):TMolecule;
+function TPDBModelMan.LoadLayer(PdbFileName: string):TMolecule;
 
 begin
   Result:=AddNewLayer.LoadPDB(PdbFileName);
 end;
 
-procedure TPDBLayerMan.ClearLayers;
+procedure TPDBModelMan.ClearLayers;
 
 var f:Integer;
 

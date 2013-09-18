@@ -5,7 +5,7 @@
 *****************                        ******************
 ***********************************************************
        Open source library for Chemera and BiGGER
-                     Version: 0.11
+                     Version: 0.12
 
 
 ***********************************************************
@@ -60,10 +60,17 @@ Windows 7
 
 Ubuntu
   ~/.oclibrary
-  
+
+***********************************************************
+******               Acknowledgements                ******
+
+This work was partially supported by Portuguese National 
+funds through Fundação para a Ciência e Tecnologia (FCT) 
+under project CREMA PTDC/EIA-CCO/115999/2009
+
 ***********************************************************
 
 Source code available at:
 https://github.com/lkrippahl/Open-Chemera
 
-Ludwig Krippahl, 2011
+Ludwig Krippahl

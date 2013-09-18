@@ -57,6 +57,10 @@ type
   function IndexOf(const C:Cardinal; const A:TCardinals):Integer;overload;
   function IndexOf(const s:string; const a:TSimpleStrings):Integer;overload;
 
+  function IsInArray(const i:Integer; const a:TIntegers):Boolean;overload;
+  function IsInArray(const C:Cardinal; const A:TCardinals):Boolean;overload;
+  function IsInArray(const s:string; const a:TSimpleStrings):Boolean;overload;
+
   function Concatenate(Coords1,Coords2:TCoords):TCoords;overload;
   function Concatenate(A1,A2:TSimpleStrings):TSimpleStrings;overload;
 
@@ -241,6 +245,25 @@ begin
   while (Result>=0) and (a[Result]<>s) do
     Dec(Result);
 end;
+
+function IsInArray(const i:Integer; const a:TIntegers):Boolean;overload;
+
+begin
+  Result:=IndexOf(i,a)>=0;
+end;
+
+function IsInArray(const C:Cardinal; const A:TCardinals):Boolean;overload;
+
+begin
+  Result:=IndexOf(C,A)>=0;
+end;
+
+function IsInArray(const s:string; const a:TSimpleStrings):Boolean;overload;
+
+begin
+  Result:=IndexOf(s,a)>=0;
+end;
+
 
 
 procedure AddUniqueToArray(const Elm:string;var Arr:TSimpleStrings);overload;

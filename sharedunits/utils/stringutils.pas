@@ -30,7 +30,7 @@ function GrabBetween(var Text:string;const Sep1,Sep2:string):string;
 
 function SplitString(Text:string;const Sep:string):TSimpleStrings;overload;
   //splits using grabword (i.e. skipping repeated separators)
-procedure SplitString(Text:string;Words:TStringList;const Sep:string=' ');overload;
+procedure SplitString(Text:string;Words:TStrings;const Sep:string=' ');overload;
   //same as above, but adds result to the Words TStringList, which must have been
   //created by caller
 function SplitString(Text:string):TSimpleStrings;overload;
@@ -52,7 +52,6 @@ function FirstByPrefix(Prefix:string;SStrings:TSimpleStrings):Integer;
   // first index starting with Prefix. Case sensitive
 function FirstContaining(Substr:string;SStrings:TSimpleStrings):Integer;
   // first index of string containing Substr
-
 
 function LookupByPrefix(Prefix:string;SStrings:TSimpleStrings):string;
   // returns string after first prefix, or '' if not found
@@ -84,6 +83,7 @@ function AsSimpleStrings(const Sl:TStrings; FirstIx,LastIx:Integer):TSimpleStrin
 function CopyStrings(SS:TSimpleStrings; FirstIx,LastIx:Integer):TSimpleStrings;
 
 procedure AppendToStringList(const Ss:TSimpleStrings;const Sl:TStrings);
+
 function CleanFileName(FileName:string):string;
   //removes illegal characters from filename.
   //TO DO: check if illegal character list is correct
@@ -153,7 +153,7 @@ begin
     AddToArray(GrabWord(Text,Sep),Result);
 end;
 
-procedure SplitString(Text:string;Words:TStringList;const Sep:string=' ');overload;
+procedure SplitString(Text:string;Words:TStrings;const Sep:string=' ');overload;
 begin
   while Text<>'' do Words.Add(GrabWord(Text,Sep));
 end;

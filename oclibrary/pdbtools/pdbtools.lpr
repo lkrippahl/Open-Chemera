@@ -25,10 +25,10 @@ uses
   {$ENDIF}{$ENDIF}
   interfaces, Classes, SysUtils, basetypes, CustApp, surface, pdbmolecules,
   molecules, geomhash, quicksort, pdbparser, mmcifparser, oclconfiguration,
-  alignment, stringutils, progress
-  { you can add units after this };
+  alignment, stringutils, progress, pdbsurface, contactprediction;
 
 type
+
   TCuboid=array[0..1] of TCoord;
   TAtomRec=record
     Atom:TAtom;
@@ -56,10 +56,12 @@ type
   end;
   TGroups=array of TGroup;
 
-  { TPdbSurface }
-  TPdbSurface = class(TCustomApplication)
+  { TPdbTools }
+  TPdbTools = class(TCustomApplication)
   protected
     procedure DoRun; override;
+    procedure DoContacDescriptors(Rad,MinSurf:TFloat);
+
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
@@ -307,6 +309,23 @@ begin
       ASA:=ASA+ResidueRecs[f].ASA;
     end;
 end;
+
+function SurfaceResidueIxs(Group:TGroup;MinSurf:TFloat):TIntegers;
+
+var f,curr:Integer;
+
+begin
+  SetLength(Result,Length(Group.ResidueRecs));
+  curr:=0;
+  for f:=0 to High(Group.ResidueRecs) do
+      if Group.ResidueRecs[f].ASA>=MinSurf then
+        begin
+        Result[curr]:=f;
+        Inc(curr);
+        end;
+  SetLength(Result,curr)
+end;
+
 
 procedure ReportSurfaces(var Groups:TGroups;Rad:TFloat;Sl:TStringList);
 
@@ -608,12 +627,14 @@ begin
     Report.Add('MSA Match: '+Chain.Name+' does not match any sequence');
 end;
 
-{ TPdbSurface }
 
-procedure TPdbSurface.DoRun;
+
+{ TPdbTools }
+
+procedure TPdbTools.DoRun;
 var
-  pdblayerman:TPDBLayerMan;
-  pdblayer:TPDBLayer;
+  pdblayerman:TPDBModelMan;
+  pdblayer:TPDBModel;
   srec:TSearchRec;
 
   //parameters
@@ -713,9 +734,56 @@ begin
 end;
 
 var
-  f:Integer;
   c:string;
   chain:TMolecule;
+  command:string;
+
+  procedure DoPDBStats;
+
+  var f:Integer;
+
+  begin
+    filemask:=ParamStr(1);
+    report.Clear;
+    if FindFirst(filemask,faAnyFile,srec)=0 then
+      repeat
+        pdblayerman.LoadLayer(ExtractFilePath(filemask)+srec.Name);
+        pdblayer:=pdblayerman.LayerByIx(0);
+        report.Add('Processing file:'+srec.Name);
+
+        BuildGroups;
+
+        if HasOption('s','surface') then
+          ReportSurfaces(groups,proberadius,report);
+
+        if HasOption('c','contacts') then
+          ReportContacts(groups,proberadius,report);
+
+        if HasOption('q','sequence') then
+          ExtractSequence(pdblayer.Molecule.Name,groups,report);
+
+        if HasOption('m','matchmsa') then
+          begin
+          c:=GetOptionValue('m','matchmsa');
+          chain:=pdblayer.GetChain(c);
+          if chain=nil then
+            report.Add('Match MSA: chain not found')
+          else  MatchMsa(chain,MSAlignment,Organisms, report);
+          end;
+        if HasOption('n','neighbours') then
+          ReportNeighbours(groups,proberadius,report);
+
+        pdblayerman.ClearLayers;
+        pdblayer:=nil;
+      until FindNext(srec)<>0;
+    FindClose(srec);
+    pdblayerman.Free;
+    if HasOption('file') then
+      report.SaveToFile(GetOptionValue('file'))
+    else
+      for f:=0 to report.Count-1 do
+        WriteLn(report.Strings[f]);
+  end;
 
 begin
   // quick check parameters
@@ -730,74 +798,102 @@ begin
   //configuration
   LoadAtomData; //for VdW radius
   LoadAAData;   //for sequence and listing aminoacids
-  pdblayerman:=TPDBLayerMan.Create(Config.MonomersPath);
+  pdblayerman:=TPDBModelMan.Create(Config.MonomersPath);
   SetParameters;
-
-  filemask:=ParamStr(1);
-  report.Clear;
-  if FindFirst(filemask,faAnyFile,srec)=0 then
-    repeat
-
-    pdblayerman.LoadLayer(ExtractFilePath(filemask)+srec.Name);
-    pdblayer:=pdblayerman.LayerByIx(0);
-    report.Add('Processing file:'+srec.Name);
-
-    BuildGroups;
-
-    if HasOption('s','surface') then
-      ReportSurfaces(groups,proberadius,report);
-
-    if HasOption('c','contacts') then
-      ReportContacts(groups,proberadius,report);
-
-    if HasOption('q','sequence') then
-      ExtractSequence(pdblayer.Molecule.Name,groups,report);
-
-    if HasOption('m','matchmsa') then
-      begin
-      c:=GetOptionValue('m','matchmsa');
-      chain:=pdblayer.GetChain(c);
-      if chain=nil then
-        report.Add('Match MSA: chain not found')
-      else  MatchMsa(chain,MSAlignment,Organisms, report);
-      end;
-    if HasOption('n','neighbours') then
-      ReportNeighbours(groups,proberadius,report);
-
-    pdblayerman.ClearLayers;
-    pdblayer:=nil;
-    until FindNext(srec)<>0;
-  FindClose(srec);
-  pdblayerman.Free;
-  if HasOption('file') then
-    report.SaveToFile(GetOptionValue('file'))
-  else
-    for f:=0 to report.Count-1 do
-      WriteLn(report.Strings[f]);
-
+  command:=ParamStr(1);
+  if command='pdb' then
+    DoPDBStats
+  else if command='desc' then
+    DoContacDescriptors(proberadius,minsurf);
   // stop program loop
   report.Free;
   Terminate;
 
 end;
 
-constructor TPdbSurface.Create(TheOwner: TComponent);
+procedure TPdbTools.DoContacDescriptors(Rad,MinSurf: TFloat);
+
+var
+  descriptorgen:TDescriptorGen;
+  paramfile:string;
+  cdparams:TCDParameters;
+
+procedure FlushSurfaces(Index:Integer);
+
+var
+  surfrep:TSurfaceReport;
+  f:Integer;
+
+begin
+  surfrep:=descriptorgen.GetSurfaceData(Index);
+  with surfrep do
+  for f:=0 to High(Residues) do
+    begin
+    WriteLn(f,':',Residues[f].Name,#9,
+      Residues[f].ID,#9,
+      IsolatedSurface[f],#9,
+      IsolatedSidechainSurface[f],#9,
+      SASurface[f],#9,
+      SASidechainSurface[f],#9);
+    end;
+end;
+
+procedure WriteReport;
+
+var
+  f:Integer;
+
+begin
+  with cdparams do
+    begin
+    WriteLn(TargetPDB);
+    WriteLn(ProbePDB);
+    WriteLn(FlattenStrings(TargetIDs,', '));
+    WriteLn(FlattenStrings(ProbeIDs,', '));
+    for f:=0 to High(TargetIndexes) do
+      Write(TargetIndexes[f],';');
+    WriteLn;
+    for f:=0 to High(ProbeIndexes) do
+      Write(ProbeIndexes[f],';');
+    end;
+  FlushSurfaces(0);
+  FlushSurfaces(1);
+end;
+
+var
+  f,g,c:Integer;
+
+
+begin
+  descriptorgen:=TDescriptorGen.Create;
+  paramfile:=ParamStr(2);
+  cdparams:=ReadParameters(paramfile);
+
+  descriptorgen.GenerateAllDescriptors(cdparams);
+
+  WriteReport;
+  descriptorgen.Free;
+
+end;
+
+constructor TPdbTools.Create(TheOwner: TComponent);
 begin
   inherited Create(TheOwner);
   StopOnException:=True;
 end;
 
-destructor TPdbSurface.Destroy;
+destructor TPdbTools.Destroy;
 begin
   inherited Destroy;
 end;
 
-procedure TPdbSurface.WriteHelp;
+procedure TPdbTools.WriteHelp;
 begin
-  writeln('pdbtools filemask [options]');
+  writeln('For pdb analysis:');
+  writeln('pdbtools pdb filemask [options]');
   writeln;
   writeln('filemask is the name of pdb file or files (e.g. 1dxg.pdb, *.pdb, ...).');
-  writeln('filemask Must be the first argument');
+  writeln('filemask Must be the first argument after the keyword pdb');
   writeln;
   writeln('Optional arguments:');
   writeln;
@@ -841,17 +937,26 @@ begin
   writeln('--msa filename: loads an msa file (fasta format)');
   writeln;
   writeln('--organisms filename: loads list of organisms to sort the msa mapping');
+  writeln;
+  writeln('For computing contact descriptors:');
+  writeln('pdbtools desc parameters');
+  writeln('Parmeters file contains (TODO)');
+  writeln('Surface exposure is computed with the whole structure, not just the specified chain');
+  writeln('The chain specified is the first chain with that chainID; all other repeats are ignored');
+  writeln('The first sequence in the MSA file must correspond to the sequence of the specified chain');
+  writeln('Can also use optional parameters, but must come *after* the main arguments');
+
 
 
 end;
 
 var
-  Application: TPdbSurface;
+  Application: TPdbTools;
 
 {$R *.res}
 
 begin
-  Application:=TPdbSurface.Create(nil);
+  Application:=TPdbTools.Create(nil);
   Application.Run;
   Application.Free;
 end.

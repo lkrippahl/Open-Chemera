@@ -14,7 +14,9 @@ Requirements:
   TER: increments chain counter.
 
 Revisions:
-To do: Read pdb info and comments
+To do:
+  Read pdb info and comments
+  create multiple models when reading a file with several models
 *******************************************************************************}
 
 unit pdbparser;
@@ -55,7 +57,7 @@ type
 
   TPDBConnections=array of TPDBConnection;
 
-  TPDBLayerInfo=record
+  TPDBInfo=record
     Header,Title,Compound,Source,
     KeyWords,ExpTechnique,Author,Journal,Remarks:TStrings;
     UserComments:TStrings;
@@ -69,9 +71,9 @@ type
     FAtoms:TPDBAtoms;
     FConnections:TPDBConnections;
     FAtomCount,FModelCount,FChainCount:Integer;
-    FInfo:TPDBLayerInfo;
+    FInfo:TPDBInfo;
   public
-    property Info:TPDBLayerInfo read FInfo;
+    property Info:TPDBInfo read FInfo;
     property Atoms:TPDBAtoms read FAtoms;
     property Connections:TPDBConnections read FConnections;
     property AtomCount:Integer read FAtomCount;

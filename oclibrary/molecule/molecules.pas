@@ -128,6 +128,7 @@ type
     function AllAtoms:TAtoms;
     function AllBonds:TAtomBonds;
     function GroupCount:Integer;
+    function AtomCount:Integer;
     function GetGroup(GroupIx:Integer):TMolecule;overload;
     function GetAtom(AtomIx:Integer):TAtom;
     procedure TagAllAtoms(Tag:Integer);
@@ -161,8 +162,23 @@ type
 
   end;
 
+function AppendAtomsToArray(const Original,ToAppend:TAtoms):TAtoms;
 
 implementation
+
+function AppendAtomsToArray(const Original,ToAppend:TAtoms):TAtoms;
+
+var f:Integer;
+    lorig,lapp:Integer;
+begin
+  lorig:=Length(Original);
+  lapp:=Length(ToAppend);
+  SetLength(Result,lorig+lapp);
+  for f:=0 to lorig-1 do
+      Result[f]:=Original[f];
+  for f:=0 to lapp-1 do
+    Result[f+lorig]:=ToAppend[f];
+end;
 
 { TAtom }
 
@@ -368,6 +384,18 @@ end;
 function TMolecule.GroupCount: Integer;
 begin
   Result:=Length(FGroups);
+end;
+
+function TMolecule.AtomCount: Integer;
+//total number of atoms in molecule and groups
+
+var
+  f,g,i:Integer;
+
+begin
+  Result:=Length(FAtoms);
+  for f:=0 to High(FGroups) do
+      Result:=Result+FGroups[f].AtomCount;
 end;
 
 
