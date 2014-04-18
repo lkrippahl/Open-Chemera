@@ -1,29 +1,27 @@
 {*******************************************************************************
-This file is part of the Open Chemera Library.
-This work is public domain (see README.TXT).
+This source file is public domain. It is provided as is, with no explicit
+or implied warranties regarding anything whatsoever.
 ********************************************************************************
 Author: Ludwig Krippahl
-Date: 9.1.2011
+Date: 16.011.2014
 Purpose:
-  Stores selection lists (current selected atoms and molecules,
-  and stored selections).
+  Neural networks (currently only MLP)
 Requirements:
 Revisions:
-To do:   everything
+To do:
 *******************************************************************************}
-
-unit selections;
+unit lrnneural;
 
 {$mode objfpc}{$H+}
 
 interface
 
 uses
-  Classes, SysUtils; 
+  Classes, SysUtils, basetypes;
 
 type
-  TSelection=class
-    { TODO : everything... }
+  TMLP=class
+
   end;
 
 implementation

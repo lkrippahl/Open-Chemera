@@ -5,7 +5,7 @@ This work is public domain (see README.TXT).
 Author: Ludwig Krippahl
 Date: 12.3.2011
 Purpose:
-  Configuration files and folders. Multiplatform support
+  Configuration files and folders. Also handles basic molecule data.
   Data stored in the configuration folders (for data used by several
   applications; data for specific applications should be handled by
   the application and kept in appfolder)
@@ -18,6 +18,8 @@ Requirements:
 
 Revisions:
 To do:
+  perhaps function AAOneLetterCode(TLC:string):string; should not be here
+    (in sequence?)
 *******************************************************************************}
 
 unit oclconfiguration;
@@ -27,7 +29,7 @@ unit oclconfiguration;
 interface
 
 uses
-  Classes, SysUtils, Forms, FileUtil, basetypes, stringutils,LCLProc;
+  Interfaces, Classes, SysUtils, Forms, FileUtil, basetypes, stringutils,LCLProc;
 
 type
   TOCLConfig=record
@@ -91,6 +93,9 @@ procedure DefaultConfig;
 var exename:string;
 
 begin
+  DecimalSeparator:='.';
+    { TODO : Improve this }
+
   exename:=ChangeFileExt(ExtractFileName(Application.Exename),'');
   with Config do
     begin
@@ -156,7 +161,6 @@ begin
   AAData:=nil;
   sl:=TStringList.Create;
   sl.LoadFromFile(Config.OCLPath+AADataFile);
-  WriteLn(Config.OCLPath+AADataFile);
   RemoveComments(sl);
   SetLength(AAData,sl.Count);
   for f:=0 to sl.Count-1 do

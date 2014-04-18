@@ -68,6 +68,7 @@ type
   public
     property Info: TPDBInfo read FInfo write FInfo;
     property Molecule:TMolecule read FProtein;
+    property FileName:string read FFileName;
     constructor Create(Templates: TTemplates;AID:Integer);
     procedure Free;
     procedure ClearChains;
@@ -76,14 +77,19 @@ type
     function NewChain(ChainName: string; ChainID, Size: integer): TMolecule;
     function GetChain(ChainIx: integer): TMolecule;overload;
     function GetChain(ChainID:string):TMolecule;overload;
+    procedure AppendChain(Chain:TMolecule);
     function GetResidue(ChainIx, ResIx: integer): TMolecule;
+    function GetResidue(ChainName:string; ResId:Integer):TMolecule;
     function GetAtom(ChainIx, ResIx, AtomIx: integer): TAtom;
-    function LoadPDB(FileName: string):TMolecule;
+    function LoadPDB(PdbFileName: string):TMolecule;
     procedure ResetTemplates(ATemplates:TTemplates);
     function ChainCount:Integer;
+    function ListChains:TSimpleStrings;
     function ResidueCount(ChainIx:Integer):Integer;
     procedure AssignAtomicData; //atomic number, vdW radius
     function TemplateIx(Name:string):Integer;
+    function CopyChains(Chains:TSimpleStrings):TMolecule;
+    function InterfaceResidues(Chains1,Chains2:TSimpleStrings;ContactDistance:TFloat):TMolecules;
   end;
 
   TPDBModels = array of TPDBModel;
@@ -101,12 +107,24 @@ type
     constructor Create(molCIFPath: string);
     function Count: integer;
     function LayerByIx(Ix: integer): TPDBModel;
+    function LayerByFileName(FileName: string): TPDBModel;
     function AddNewLayer: TPDBModel;
     function LoadLayer(PdbFileName: string):TMolecule;
+    function GetChains(Layer: Integer; Indexes: TIntegers): TMolecules;overload;
+    function GetChains(Layer: Integer; IDs: TSimpleStrings): TMolecules;overload;
     procedure ClearLayers;
   end;
 
   function AtomIsAABackbone(Atom:TAtom):Boolean;
+  function BackboneOnly(Atoms:TAtoms):TAtoms;
+  function NoBackBone(Atoms:TAtoms):TAtoms;
+  function ResidueIsAminoAcid(Residue:TMolecule):Boolean;
+  function ChainSequence(Chain:TMolecule;MissingMarker:string='X'):string;
+    //returns string with one letter aa code for each residue. Non AA residues
+    //are and gaps in the sequence of residue IDs are filled with the MissingMarker
+  procedure SaveToPDB(Molecule:TMolecule;FileName:string);
+  function GetResidue(const Protein:TMolecule;const ChainName:string;const ResId:Integer):TMolecule;
+    //assumes Protein is a protein, with chains and residues
 
 implementation
 
@@ -117,6 +135,110 @@ begin
     Result:= (Name='N') or (Name='O') or (Name='CA') or (Name='C');
 end;
 
+function BackboneOnly(Atoms: TAtoms): TAtoms;
+
+var f,c:Integer;
+
+begin
+  SetLength(Result,Length(Atoms));
+  c:=0;
+  for f:=0 to High(Atoms) do
+    if AtomIsAABackbone(Atoms[f]) then
+      begin
+      Result[c]:=Atoms[f];
+      Inc(c);
+      end;
+  SetLength(Result,c);
+end;
+
+function NoBackBone(Atoms: TAtoms): TAtoms;
+
+var f,c:Integer;
+
+begin
+  SetLength(Result,Length(Atoms));
+  c:=0;
+  for f:=0 to High(Atoms) do
+    if not AtomIsAABackbone(Atoms[f]) then
+      begin
+      Result[c]:=Atoms[f];
+      Inc(c);
+      end;
+  SetLength(Result,c);
+end;
+
+function ResidueIsAminoAcid(Residue: TMolecule): Boolean;
+begin
+  Result:=(Residue.GroupCount=0) and (AAOneLetterCode(Residue.Name)<>'');
+end;
+
+function ChainSequence(Chain:TMolecule;MissingMarker:string='X'):string;
+
+var
+  f,previd:Integer;
+  res:TMolecule;
+  tmp:string;
+begin
+  Result:='';
+  if Chain.GroupCount>0 then
+    begin
+    previd:=Chain.GetGroup(0).ID-1;
+    for f:=0 to Chain.GroupCount-1 do
+      begin
+      Inc(previd);
+      res:=Chain.GetGroup(f);
+      while previd<res.ID do
+        begin
+        Inc(previd);
+        Result:=Result+MissingMarker;{ TODO : this is very inneficient. However, not sure if worth improving, since this should never be called many times for the same pdb file }
+        end;
+      tmp:=AAOneLetterCode(res.Name);
+      if tmp='' then
+        Result:=Result+MissingMarker
+      else Result:=Result+tmp;
+      end;
+    end;
+end;
+
+procedure SaveToPDB(Molecule: TMolecule; FileName: string);
+
+var
+  sl:TStringList;
+  atoms:TAtoms;
+  f:Integer;
+  res,chain:TMolecule;
+  rname,chname:string;
+  rid:Integer;
+begin
+  sl:=TStringList.Create;
+  atoms:=Molecule.AllAtoms;
+  for f:=0 to High(atoms) do
+    begin
+    res:=atoms[f].Parent;
+    rname:='';
+    rid:=0;
+    chname:='';
+    if res<>nil then
+      begin
+      rname:=res.Name;
+      rid:=res.ID;
+      chain:=res.Parent;
+      if chain<>nil then
+        chname:=chain.Name;
+      end;
+    sl.Add(AtomRecord(atoms[f].Name,rname,chname,atoms[f].ID,rid,atoms[f].Coords));
+    end;
+  sl.SaveToFile(FileName);
+  sl.Free;
+
+end;
+
+function GetResidue(const Protein: TMolecule; const ChainName: string;
+  const ResId: Integer): TMolecule;
+begin
+  Result:=Protein.GetGroup(ChainName);
+  if Result<>nil then Result:=Result.GetGroupById(ResId);
+end;
 
 { TPDBModel }
 
@@ -174,22 +296,25 @@ end;
 
 function TPDBModel.GetChain(ChainID: string): TMolecule;
 
-var f:Integer;
-
 begin
-  Result:=nil;
-  for f:=0 to High(FProtein.Groups) do
-    if FProtein.Groups[f].Name=ChainId then
-      begin
-      Result:=FProtein.Groups[f];
-      Break;
-      end;
+  Result:=FProtein.GetGroup(ChainId);
+end;
+
+procedure TPDBModel.AppendChain(Chain: TMolecule);
+begin
+  FProtein.AddGroup(Chain);
 end;
 
 function TPDBModel.GetResidue(ChainIx, ResIx: integer): TMolecule;
 begin
   Result := FProtein.GetGroup(ChainIx);
   if Result<>nil then Result:=Result.GetGroup(ResIx);
+end;
+
+function TPDBModel.GetResidue(ChainName: string; ResId: Integer): TMolecule;
+begin
+  Result := GetChain(ChainName);
+  if Result<>nil then Result:=Result.GetGroupById(ResId);
 end;
 
 function TPDBModel.GetAtom(ChainIx, ResIx, AtomIx: integer): TAtom;
@@ -203,7 +328,7 @@ begin
   if mol <>nil then Result := mol.GetAtom(AtomIx);
 end;
 
-function TPDBModel.LoadPDB(FileName: string):TMolecule;
+function TPDBModel.LoadPDB(PdbFileName: string):TMolecule;
 
 var
   parser: TPDBReader;
@@ -213,8 +338,9 @@ var
 
 begin
   ClearChains;
-  parser := TPDBReader.Create(FileName);
-  FProtein.Name:=ChangeFileExt(ExtractFileName(FileName),'');
+  FFileName:=PdbFileName;
+  parser := TPDBReader.Create(PdbFileName);
+  FProtein.Name:=ChangeFileExt(ExtractFileName(PdbFileName),'');
   CreateChains(parser.ChainIDs);
 
   //read atoms
@@ -257,6 +383,16 @@ begin
   Result:=FProtein.GroupCount;
 end;
 
+function TPDBModel.ListChains: TSimpleStrings;
+
+var f:Integer;
+
+begin
+  SetLength(Result,Length(FProtein.Groups));
+  for f:=0 to High(FProtein.Groups) do
+    Result[f]:=FProtein.Groups[f].Name;
+end;
+
 function TPDBModel.ResidueCount(ChainIx: Integer): Integer;
 begin
   Result:=FProtein.GetGroup(ChainIx).GroupCount;
@@ -293,6 +429,27 @@ begin
   Result:=High(FTemplates);
   while (Result>=0) and (Name<>FTemplates[Result].Name) do
     Dec(Result);
+end;
+
+function TPDBModel.CopyChains(Chains: TSimpleStrings): TMolecule;
+
+var f:Integer;
+
+begin
+  if Chains=nil then
+    Result:=nil
+  else
+    begin
+    Result:=TMolecule.Create(FProtein.Name,FProtein.ID,nil);
+    for f:=0 to High(Chains) do
+      Result.AddGroup(TMolecule.CopyFrom(FProtein.GetGroup(Chains[f]),Result));
+    end;
+end;
+
+function TPDBModel.InterfaceResidues(Chains1, Chains2: TSimpleStrings;
+  ContactDistance: TFloat): TMolecules;
+begin
+
 end;
 
 { TPDBModelMan }
@@ -377,6 +534,20 @@ begin
   Result := FLayers[Ix];
 end;
 
+function TPDBModelMan.LayerByFileName(FileName: string): TPDBModel;
+
+var f:Integer;
+
+begin
+  Result:=nil;
+  for f:=0 to High(FLayers) do
+    if FLayers[f].FileName=FileName then
+      begin
+      Result:=FLayers[f];
+      Break;
+      end;
+end;
+
 function TPDBModelMan.AddNewLayer: TPDBModel;
 begin
   Result := TPDBModel.Create(FTemplates,Length(FLayers));
@@ -388,6 +559,27 @@ function TPDBModelMan.LoadLayer(PdbFileName: string):TMolecule;
 
 begin
   Result:=AddNewLayer.LoadPDB(PdbFileName);
+end;
+
+function TPDBModelMan.GetChains(Layer: Integer; Indexes: TIntegers): TMolecules;
+
+var f:Integer;
+
+begin
+  SetLength(Result,Length(Indexes));
+  for f:=0 to High(Result) do
+    Result[f]:=LayerByIx(Layer).GetChain(Indexes[f]);
+end;
+
+function TPDBModelMan.GetChains(Layer: Integer; IDs: TSimpleStrings
+  ): TMolecules;
+
+var f:Integer;
+
+begin
+  SetLength(Result,Length(IDs));
+  for f:=0 to High(Result) do
+    Result[f]:=LayerByIx(Layer).GetChain(IDs[f]);
 end;
 
 procedure TPDBModelMan.ClearLayers;

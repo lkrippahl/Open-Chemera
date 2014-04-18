@@ -35,6 +35,8 @@ procedure SplitString(Text:string;Words:TStrings;const Sep:string=' ');overload;
   //created by caller
 function SplitString(Text:string):TSimpleStrings;overload;
   //splits on all whitespace (<=32)
+function SplitChars(Text:string):TSimpleStrings;
+  //split one char per string
 
 function GetInteger(AString:string;Start,Finish:Integer; out Val:Integer):Boolean;overload;
 function GetInteger(AString:string;Start,Finish:Integer):Integer;overload;
@@ -107,6 +109,16 @@ function HtmltoAscii(const Text:string):string;
 function BasicASCII(const Text:string):string;
 function ReadAsSimpleStrings(const FileName:string):TSimpleStrings;
 
+procedure ReadKeysValues(Raw:TSimpleStrings;out Keys,Values:TSimpleStrings);
+  //decomposes an array of key=value strings into keys and values
+
+//convert to string
+function RightJustify(Int,Len:Integer):string;overload;
+function RightJustify(Flt:TFloat;Len,Decimal:Integer):string;overload;
+function LeftJustify(Text:string;Len:Integer):string;overload;
+
+
+
 implementation
 
 function GrabWord(var Text:string;const Sep:string=' '):string;
@@ -177,6 +189,16 @@ begin
         end;
   if s<>'' then
     AddToArray(s,Result);
+end;
+
+function SplitChars(Text: string): TSimpleStrings;
+
+var f:Integer;
+
+begin
+  SetLength(Result,Length(Text));
+  for f:=0 to High(Result) do
+    Result[f]:=Text[f+1];
 end;
 
 function GetInteger(AString:string;Start,Finish:Integer; out Val:Integer):Boolean;
@@ -800,6 +822,79 @@ begin
   tmp.LoadFromFile(FileName);
   Result:=AsSimpleStrings(tmp);
   tmp.Free;
+end;
+
+procedure ReadKeysValues(Raw:TSimpleStrings;out Keys,Values:TSimpleStrings);
+
+var
+  f:Integer;
+  s:string;
+  tmp:TSimpleStrings;
+
+begin
+  Keys:=nil;
+  Values:=nil;
+  for f:=0 to High(Raw) do
+    begin
+    s:=Raw[f];
+    if Pos(';',s)>0 then Delete(s,Pos(';',s),Length(s));
+    if Pos('=',s)>0 then
+      begin
+      tmp:=SplitString(s,'=');
+      AddToArray(TrimmedBlanks(tmp[0]),Keys);
+      AddToArray(TrimmedBlanks(tmp[1]),Values);
+      end;
+    end;
+end;
+
+function RightJustify(Int, Len: Integer): string;
+
+var
+  tmp:string;
+  dif,f:Integer;
+
+
+begin
+  SetLength(Result,Len);
+  tmp:=IntToStr(Int);
+  dif:=Len-Length(tmp);
+  for f:=1 to Len do
+    if f-dif>0 then
+      Result[f]:=tmp[f-dif]
+    else
+      Result[f]:=' ';
+end;
+
+function RightJustify(Flt: TFloat; Len, Decimal: Integer): string;
+
+var
+  tmp:string;
+  dif,f:Integer;
+
+
+begin
+  SetLength(Result,Len);
+  tmp:=FloatToStrF(Flt,ffFixed,0,Decimal);
+  dif:=Len-Length(tmp);
+  for f:=1 to Len do
+    if f-dif>0 then
+      Result[f]:=tmp[f-dif]
+    else
+      Result[f]:=' ';
+end;
+
+function LeftJustify(Text: string; Len: Integer): string;
+
+var
+  f:Integer;
+
+begin
+  SetLength(Result,Len);
+  for f:=1 to Len do
+    if f<=Length(Text) then
+      Result[f]:=Text[f]
+    else
+      Result[f]:=' ';
 end;
 
 end.

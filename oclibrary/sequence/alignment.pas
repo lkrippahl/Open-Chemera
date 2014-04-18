@@ -12,6 +12,7 @@ To do:
   SinglesToMSA is ignoring the TrimToQuery parameter. Rewrite
   SumOfPairScores is not calculating gap scores
   NeedlemanWunschAlign raises exception on invalid residues (like CA HOH, etc)
+  May best be merged with sequence unit...
 *******************************************************************************}
 
 unit alignment;
@@ -21,12 +22,14 @@ unit alignment;
 interface
 
 uses
-  Classes, SysUtils,basetypes, stringutils, progress, debugutils, fasta;
+  Classes, SysUtils,basetypes, stringutils, progress, debugutils, fasta, sequence;
 
 const
 
 // Default marker for sequence gaps
   DefaultGapMarker='-';
+// Default marker used in substitution matrixes. This is the index used in
+  DefaultSubstitutionGapMarker='*';
 
 type
 
@@ -58,7 +61,7 @@ type
 
   TSubMatrix=record
     //Substitution matrices
-    MonomerIndex:string;      //one letter code for monomers, same length as matrix
+    MonomerIndex:string;    //one letter code for monomers, same length as matrix
     Matrix:TMatrix;         //substitution values
     //NOTE: MonomerIndex is 1 based. Must subtract 1 to obtain index in Matrix
     Comments:TSimpleStrings;
@@ -69,6 +72,9 @@ function TrimMSA(msa:TMSA; seqid:string):TMSA;
   // removes all gaps from the identified sequence and trims all others
   // helps to find the residue variations from one sequence to all others
   // if the sequence is not found returns an empty MSA
+
+function TransposeMSA(const MSA:TMSA):TSimpleStrings;
+  // Returns strings with the MSA columns
 
 function SinglesToMSA(query:string;sas:TSingleAlignments;
   TrimToQuery:Boolean=False; gapmarker:char=DefaultGapMarker):TMSA;
@@ -88,7 +94,16 @@ function ReadBLASTMatrix(FileName:string):TSubMatrix;
 
 procedure SaveMSAToFile(MSA:TMSA; FileName:string);
 function SumOfPairScores(const MSA:TMSA;const SubMat:TSubMatrix):TFLoats;
-function GetSubScore(const SubMat:TSubMatrix;A1,A2:Char):TFloat;
+function GetSubScore(const SubMat:TSubMatrix;A1,A2:Char;SubGapMarker:Char=DefaultSubstitutionGapMarker):TFloat;
+  //if A1 or A2 are not found, uses SubGapMarker.
+
+function ScoreSequencePair(const Seq1,Seq2:string; const SubMat:TSubMatrix;
+  SubGapMarker:Char=DefaultSubstitutionGapMarker):TFloat;overload;
+function ScoreSequencePair(const Seq1,Seq2:TOCCompressedSequence;
+  const SubMat:TSubMatrix;SubGapMarker:Char=DefaultSubstitutionGapMarker):TFloat;overload;
+
+
+
 
 function GapPenalty(const SubMat:TSubMatrix; GapLen: Integer): TFloat;
 function NeedlemanWunschAlign(Seq1Ix, Seq2Ix: TIntegers; const SubMat:TSubMatrix):TIntegers;
@@ -152,6 +167,26 @@ begin
       begin
       Result.SequenceIDs[f]:=msa.SequenceIDs[f];
       Result.Alignment[f]:=FromList(msa.Alignment[f]);
+      end;
+    end;
+end;
+
+function TransposeMSA(const MSA:TMSA):TSimpleStrings;
+
+var
+  f,g:Integer;
+
+begin
+  if MSA.Alignment=nil then
+    Result:=nil
+  else
+    begin
+    SetLength(Result,Length(MSA.Alignment[0]));
+    for f:=1 to Length(MSA.Alignment[0]) do
+      begin
+      SetLength(Result[f-1],Length(MSA.Alignment));
+      for g:=0 to High(MSA.Alignment) do
+        Result[f-1,g+1]:=MSA.Alignment[g,f];
       end;
     end;
 end;
@@ -257,12 +292,11 @@ begin
           Result.Matrix[ix]:=StringToFloats(s);
           end;
         end;
-
       end;
-
     end;
   buf.Free;
 end;
+
 
 procedure SaveMSAToFile(MSA:TMSA; FileName:string);
 
@@ -307,16 +341,54 @@ begin
 
 end;
 
-function GetSubScore(const SubMat:TSubMatrix;A1,A2:Char):TFloat;
+function GetSubScore(const SubMat:TSubMatrix;A1,A2:Char;SubGapMarker:Char=DefaultSubstitutionGapMarker):TFloat;
 
 var i1,i2:Integer;
 
 begin
   i1:=Pos(A1,SubMat.MonomerIndex)-1;
+  if i1<0 then i1:=Pos(SubGapMarker,SubMat.MonomerIndex)-1;
   i2:=Pos(A2,SubMat.MonomerIndex)-1;
+  if i2<0 then i1:=Pos(SubGapMarker,SubMat.MonomerIndex)-1;
   if (i1>=0) and (i2>=0) then
     Result:=SubMat.Matrix[i1,i2]
   else Result:=0;
+end;
+
+function ScoreSequencePair(const Seq1, Seq2: string; const SubMat: TSubMatrix;
+  SubGapMarker:Char=DefaultSubstitutionGapMarker): TFloat;
+
+var f:Integer;
+
+begin
+  Result:=0;
+  Assert(Length(Seq1)=Length(Seq2),'Error in scoring sequence pair: sequences must have equal lengths');
+  for f:=1 to Length(Seq1) do
+    Result:=Result+GetSubScore(SubMat,Seq1[f],Seq2[f],SubGapMarker);
+end;
+
+function ScoreSequencePair(const Seq1, Seq2: TOCCompressedSequence;
+  const SubMat: TSubMatrix;SubGapMarker:Char=DefaultSubstitutionGapMarker): TFloat;
+
+var
+  ix1,ix2:Integer;
+  st,en:Integer;
+  tmp:TFloat;
+
+begin
+  Assert(Seq1[High(Seq1)].Last=Seq2[High(Seq2)].Last,'Error in scoring sequence pair: sequences must have equal lengths');
+  Result:=0;
+  ix1:=0;
+  ix2:=0;
+  while (ix1<Length(Seq1)) do
+    begin
+    st:=Max(Seq1[ix1].First,Seq2[ix2].First);
+    en:=Min(Seq1[ix1].Last,Seq2[ix2].Last)+1;
+    tmp:=GetSubScore(SubMat,Seq1[ix1].Symbol,Seq2[ix2].Symbol,SubGapMarker)*(en-st);
+    Result:=Result+tmp;
+    if en>Seq1[ix1].Last then Inc(ix1);
+    if en>Seq2[ix2].Last then Inc(ix2);
+    end;
 end;
 
 function GapPenalty(const SubMat:TSubMatrix; GapLen: Integer): TFloat;

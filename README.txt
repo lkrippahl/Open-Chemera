@@ -5,7 +5,7 @@
 *****************                        ******************
 ***********************************************************
        Open source library for Chemera and BiGGER
-                     Version: 0.12
+                     Version: 0.14
 
 
 ***********************************************************
@@ -61,6 +61,25 @@ Windows 7
 Ubuntu
   ~/.oclibrary
 
+***********************************************************
+******                  Contents                     ******
+
+bigger:
+  The implementation of the BiGGER algorithm
+
+cclassif:
+  Contacts classifier
+  
+chemera
+  visualization
+  
+dockprep
+  Utility for preparing docking order files for bigger
+  
+pdbtools
+  Utility for processing pdb structures and sequences
+
+  
 ***********************************************************
 ******               Acknowledgements                ******
 

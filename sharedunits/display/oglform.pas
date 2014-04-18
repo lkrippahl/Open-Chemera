@@ -19,7 +19,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs,
-  OpenGLContext,gl,glu,base3ddisplay,basetypes,threedcalc,LCLProc;
+  OpenGLContext,gl,glu,glext,base3ddisplay,basetypes,geomutils,LCLProc, types;
 
 type
   //color format compatible with glu
@@ -34,16 +34,22 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure OGLPbMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer
       );
+    procedure OGLPbMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure OGLPbMouseWheelDown(Sender: TObject; Shift: TShiftState;
+      MousePos: TPoint; var Handled: Boolean);
     procedure OGLPbPaint(Sender: TObject);
     procedure OGLPbResize(Sender: TObject);
   private
     { private declarations }
   protected
       FInitialized:Boolean;
+      FDistanceToCenter:TFLoat;
       FBaseSphere,FBaseCube:TQuadMesh;
       FDisplayLists:array of GLUInt;
       FObjectLists: array of T3DObjectList;
       FDisplayColors: array of TGluRGBA; //colors for displaylists
+      FBackground:TGluRGBA;
 
       //mouse tracking
       FCX,FCY:Integer;                   //current mouse position
@@ -102,8 +108,11 @@ end;
 constructor TOpenGLForm.Create(TheOwner: TComponent);
 begin
   inherited Create(TheOwner);
+  FDistanceToCenter:=100;
   OGLPb.MakeCurrent;
-    SetQuality(3);
+  SetQuality(3);
+  FBackground:=ColorWhite;    // sets background color
+
 end;
 
 procedure TOpenGLForm.OGLPbPaint(Sender: TObject);
@@ -155,6 +164,19 @@ begin
     end;
 end;
 
+procedure TOpenGLForm.OGLPbMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+begin
+  FDistanceToCenter:=FDistanceToCenter-WheelDelta/10;
+  OGLPb.Invalidate;
+end;
+
+procedure TOpenGLForm.OGLPbMouseWheelDown(Sender: TObject; Shift: TShiftState;
+  MousePos: TPoint; var Handled: Boolean);
+begin
+
+end;
+
 procedure TOpenGLForm.ClearDisplayLists;
 
 var f:Integer;
@@ -180,27 +202,61 @@ begin
         begin
         c0:=Points[Faces[f,g]];
         glNormal3f(c0[0],c0[1],c0[2]);
-        c:=ScaleVector(c0,Rad);
-        c:=AddVectors(c,sphC);
+        c:=Multiply(c0,Rad);
+        c:=Add(c,sphC);
         //TO DO:if UseTextures then glTexCoord2f(,);
         glVertex3f(c[0],c[1],c[2]);
         end;
 end;
 
+procedure DoCuboid(TL,BR:TCoord);
+
+var
+  f,g:Integer;
+  c:TCoord;
+
+begin
+  with FBaseCube do
+    begin
+    Points[0]:=BR;
+    Points[1]:=Coord(BR[0],BR[1],TL[2]);
+    Points[2]:=Coord(BR[0],TL[1],BR[2]);
+    Points[3]:=Coord(BR[0],TL[1],TL[2]);
+    Points[4]:=Coord(TL[0],BR[1],BR[2]);
+    Points[5]:=Coord(TL[0],BR[1],TL[2]);
+    Points[6]:=Coord(TL[0],TL[1],BR[2]);
+    Points[7]:=TL;
+    for f:=0 to High(Faces) do
+      for g:=0 to 3 do
+        begin
+        c:=Points[Faces[f,g]];
+        glNormal3f(Normals[f,0],Normals[f,1],Normals[f,2]);
+        //TO DO:if UseTextures then glTexCoord2f(,);
+        glVertex3f(c[0],c[1],c[2]);
+        end;
+    end;
+end;
+
+
 var
   f:Integer;
-  tmp:GLUint;
 
 begin
   glNewList(ListName, GL_COMPILE);
   SetMaterial(ObjectList.Material);
   glBegin(GL_QUADS);
+
+  glEnable (GL_BLEND);
+  //glBlendFunc (GL_SRC_ALPHA, GL_DST_ALPHA);
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  //glBlendFunc(GL_ONE_MINUS_DST_ALPHA,GL_DST_ALPHA);
+
   for f:=0 to High(ObjectList.Objects) do
     with ObjectList.Objects[f] do
     case ObjectType of
       otSphere:DoSphere(Rad,sphC);
-      {otCilinder:(cylC1,cylC2:TCoord;Rad1,Rad2:TFLoat);
-      otCuboid:(cubTopLeft,cubBotRight:TCoord);}
+      {otCilinder:(cylC1,cylC2:TCoord;Rad1,Rad2:TFLoat);}
+      otCuboid:DoCuboid(cubTopLeft,cubBotRight);
     end;
   glEnd;
   // do {otLine:(linC1,linC2:TCoord); here, and others not quads
@@ -265,7 +321,7 @@ begin
   //Fog
   //glEnable (GL_FOG);
   glFogi (GL_FOG_MODE,GL_LINEAR);
-  glFogfv (GL_FOG_COLOR, ColorBlack);
+  glFogfv (GL_FOG_COLOR, FBackground);
   glFogf (GL_FOG_DENSITY, 0.01);
   glFogf(GL_FOG_START, 20);
   glFogf(GL_FOG_END, 100);
@@ -274,13 +330,18 @@ begin
   //textures
   //TO DO:  FTextures.BindTextures;
 
-  glClearColor(0.0,0.0,0.0,1.0);    // sets background color
+  glClearColor(FBackground[0],
+               FBackground[1],
+               FBackground[2],
+               FBackground[3]);
+
   glClearDepth(1.0);
   glDepthFunc(GL_LEQUAL);           // the type of depth test to do
   glEnable(GL_DEPTH_TEST);          // enables depth testing
   glShadeModel(GL_SMOOTH);          // enables smooth color shading
 
   glEnable(GL_LIGHTING);
+
 
   glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
   glHint(GL_POLYGON_SMOOTH_HINT,GL_NICEST);
@@ -340,11 +401,13 @@ procedure TOpenGLForm.Refresh;
 
 var
   f:Integer;
-  col:TGluRGBA;
- //v:TCoords;
 
 begin
-  glClearColor(0.0, 0, 0.0, 1);
+  glClearColor(FBackground[0],
+               FBackground[1],
+               FBackground[2],
+               FBackground[3]);
+
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
 
@@ -362,7 +425,7 @@ begin
 
   //set objects in place and rotation
   glLoadIdentity;
-  glTranslatef(0,0,-100);
+  glTranslatef(0,0,-FDistanceToCenter);
   glMultMatrixf(FModelMat);
 
   for f:=0 to High(FDisplayLists) do
@@ -383,7 +446,7 @@ procedure TOpenGLForm.ResizeForm(NewWidth, NewHeight: Longint);
 begin
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective(     30.0,   // Field-of-view angle
+  gluPerspective(     15.0,   // Field-of-view angle
                    Width/Height,   // Aspect ratio of view volume
                          0.1,   // Distance to near clipping plane
                     100.0 ); // Distance to far clipping plane

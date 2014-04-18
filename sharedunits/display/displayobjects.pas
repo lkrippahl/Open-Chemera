@@ -11,6 +11,8 @@ Purpose:
 Requirements:
 Revisions:
 To do:
+  Display settings for atoms
+  Display options for grids (colors, layers, which grids)
 *******************************************************************************}
 
 unit displayobjects;
@@ -20,7 +22,8 @@ unit displayobjects;
 interface
 
 uses
-  Classes, SysUtils, basetypes, base3ddisplay,LCLProc, molecules, oclconfiguration;
+  Classes, SysUtils, basetypes, base3ddisplay,LCLProc, molecules, oclconfiguration,
+  linegrids, geomutils;
 
 type
   TAtomSettings=record
@@ -33,6 +36,15 @@ type
   end;
   TBondSettingsArray=array of TBondSettings;
 
+  TGridSettings=record
+    Grid:TGridPlane;
+    TransVec:TCoord;
+    Resolution:TFloat;
+    Ambient,Diffuse,Specular:TRGBAColor;
+  end;
+
+  TGridSettingsArray=array of TGridSettings;
+
   { TDisplayManager }
 
   TDisplayManager=class
@@ -41,22 +53,28 @@ type
     //This form neither creates nor destroys them
     FDisplay:IBase3DDisplay;        //Interface to display window
     FLayers:TMolecules;
+    FGrids:TGridSettingsArray;
 
     //SettingsLists
     FAtoms:TAtomSettingsArray;
     FBonds:TBondSettingsArray;
+    function GridAsObjects(Grid: TGridPlane;TransVec:TCoord;Res:TFloat;
+                  Cubes:Boolean=True):T3DObjects;
 
   public
     constructor Create(Display:IBase3DDisplay);
     procedure SetDisplay(Display:IBase3DDisplay);
 
-    procedure Attach(Molecule:TMolecule);
-      //add a molecule to rendering
+    procedure Attach(Molecule:TMolecule);overload;
+    procedure Attach(AGrid:TGridPlane;ATransVec:TCoord;AResolution:TFloat;AColor:TRGBAColor);overload;
+
     procedure Detach(Molecule:TMolecule);
       //remove one molecule
 
     function LayerIndex(Molecule:TMolecule):Integer;
-    procedure Render;
+    procedure RenderLayers;
+    procedure RenderGrids;
+    procedure Render(ShowLayers:Boolean=True;ShowGrids:Boolean=True);
 
     procedure OnDeleteAtoms;
       //called from molecules in order to remove tagged atoms and affected bonds
@@ -69,6 +87,44 @@ type
 implementation
 
 { TDisplayManager }
+
+function TDisplayManager.GridAsObjects(Grid: TGridPlane; TransVec: TCoord;
+  Res: TFloat; Cubes: Boolean): T3DObjects;
+var
+  x,y,z,f,zz:Integer;
+  count,curr:Integer;
+
+  procedure AddCuboid(GridX,GridY,GridZ1,GridZ2:Integer);
+
+  var tl,br:TCoord;
+
+  begin
+    br:=Coord((GridX+0.1)*res,(GridY+0.1)*res,(GridZ1+0.1)*res);
+    tl:=Coord((GridX+0.9)*res,(GridY+0.9)*res,(GridZ2+0.9)*res);
+    br:=Add(br,TransVec);
+    tl:=Add(tl,TransVec);
+    Inc(curr);
+    Result[curr].ObjectType:=otCuboid;
+    Result[curr].cubTopLeft:=tl;
+    Result[curr].cubBotRight:=br;
+  end;
+
+begin
+  if Cubes then count:=CountCells(Grid)
+  else count:=CountSegments(Grid);
+  SetLength(Result,count);
+  curr:=-1;
+  for x:=0 to High(Grid) do
+   for y:=0 to High(Grid[x]) do
+     for z:=0 to High(Grid[x,y]) do
+       if Cubes then
+         for zz:=Grid[x,y,z,0] to Grid[x,y,z,1] do
+           AddCuboid(x,y,zz,zz)
+       else
+          AddCuboid(x,y,Grid[x,y,z,0],Grid[x,y,z,1]);
+  if curr<High(Result) then
+    SetLength(Result,curr+1);
+end;
 
 constructor TDisplayManager.Create(Display: IBase3DDisplay);
 begin
@@ -88,7 +144,22 @@ procedure TDisplayManager.Attach(Molecule: TMolecule);
 begin
   SetLength(FLayers,Length(FLayers)+1);
   FLayers[High(FLayers)]:=Molecule;
-  DebugLn('Attached');
+  DebugLn('Attached:'+Molecule.Name);
+end;
+
+procedure TDisplayManager.Attach(AGrid:TGridPlane;ATransVec:TCoord;AResolution:TFloat;AColor:TRGBAColor);
+begin
+  SetLength(FGrids,Length(FGrids)+1);
+  with FGrids[High(FGrids)] do
+    begin
+    Grid:=AGrid;
+    TransVec:=ATransVec;
+    Diffuse:=AColor;
+    Specular:=AColor;
+    Ambient:=AColor;
+    Resolution:=AResolution;
+    end;
+  DebugLn('Attached Docking grid');
 end;
 
 procedure TDisplayManager.Detach(Molecule: TMolecule);
@@ -124,7 +195,7 @@ begin
     Dec(Result);
 end;
 
-procedure TDisplayManager.Render;
+procedure TDisplayManager.RenderLayers;
 //TO DO: mostly everything. Still just for testing
 //TO DO: should check which have changed
 //TO DO: group objects by material
@@ -135,7 +206,6 @@ var
   ol:T3DObjectList;
 
 begin
-  FDisplay.ClearObjectLists;
   for f:=0 to High(FLayers) do
     begin
     al:=FLayers[f].AllAtoms;
@@ -150,12 +220,44 @@ begin
             end
           else
             ol.Material:=DefaultMaterial;
+//        if f=0 then
+//          ol.Material.Ambient:=RGBAColor(1,0,0,1);
         ol.Objects[0].ObjectType:=otSphere;
         ol.Objects[0].sphC:=al[g].Coords;
         ol.Objects[0].Rad:=al[g].Radius;
+        if f>0 then ol.Objects[0].Rad:=al[g].Radius/4;
         FDisplay.AddObjectList(ol);
         end;
     end;
+end;
+
+procedure TDisplayManager.RenderGrids;
+//TO DO: mostly everything. Still just for testing
+//TO DO: should check which have changed
+//TO DO: group objects by material
+
+var
+  ol:T3DObjectList;
+  gr:Integer;
+
+
+begin
+  ol.Material:=DefaultMaterial;
+  for gr:=0 to High(FGrids) do
+    begin
+    ol.Material.Ambient:=FGrids[gr].Ambient;
+    ol.Material.Diffuse:=FGrids[gr].Diffuse;
+    ol.Material.Specular:=FGrids[gr].Specular;
+    ol.Objects:=GridAsObjects(FGrids[gr].Grid,FGrids[gr].TransVec,FGrids[gr].Resolution,False);
+    FDisplay.AddObjectList(ol);
+    end;
+end;
+procedure TDisplayManager.Render(ShowLayers: Boolean; ShowGrids: Boolean);
+
+begin
+  FDisplay.ClearObjectLists;
+  if ShowLayers then RenderLayers;
+  if ShowGrids then RenderGrids;
   FDisplay.Compile;
 end;
 

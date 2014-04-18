@@ -24,7 +24,7 @@ unit molecules;
 interface
 
 uses
-  Classes, SysUtils, basetypes;
+  Classes, SysUtils, basetypes, geomutils;
 
 const
   //bond types
@@ -55,7 +55,7 @@ type
     FCoord:TCoord;
     FRadius:TFloat;
     FCharge:TFloat;
-    FMass:TFloat;
+    FMass:TFloat;       { TODO : Should this be here? }
     FID:Integer;
 
   public
@@ -73,6 +73,7 @@ type
     property ID:Integer read FID write FID;       //should be unique for each molecule
     property Parent:TMolecule read FParent;
     constructor Create(AName:string; AID:Integer;AParent:TMolecule);
+    constructor CopyFrom(AAtom:TAtom;NewParent:TMolecule);
   end;
 
   TAtoms=array of TAtom;
@@ -114,22 +115,27 @@ type
 
     function AtomIndex(AAtom:TAtom):Integer;      //index in FAtoms
     function GroupIndex(Group:TMolecule):Integer; //Index in FGroups
-    procedure AddGroup(Group:TMolecule);          //adds an existing group
     procedure AddAtom(Atom:TAtom);                //adds an existing atom
   public
+    property GroupAtoms:TAtoms read FAtoms;
     property MolType:string read FType write FType;
     property Name:string read FName write FName;
     property ID:Integer read FID write FID;
     property Parent:TMolecule read FParent;
     property Groups:TMolecules read FGroups;
     constructor Create(AName:string; AID:Integer; AParent:TMolecule);
-    function NewGroup(GName:string; GID:Integer):TMolecule;// creates and adds group
-    function NewAtom(AName:string; AID:integer):TAtom; //creates and adds atom;
+    constructor CopyFrom(AMolecule:TMolecule;NewParent:TMolecule);
+    procedure AddGroup(Group:TMolecule);                    //adds an existing group
+    function NewGroup(GName:string; GID:Integer):TMolecule; // creates and adds group
+    function NewAtom(AName:string; AID:integer):TAtom;      //creates and adds atom;
     function AllAtoms:TAtoms;
+    function AllTerminalGroups:TMolecules;
     function AllBonds:TAtomBonds;
     function GroupCount:Integer;
     function AtomCount:Integer;
     function GetGroup(GroupIx:Integer):TMolecule;overload;
+    function GetGroup(GroupName:string):TMolecule;overload;
+    function GetGroupById(GroupId:Integer):TMolecule;
     function GetAtom(AtomIx:Integer):TAtom;
     procedure TagAllAtoms(Tag:Integer);
     procedure TagAllBonds(Tag:Integer);
@@ -140,6 +146,11 @@ type
     procedure RemoveTaggedBonds(Tag:Integer;OnDelete:TOnDeleteCallback=nil);
     procedure DeleteAtoms(Atoms:TAtoms;OnDelete:TOnDeleteCallback=nil);
     function AtomById(AId:Integer):TAtom;    //looks also recursively in groups
+
+    procedure Transform(TranslationVec:TCoord);overload;
+    procedure Transform(RotationMat:TRotMatrix);overload;
+    procedure Transform(Quat:TQuaternion);overload;
+    procedure Transform(TranslationVec:TCoord;RotationMat:TRotMatrix);overload;
 
     //These procedures clear all groups or atoms, respectively
     //They are meant to be used on empty molecules
@@ -162,7 +173,9 @@ type
 
   end;
 
-function AppendAtomsToArray(const Original,ToAppend:TAtoms):TAtoms;
+  function AppendAtomsToArray(const Original,ToAppend:TAtoms):TAtoms;
+  procedure AppendGroupToArray(const Group:TMolecule;var Groups:TMolecules);
+  procedure AppendGroupsToArray(var Original:TMolecules;const ToAppend:TMolecules);
 
 implementation
 
@@ -180,6 +193,25 @@ begin
     Result[f+lorig]:=ToAppend[f];
 end;
 
+procedure AppendGroupToArray(const Group: TMolecule; var Groups: TMolecules);
+begin
+  SetLength(Groups,Length(Groups)+1);
+  Groups[High(Groups)]:=Group;
+end;
+
+procedure AppendGroupsToArray(var Original: TMolecules; const ToAppend: TMolecules);
+
+var f:Integer;
+    lorig,lapp:Integer;
+begin
+  lorig:=Length(Original);
+  lapp:=Length(ToAppend);
+  SetLength(Original,lorig+lapp);
+  for f:=0 to lapp-1 do
+    Original[f+lorig]:=ToAppend[f];
+end;
+
+
 { TAtom }
 
 constructor TAtom.Create(AName: string;AID:Integer;AParent:TMolecule);
@@ -189,6 +221,19 @@ begin
   FParent:=AParent;
   FID:=AID;
   FAtomicNumber:=-1; //undetermined
+end;
+
+constructor TAtom.CopyFrom(AAtom: TAtom; NewParent: TMolecule);
+begin
+  inherited Create;
+  FName:=AAtom.Name;
+  FParent:=NewParent;
+  FID:=AAtom.FID;
+  FAtomicNumber:=AAtom.FAtomicNumber;
+  FCoord:=AAtom.FCoord;
+  FRadius:=AAtom.FRadius;
+  FCharge:=AAtom.FCharge;
+  FMass:=AAtom.FMass;
 end;
 
 { TMolecule }
@@ -216,6 +261,46 @@ begin
   FGroups:=nil;
   FBondsTable:=nil;
   FAtoms:=nil;
+end;
+
+constructor TMolecule.CopyFrom(AMolecule: TMolecule;NewParent:TMolecule);
+
+var
+  f,bondcount:Integer;
+  at1,at2:TAtom;
+
+begin
+  inherited Create;
+  FName:=AMolecule.FName;
+  FID:=AMolecule.FID;
+  FParent:=NewParent;
+  SetLength(FGroups,Length(AMolecule.FGroups));
+  for f:=0 to High(FGroups) do
+    FGroups[f]:=TMolecule.CopyFrom(AMolecule.FGroups[f],Self);
+
+  SetLength(FAtoms,Length(AMolecule.FAtoms));
+  for f:=0 to High(FAtoms) do
+    FAtoms[f]:=TAtom.CopyFrom(AMolecule.FAtoms[f],Self);
+
+  //copy only bonds between atoms in the new molecule
+  //this means some bonds may be lost when copying a subset of chains...
+  SetLength(FBondsTable,Length(AMolecule.FBondsTable));
+  bondcount:=0;
+  for f:=0 to High(AMolecule.FBondsTable) do
+    begin
+    at1:=AtomById(AMolecule.FBondsTable[f].Atom1.ID);
+    at2:=AtomById(AMolecule.FBondsTable[f].Atom2.ID);
+    if (at1<>nil) and (at2<>nil) then
+      begin
+      FBondsTable[bondcount].Atom1:=at1;
+      FBondsTable[bondcount].Atom2:=at2;
+      FBondsTable[bondcount].BondType:=AMolecule.FBondsTable[f].BondType;
+      Inc(bondcount);
+      end;
+    end;
+  SetLength(FBondsTable,bondcount);
+
+
 end;
 
 procedure TMolecule.DeleteTaggedAtoms(Tag:Integer;OnDelete:TOnDeleteCallback=nil);
@@ -357,6 +442,20 @@ begin
     end;
 end;
 
+function TMolecule.AllTerminalGroups: TMolecules;
+
+var
+  f:Integer;
+
+begin
+  Result:=nil;
+  for f:=0 to High(FGroups) do
+    if FGroups[f].Groups=nil then
+      AppendGroupToArray(FGroups[f],Result)
+    else
+      AppendGroupsToArray(Result,FGroups[f].AllTerminalGroups);
+end;
+
 function TMolecule.AllBonds: TAtomBonds;
 
 //flattens hierarchy into a single array of atom bonds
@@ -390,7 +489,7 @@ function TMolecule.AtomCount: Integer;
 //total number of atoms in molecule and groups
 
 var
-  f,g,i:Integer;
+  f:Integer;
 
 begin
   Result:=Length(FAtoms);
@@ -403,6 +502,34 @@ function TMolecule.GetGroup(GroupIx:Integer): TMolecule;
 begin
   Assert((GroupIx<Length(FGroups)) and (GroupIx>=0),'Invalid group index');
   Result:=FGroups[GroupIx];
+end;
+
+function TMolecule.GetGroup(GroupName: string): TMolecule;
+
+var f:Integer;
+
+begin
+  Result:=nil;
+  for f:=0 to High(FGroups) do
+  if FGroups[f].Name=GroupName then
+    begin
+    Result:=FGroups[f];
+    Break;
+    end;
+end;
+
+function TMolecule.GetGroupById(GroupId: Integer): TMolecule;
+
+var f:Integer;
+
+begin
+  Result:=nil;
+  for f:=0 to High(FGroups) do
+  if FGroups[f].ID=GroupID then
+    begin
+    Result:=FGroups[f];
+    Break;
+    end;
 end;
 
 function TMolecule.GetAtom(AtomIx: Integer): TAtom;
@@ -487,6 +614,59 @@ begin
         if Result<> nil then Break;
         end;
 end;
+
+procedure TMolecule.Transform(TranslationVec: TCoord);
+
+var
+  ats:TAtoms;
+  f:Integer;
+
+begin
+  ats:=AllAtoms;
+  for f:=0 to High(ats) do
+    ats[f].Coords:=Add(ats[f].Coords,TranslationVec);
+end;
+
+procedure TMolecule.Transform(RotationMat: TRotMatrix);
+
+var
+  ats:TAtoms;
+  f:Integer;
+
+begin
+  ats:=AllAtoms;
+  for f:=0 to High(ats) do
+    ats[f].Coords:=Rotate(ats[f].Coords,RotationMat);
+end;
+
+procedure TMolecule.Transform(Quat: TQuaternion);
+
+var
+  ats:TAtoms;
+  f:Integer;
+
+begin
+  ats:=AllAtoms;
+  for f:=0 to High(ats) do
+    ats[f].Coords:=Rotate(ats[f].Coords,Quat);
+end;
+
+
+procedure TMolecule.Transform(TranslationVec: TCoord; RotationMat: TRotMatrix);
+
+var
+  ats:TAtoms;
+  f:Integer;
+
+begin
+  ats:=AllAtoms;
+  for f:=0 to High(ats) do
+    begin
+    ats[f].Coords:=Add(ats[f].Coords,TranslationVec);
+    ats[f].Coords:=Rotate(ats[f].Coords,RotationMat);
+    end;
+end;
+
 
 procedure TMolecule.CreateEmptyGroups(Count: Integer);
 //Sets molecule with an array of empty groups

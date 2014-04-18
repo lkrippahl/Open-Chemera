@@ -29,10 +29,10 @@ type
     TreeView1: TTreeView;
   private
     { private declarations }
-    FLayerMan:TPdbLayerMan;
+    FLayerMan:TPdbModelMan;
   public
     { public declarations }
-    constructor Create(ALayerMan:TPDBLayerMan);
+    constructor Create(TheOwner: TComponent;ALayerMan:TPDBModelMan);reintroduce;
     procedure Rebuild;
   end;
 
@@ -43,9 +43,9 @@ implementation
 
 { TMolTreeForm }
 
-constructor TMolTreeForm.Create(ALayerMan: TPDBLayerMan);
+constructor TMolTreeForm.Create(TheOwner: TComponent;ALayerMan: TPDBModelMan);
 begin
-
+  inherited Create(TheOwner);
 end;
 
 procedure TMolTreeForm.Rebuild;

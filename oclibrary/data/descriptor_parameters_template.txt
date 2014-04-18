@@ -18,6 +18,11 @@ ProbeChainIDs=              ;comma separated list of chain IDs: A,B,C...
 SurfaceCutoff=
   ;Value to determine which residues are at surface (Sidechain SAS)
 
+ComputeContactsByDistance=0
+  ;set to 1 to use distance for contact determination instead of surface
+ContactDistance=5
+  ;contact distance if ComputeContactsByDistance=1
+  
 [SequenceFolders]
 ;list of name and folders containing the msa files. E.g:
 ;Seqs1= C:/somefolder/seqsA

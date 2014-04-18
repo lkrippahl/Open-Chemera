@@ -57,6 +57,7 @@ type
   TQuadMesh=record
     Faces:TQuads;
     Points:TCoords;
+    Normals:TCoords;
   end;
 
 
@@ -138,8 +139,9 @@ begin
   diag:=1/Sqrt(0.75); //normalization
   with Result do
     begin
-    SetLength(Result.Points,8);
-    SetLength(Result.Faces,6);
+    SetLength(Points,8);
+    SetLength(Faces,6);
+    SetLength(Normals,6);
     c:=0;
     for x:=0 to 1 do
       for y:=0 to 1 do
@@ -150,12 +152,18 @@ begin
           Inc(c);
         end;
     //all anti-clockwise, starting from low corner
-    Faces[0]:=Quad(2,0,1,3); //West
-    Faces[1]:=Quad(4,6,7,5); //East
-    Faces[2]:=Quad(6,2,3,7); //North
-    Faces[3]:=Quad(0,4,5,1); //South
-    Faces[4]:=Quad(1,5,7,3); //Top
-    Faces[5]:=Quad(0,2,6,4); //Bottom
+    Faces[0]:=Quad(2,0,1,3);   //West
+    Normals[0]:=Coord(-1,0,0); //West
+    Faces[1]:=Quad(4,6,7,5);   //East
+    Normals[1]:=Coord(1,0,0);  //East
+    Faces[2]:=Quad(6,2,3,7);   //North
+    Normals[2]:=Coord(0,1,0);  //North
+    Faces[3]:=Quad(0,4,5,1);   //South
+    Normals[3]:=Coord(0,-1,0); //South
+    Faces[4]:=Quad(1,5,7,3);   //Top
+    Normals[4]:=Coord(0,0,1);  //Top
+    Faces[5]:=Quad(0,2,6,4);   //Bottom
+    Normals[5]:=Coord(0,0,-1);  //Bottom
     end;
 end;
 
@@ -323,6 +331,7 @@ var f:Integer;
 begin
   Result:=QuadCube;
   for f:=1 to Splits do SplitFaces;
+  Result.Normals:=nil;
 end;
 
 function DefaultMaterial:T3DMaterial;

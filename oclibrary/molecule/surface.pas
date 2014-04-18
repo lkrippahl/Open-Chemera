@@ -19,7 +19,7 @@ unit surface;
 interface
 
 uses
-  Classes, SysUtils, basetypes, geomhash, threedcalc;
+  Classes, SysUtils, basetypes, geomhash, geomutils;
 
 function GoldenSpiralPoints(Num:Integer):TCoords;
   //Returns Num points distributed around a sphere centered at origin, radius 1
@@ -83,7 +83,6 @@ begin
   if Points=nil then Exit;
   hashcell:=LargestRadius*2;
   if hashcell<MinHashCell then hashcell:=MinHashCell;
-
   ghash:=TGeomHasher.Create(Points,hashcell);
   for f:=0 to High(Points) do
     begin
@@ -91,7 +90,7 @@ begin
     countouts:=0;
     for g:=0 to High(SpherePoints) do
       begin
-      sphere:=AddVectors(ScaleVector(SpherePoints[g],Radii[f]),Points[f]);
+      sphere:=Add(Scaled(SpherePoints[g],Radii[f]),Points[f]);
       intersect:=False;
       for h:=0 to High(Ixs) do
         if (ixs[h]<>f) and (Distance(sphere,Points[ixs[h]])<Radii[ixs[h]]) then

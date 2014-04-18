@@ -7,9 +7,11 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, chemeramain, displayobjects, molecules, pdbmolecules, basetypes, selections, base3ddisplay,
-displaysettings, oglform, pdbparser, lazopenglcontext,
-oclconfiguration, geomhash, moleculetree, notifications;
+  Forms, chemeramain, displayobjects, molecules, pdbmolecules, basetypes,
+  selections, base3ddisplay, displaysettings, oglform, pdbparser,
+  lazopenglcontext, oclconfiguration, geomhash, geomutils, moleculetree,
+  notifications, molutils, surface, linegrids, povray, dockdomains,
+  dockconstraints, formdocker;
 
 {$R *.res}
 

@@ -7,6 +7,9 @@ Date: 31.3.2011
 Purpose:
   Sorting
 Revisions:
+TODO: Only TFloats sorting is implemented in QSAscendingIndex; the others
+  convert the data to sort as float. This should be improved by implementing
+  QS on the other value types (? bad code reuse but good for large arrays)
 *******************************************************************************}
 unit quicksort;
 
@@ -26,6 +29,9 @@ function QSAscendingIndex(const Values:TIntegers):TIntegers;overload;
 function QSIntsAsVals(Ints:array of Integer):TFloats;
 function QSIndexAsRanking(Ix:TIntegers):TIntegers;
 function QSZeroBasedIndex(Count:Integer):TIntegers;
+function QSSorted(const Values:TIntegers):TIntegers;overload;
+function QSSorted(const Values:TFloats):TFloats;overload;
+
 
 implementation
 
@@ -141,6 +147,32 @@ begin
   SetLength(Result,Count);
   for f:=0 to Count-1 do
     Result[f]:=f;
+end;
+
+function QSSorted(const Values: TIntegers): TIntegers;
+
+var
+  ixs:TIntegers;
+  f:Integer;
+
+begin
+  ixs:=QSAscendingIndex(Values);
+  SetLength(Result,Length(ixs));
+  for f:=0 to High(Result) do
+    Result[f]:=Values[ixs[f]];
+end;
+
+function QSSorted(const Values: TFloats): TFloats;
+
+var
+  ixs:TIntegers;
+  f:Integer;
+
+begin
+  ixs:=QSAscendingIndex(Values);
+  SetLength(Result,Length(ixs));
+  for f:=0 to High(Result) do
+    Result[f]:=Values[ixs[f]];
 end;
 
 function QSAscendingIndex(const Values:TIntegers):TIntegers;overload;

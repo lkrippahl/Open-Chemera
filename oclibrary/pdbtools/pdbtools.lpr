@@ -25,11 +25,11 @@ uses
   {$ENDIF}{$ENDIF}
   interfaces, Classes, SysUtils, basetypes, CustApp, surface, pdbmolecules,
   molecules, geomhash, quicksort, pdbparser, mmcifparser, oclconfiguration,
-  alignment, stringutils, progress, pdbsurface, contactprediction;
+  alignment, stringutils, progress, pdbsurface, contactprediction, ebiblastp,
+  sequence, fasta;
 
 type
 
-  TCuboid=array[0..1] of TCoord;
   TAtomRec=record
     Atom:TAtom;
     ASA:TFloat;
@@ -61,6 +61,10 @@ type
   protected
     procedure DoRun; override;
     procedure DoContacDescriptors(Rad,MinSurf:TFloat);
+    // procedure PDBAnalysis; TODO
+    procedure MergeBLASTP(MaxSeqs:Integer=2000);
+    // merges a set of xml files with results from BLASTP(EBI)
+    procedure ExportChainSequences;
 
   public
     constructor Create(TheOwner: TComponent); override;
@@ -69,563 +73,8 @@ type
   end;
 
 var
-  GoldenSphere:TCoords;
-  MinHashCell:Single;     //cell width for geometric hashing
   SortResidues:Boolean;   //sort residue contacts and surface, largest first
   MinSurf:Single;         //ASA cutoff for reporting residues at surface
-  UseOnlyRes,ExcludeRes:TSimpleStrings;
-                          //list of residue types to use or to exclude
-                          //(exclude is ignored unles useonly is nil
-
-  MSAlignment:TMSA;       //for msa mapping
-  Organisms:TSimpleStrings;
-                          //for sorting the lines in the MSA mapping
-
-function UseRes(Name:string):Boolean;
-
-begin
-  Result:=((UseOnlyRes=nil) or (LastIndexOf(Name,UseOnlyRes)>=0)) and
-           (LastIndexOf(Name,ExcludeRes)<0);
-end;
-
-function CalcASAs(Atoms:TAtoms;Rad:TFloat):TFloats;overload;
-
-var
-  f:Integer;
-  points:TCoords;
-  radii:TFloats;
-
-begin
-  SetLength(points,Length(Atoms));
-  SetLength(radii,Length(Atoms));
-  for f:=0 to High(Atoms) do
-    begin
-    points[f]:=Atoms[f].Coords;
-    radii[f]:=Atoms[f].Radius+Rad;
-    end;
-  Result:=SRSurface(points,radii,GoldenSphere,MinHashCell);
-
-end;
-
-procedure CalcASAs(var AtomRecs:TAtomRecs;Rad:TFloat);overload;
-
-var
-  asas:TFLoats;
-  atoms:TAtoms;
-  f:Integer;
-
-begin
-  SetLength(atoms,Length(AtomRecs));
-  for f:=0 to High(atoms) do atoms[f]:=AtomRecs[f].Atom;
-  asas:=CalcAsas(atoms,Rad);
-  for f:=0 to High(AtomRecs) do
-    AtomRecs[f].ASA:=asas[f];
-end;
-
-function UseResidue(ResName:string):Boolean;
-
-begin
-  if UseOnlyRes<>nil then
-    Result:=IndexOf(ResName,UseOnlyRes)>=0
-  else Result:=IndexOf(ResName,ExcludeRes)<0;
-end;
-
-procedure PopulateGroup(var Group:TGroup);//from chains creates atomrecs and residuerecs
-
-var
-  tmpatoms:TAtoms;
-  tmpresidues:TMolecules;
-  f,r,a,alen:Integer;
-
-
-begin
-  with Group do
-    begin
-    AtomRecs:=nil;
-    ResidueRecs:=nil;
-    ASA:=-1;
-    for f:=0 to High(Chains) do
-      begin
-      tmpresidues:=Chains[f].Groups;
-      for r:=0 to High(tmpresidues) do
-        if UseResidue(tmpresidues[r].Name) then
-          begin
-          SetLength(ResidueRecs,Length(ResidueRecs)+1);
-          with ResidueRecs[High(ResidueRecs)] do
-            begin
-            Residue:=tmpresidues[r];
-            ASA:=0;
-            ContactSurfaces:=nil;
-            ContactResidues:=nil;
-            tmpatoms:=Residue.AllAtoms;
-            alen:=Length(AtomRecs);
-            SetLength(AtomRecs,Length(tmpatoms)+alen);
-            for a:=0 to High(tmpatoms) do
-              begin
-              AtomRecs[a+alen].Atom:=tmpatoms[a];
-              AtomRecs[a+alen].ASA:=0;
-              AtomRecs[a+alen].ResidueRec:=High(ResidueRecs);
-              end;
-            end;
-          end;
-      end;
-    end;
-end;
-
-procedure CalcResASAs(var Group:TGroup;Rad:TFloat);
-
-var
-  f:Integer;
-
-begin
-  with Group do
-    begin
-    CalcASAs(AtomRecs,Rad);
-    for f:=0 to High(ResidueRecs) do
-      with ResidueRecs[f] do
-        begin
-        ASA:=0;
-        IsolatedASA:=Sum(CalcASAs(Residue.AllAtoms,Rad));
-        end;
-    for f:=0 to High(AtomRecs) do
-      ResidueRecs[AtomRecs[f].ResidueRec].ASA:=
-        ResidueRecs[AtomRecs[f].ResidueRec].ASA+AtomRecs[f].ASA;
-    end;
-end;
-
-function CalcHull(Atoms:TAtoms;Rad:TFloat):TCuboid;
-
-var
-  f:Integer;
-  c1,c2:TCoord;
-
-begin
-  if Atoms=nil then
-    begin
-    c1:=NullVector;
-    c2:=NullVector;
-    end
-  else
-    begin
-    c1:=Atoms[0].Coords;
-    c2:=c1;
-    for f:=1 to High(Atoms) do
-      begin
-      c1:=Min(c1,Atoms[f].Coords);
-      c2:=Max(c2,Atoms[f].Coords);
-      end;
-    for f:=0 to 2 do
-      begin
-      c1[f]:=c1[f]-Rad;
-      c2[f]:=c2[f]+Rad;
-      end;
-    end;
-  Result[0]:=c1;
-  Result[1]:=c2;
-end;
-
-procedure SetupResiduesContact(var Group:TGroup;Rad:TFloat);
-
-var f:Integer;
-
-begin
-  with Group do
-    for f:=0 to High(ResidueRecs) do
-      with ResidueRecs[f] do
-        begin
-        ContactHull:=CalcHull(Residue.AllAtoms,Rad);
-        IsolatedASA:=Sum(CalcAsas(Residue.AllAtoms,Rad));
-        ContactSurfaces:=nil;
-        ContactResidues:=nil;
-        end;
-end;
-
-function Intersect(Cuboid1,Cuboid2:TCuboid):Boolean;
-
-  var c1,c2:TCoord;
-
-  begin
-    c1:=Max(Cuboid1[0],Cuboid2[0]);
-    c2:=Min(Cuboid1[1],Cuboid2[1]);
-    Result:=(c1[0]<=c2[0]) and (c1[1]<=c2[1]) and (c1[2]<=c2[2]);
-  end;
-
-function CalcResidueContact(Res1,Res2:TResidueRec;Rad:TFloat):TFloat;
-
-var
-  sr1,sr2,sr:TFloat;
-  atoms1,atoms2:TAtoms;
-  len,f:Integer;
-
-begin
-  atoms1:=Res1.Residue.AllAtoms;
-  atoms2:=Res2.Residue.AllAtoms;
-  len:=Length(atoms1);
-  SetLength(atoms1,Length(atoms1)+Length(atoms2));
-  for f:=0 to High(atoms2) do atoms1[f+len]:=atoms1[f];
-  sr:=Sum(CalcASAs(atoms1,Rad));
-  sr1:=Res1.IsolatedASA;
-  sr2:=Res2.IsolatedASA;
-  //Contact area is half the lost ASA when in contact
-  Result:=(sr1+sr2-sr)/2;
-end;
-
-
-procedure CalcContacts(var Group1,Group2:TGroup;Rad:TFloat);
-
-var
-  r1,r2:Integer;
-  sr:TFloat;
-
-begin
-  SetupResiduesContact(Group1,Rad);
-  SetupResiduesContact(Group2,Rad);
-  for r1:=0 to High(Group1.ResidueRecs) do
-    for r2:=0 to High(Group2.ResidueRecs) do
-      if Intersect(Group1.ResidueRecs[r1].ContactHull,
-                   Group2.ResidueRecs[r2].ContactHull) then
-        begin
-        sr:=CalcResidueContact(Group1.ResidueRecs[r1],
-            Group2.ResidueRecs[r2],Rad);
-        AddToArray(sr,Group1.ResidueRecs[r1].ContactSurfaces);
-        AddToArray(r2,Group1.ResidueRecs[r1].ContactResidues);
-        AddToArray(sr,Group2.ResidueRecs[r2].ContactSurfaces);
-        AddToArray(r1,Group2.ResidueRecs[r2].ContactResidues);
-        end;
-end;
-
-
-procedure CalcASA(var Group:TGroup;Rad:TFloat);
-
-var
-  f:Integer;
-
-begin
-  CalcResASAs(Group,Rad);
-  with Group do
-    begin
-    ASA:=0;
-    for f:=0 to High(ResidueRecs) do
-      ASA:=ASA+ResidueRecs[f].ASA;
-    end;
-end;
-
-function SurfaceResidueIxs(Group:TGroup;MinSurf:TFloat):TIntegers;
-
-var f,curr:Integer;
-
-begin
-  SetLength(Result,Length(Group.ResidueRecs));
-  curr:=0;
-  for f:=0 to High(Group.ResidueRecs) do
-      if Group.ResidueRecs[f].ASA>=MinSurf then
-        begin
-        Result[curr]:=f;
-        Inc(curr);
-        end;
-  SetLength(Result,curr)
-end;
-
-
-procedure ReportSurfaces(var Groups:TGroups;Rad:TFloat;Sl:TStringList);
-
-var g,r:Integer;
-    index:TIntegers;
-    contacts:TFloats;
-
-procedure WriteRec(const Rec:TResidueRec);
-
-begin
-  if Rec.ASA>=MinSurf then
-    Sl.Add(Rec.Residue.Parent.Name+#9+
-          Rec.Residue.Name+#9+
-          IntToStr(Rec.Residue.Id)+#9+
-          FloatToStrF(Rec.ASA,ffFixed,1,1)+#9+
-          FloatToStrF(Rec.IsolatedASA,ffFixed,1,1));
-end;
-
-begin
-  for g:=0 to High(Groups) do
-    begin
-    Sl.Add('');
-    Sl.Add('Group: '+Groups[g].Name);
-    CalcASA(Groups[g],Rad);
-    Sl.Add('Total ASA: '+FloatToStrF(Groups[g].ASA,ffFixed,1,1));
-    Sl.Add('Chain'+#9+'Res'+#9+'ID'+#9+'Surf'+#9+'ASA');
-    if SortResidues then
-      begin
-      SetLength(contacts,Length(Groups[g].ResidueRecs));
-      for r:=0 to High(contacts) do
-        contacts[r]:=-Groups[g].ResidueRecs[r].ASA;
-      index:=QSAscendingIndex(contacts);
-      for r:=0 to High(Groups[g].ResidueRecs) do
-        WriteRec(Groups[g].ResidueRecs[index[r]]);
-      end
-    else
-      for r:=0 to High(Groups[g].ResidueRecs) do
-        WriteRec(Groups[g].ResidueRecs[r]);
-    end;
-
-end;
-
-procedure CalcNeighbours(Group:TGroup;Rad:TFloat);
-
-var
-  r1,r2:Integer;
-  sr:TFloat;
-
-
-begin
-  SetupResiduesContact(Group,Rad);
-  with Group do
-    for r1:=0 to High(ResidueRecs)-1 do
-      for r2:=r1+1 to High(ResidueRecs) do
-         if Intersect(Group.ResidueRecs[r1].ContactHull,
-                      Group.ResidueRecs[r2].ContactHull) then
-          begin
-          sr:=CalcResidueContact(Group.ResidueRecs[r1],
-              Group.ResidueRecs[r2],Rad);
-          AddToArray(sr,Group.ResidueRecs[r1].ContactSurfaces);
-          AddToArray(r2,Group.ResidueRecs[r1].ContactResidues);
-          AddToArray(sr,Group.ResidueRecs[r2].ContactSurfaces);
-          AddToArray(r1,Group.ResidueRecs[r2].ContactResidues);
-          end;
-end;
-
-procedure ReportNeighbours(Groups:TGroups;Rad:TFloat;Sl:TStringList);
-
-var g,f,r1:Integer;
-    s:string;
-
-begin
-  for g:=0 to High(Groups) do
-    begin
-    CalcNeighbours(Groups[g],Rad);
-    Sl.Add('Neighbours: '+Groups[g].Name);
-
-    for r1:=0 to High(Groups[g].ResidueRecs) do
-      with Groups[g].ResidueRecs[r1] do
-        begin
-        s:=Residue.Name+#9+IntToStr(Residue.Id);
-        for f:=0 to High(ContactResidues) do
-          if ContactSurfaces[f]>MinSurf then
-            s:=s+#9+IntToStr(Groups[g].ResidueRecs[ContactResidues[f]].Residue.Id)
-                +#9+FloatToStrF(ContactSurfaces[f],ffFixed,1,1);
-        Sl.Add(s);
-        end;
-    end;
-end;
-
-procedure ReportContacts(var Groups:TGroups;Rad:TFloat;Sl:TStringList);
-
-function CalcJointASA(Ix1,Ix2:Integer):TFloat;
-
-var
-  f,len:Integer;
-  tmpatoms:TAtoms;
-begin
-  len:=Length(Groups[Ix1].AtomRecs);
-  SetLength(tmpatoms,len+Length(Groups[Ix2].AtomRecs));
-  for f:=0 to High(Groups[Ix1].AtomRecs) do
-    tmpatoms[f]:=Groups[Ix1].AtomRecs[f].Atom;
-  for f:=0 to High(Groups[Ix2].AtomRecs) do
-    tmpatoms[f+len]:=Groups[Ix2].AtomRecs[f].Atom;
-  Result:=Sum(CalcASAs(tmpatoms,Rad));
-end;
-
-procedure WriteRecs(const Rec1,Rec2:TResidueRec;Cont:TFloat);
-
-begin
-  if Cont>=MinSurf then
-    Sl.Add(Rec1.Residue.Parent.Name+#9+
-          Rec1.Residue.Name+#9+
-          IntToStr(Rec1.Residue.Id)+#9+
-          Rec2.Residue.Parent.Name+#9+
-          Rec2.Residue.Name+#9+
-          IntToStr(Rec2.Residue.Id)+#9+
-          FloatToStrF(Cont,ffFixed,1,1));
-end;
-
-var g1,g2,r,f:Integer;
-    index,resix1,resix2:TIntegers;
-    contacts:TFloats;
-    jointASA:TFloat;
-
-begin
-  //Need group ASAs for interface calculation
-  for g1:=0 to High(Groups) do
-    if Groups[g1].ASA<0 then //check if already calculated (if -s option)
-      CalcASA(Groups[g1],Rad);
-
-  for g1:=0 to High(Groups)-1 do
-    for g2:=g1+1 to High(Groups) do
-      begin
-      Sl.Add('Contacts: '+Groups[g1].Name+' to '+Groups[g2].Name);
-      CalcContacts(Groups[g1],Groups[g2],Rad);
-
-      jointASA:=CalcJointAsa(g1,g2);
-      jointASA:=(Groups[g1].ASA+Groups[g2].ASA-jointASA)/2;
-        //contact surface is half the loss in ASA when joining the groups
-      Sl.Add('Contact surface (A^2): '+FloatToStrF(jointASA,ffFixed,1,1));
-      resix1:=nil;
-      resix2:=nil;
-      contacts:=nil;
-      with Groups[g1] do
-        for r:=0 to High(ResidueRecs) do
-          with ResidueRecs[r] do
-            for f:=0 to High(ContactResidues) do
-              begin
-              AddToArray(r,resix1);
-              AddToArray(ContactResidues[f],resix2);
-              AddToArray(-ContactSurfaces[f],contacts); //negative, for sorting
-              end;
-      if SortResidues then
-        begin
-        index:=QSAscendingIndex(contacts);
-        for r:=0 to High(index) do
-          WriteRecs(Groups[g1].ResidueRecs[resix1[index[r]]],
-                    Groups[g2].ResidueRecs[resix2[index[r]]],
-                    -contacts[index[r]]);
-        end
-      else
-        for r:=0 to High(resix1) do
-          WriteRecs(Groups[g1].ResidueRecs[resix1[r]],Groups[g2].ResidueRecs[resix2[r]],
-                    -contacts[r]);
-      end;
-end;
-
-function ChainSequence(Chain:TMolecule):string;
-
-var
-  res:TMolecules;
-  r:Integer;
-  c,s:string;
-  rid:Integer;
-
-begin
-  res:=Chain.Groups;
-  s:='';
-  for r:=0 to High(res) do
-    begin
-    rid:=res[r].Id;
-    while Length(s)<rid-1 do s:=s+'X';
-    if Length(s)<rid then
-      begin
-      c:=AAOneLetterCode(res[r].Name);
-      if c<>'' then
-        s:=s+c
-      else s:=s+'X';
-      end;
-    end;
-  Result:=s;
-end;
-
-procedure ExtractSequence(Name:string;Groups:TGroups;Report:TStringList);
-
-function GetChains:TMolecules;
-
-var
-  f,g:Integer;
-
-begin
-  Result:=nil;
-  for f:=0 to High(Groups) do
-    with Groups[f] do for g:=0 to High(Chains) do
-      begin
-      SetLength(Result,Length(Result)+1);
-      Result[High(Result)]:=Chains[g];
-      end;
-end;
-
-var
-  chains:TMolecules;
-  f:Integer;
-  s:string;
-
-begin
-  chains:=GetChains;
-  for f:=0 to High(chains) do
-    begin
-    s:=ChainSequence(chains[f]);
-    Report.Add('> '+Name+':'+chains[f].Name);
-    Report.Add(s);
-    end;
-end;
-
-function MapOrgsToMSA(MSA:TMSA;Orgs:TSimpleStrings):TIntegers;
-
-var f,g:Integer;
-
-begin
-  if Orgs=nil then
-    Result:=nil
-  else
-    begin
-    SetLength(Result,Length(Orgs));
-    for f:=0 to High(Orgs) do
-      begin
-      Result[f]:=-1;
-      for g:=0 to High(MSA.SequenceIds) do
-        if Pos(Orgs[f],MSA.SequenceIds[g])>0 then
-          begin
-          Result[f]:=g;
-          Break;
-          end;
-      end;
-    end;
-end;
-
-procedure MatchMSA(Chain:TMolecule;MSA:TMSA;Orgs:TSimpleStrings;Report:TStringList);
-
-var
-  ix,ixres:Integer;
-  map,osmap:TIntegers;
-  seq:string;
-  f,g:Integer;
-  res:TMolecule;
-
-begin
-  if MSA.Alignment=nil then
-    begin
-    Report.Add('No alignment to process');
-    Exit;
-    end;
-  seq:=ChainSequence(Chain);
-  osmap:=MapOrgsToMSA(MSA,Orgs);
-  if LastIndexOf(-1,osmap)>=0 then
-    begin
-    Report.Add('Missing organisms');
-    for f:=0 to High(osmap) do
-      if osmap[f]<0 then Report.Add(Organisms[f]);
-    end;
-
-  ix:=FindMatch(seq,MSA,map);
-
-  if ix>=0 then
-    begin
-    Report.Add('MSA Match: '+Chain.Name+': matches sequence '+IntToStr(ix+1)+
-      ' (in first position)');
-    for f:=0 to High(Chain.Groups) do
-    if Chain.Groups[f].Id>0 then //TODO:improve this, can be negative, but must change sequence extraction...
-      begin
-      res:=Chain.Groups[f];
-      ixres:=map[res.ID-1];
-      seq:=msa.Alignment[ix][ixres];
-      if osmap=nil then
-        begin
-        for g:=0 to High(msa.Alignment) do
-          if g<>ix then seq:=seq+msa.Alignment[g][ixres];
-        end
-      else
-        for g:=0 to High(osmap) do
-          if osmap[g]>=0 then
-            seq:=seq+msa.Alignment[osmap[g]][ixres];
-      if UseRes(res.Name) then Report.Add(res.name+#9+IntToStr(res.ID)+#9+seq);
-      end;
-    end
-  else
-    Report.Add('MSA Match: '+Chain.Name+' does not match any sequence');
-end;
 
 
 
@@ -633,20 +82,11 @@ end;
 
 procedure TPdbTools.DoRun;
 var
-  pdblayerman:TPDBModelMan;
-  pdblayer:TPDBModel;
-  srec:TSearchRec;
-
-  //parameters
-  proberadius:Single;     //water molecule radius
-  filemask:string;
-
-  groupids:array of TSimpleStrings;
-    //chain identifiers for groups; nil if all one group
-
-  groups:TGroups;
 
   report:TStringList;
+  command:string;
+  proberadius:TFLoat;
+    {
 
 procedure SetParameters;
 
@@ -707,37 +147,6 @@ begin
 end;
 
 
-procedure BuildGroups;
-
-var f,g:Integer;
-
-begin
-  if groupids=nil then
-    begin
-    SetLength(groups,1);
-    groups[0].Chains:=pdblayer.Molecule.Groups;
-    groups[0].Name:=pdblayer.Molecule.Name;
-    end
-  else
-    begin
-    SetLength(groups,Length(groupids));
-    for f:=0 to High(groupids) do
-      begin
-      SetLength(groups[f].Chains,Length(groupids[f]));
-      groups[f].Name:=pdblayer.Molecule.Name+':'+FlattenStrings(groupids[f],',');
-      for g:=0 to High(groupids[f]) do
-        groups[f].Chains[g]:=pdblayer.GetChain(groupids[f,g]);
-      end;
-    end;
-  for f:=0 to High(groups) do
-    PopulateGroup(groups[f]);
-end;
-
-var
-  c:string;
-  chain:TMolecule;
-  command:string;
-
   procedure DoPDBStats;
 
   var f:Integer;
@@ -759,8 +168,8 @@ var
         if HasOption('c','contacts') then
           ReportContacts(groups,proberadius,report);
 
-        if HasOption('q','sequence') then
-          ExtractSequence(pdblayer.Molecule.Name,groups,report);
+//        if HasOption('q','sequence') then
+//          ExtractSequence(pdblayer.Molecule.Name,groups,report);
 
         if HasOption('m','matchmsa') then
           begin
@@ -784,7 +193,7 @@ var
       for f:=0 to report.Count-1 do
         WriteLn(report.Strings[f]);
   end;
-
+                                           }
 begin
   // quick check parameters
   if HasOption('h','help') or (ParamCount<1) then begin //TODO: check parameters
@@ -798,14 +207,19 @@ begin
   //configuration
   LoadAtomData; //for VdW radius
   LoadAAData;   //for sequence and listing aminoacids
-  pdblayerman:=TPDBModelMan.Create(Config.MonomersPath);
-  SetParameters;
+//  pdblayerman:=TPDBModelMan.Create(Config.MonomersPath);
+//  SetParameters;
   command:=ParamStr(1);
-  if command='pdb' then
+  proberadius:=1.4;
+ { if command='pdb' then
     DoPDBStats
-  else if command='desc' then
-    DoContacDescriptors(proberadius,minsurf);
-  // stop program loop
+  else }if command='desc' then
+    DoContacDescriptors(proberadius,minsurf)
+  else if command='seq' then
+    ExportChainSequences
+  else if command='merge' then
+    MergeBLASTP;
+
   report.Free;
   Terminate;
 
@@ -826,17 +240,123 @@ var
 
 begin
   surfrep:=descriptorgen.GetSurfaceData(Index);
+  writeln;
+  WriteLn('Res'+#9+'ID'+#9+'Isolated'+#9+'Isolated SC'+#9+'SASurf'+#9+'SAS SC');
   with surfrep do
   for f:=0 to High(Residues) do
     begin
-    WriteLn(f,':',Residues[f].Name,#9,
+    WriteLn(Residues[f].Name,#9,
       Residues[f].ID,#9,
-      IsolatedSurface[f],#9,
-      IsolatedSidechainSurface[f],#9,
-      SASurface[f],#9,
-      SASidechainSurface[f],#9);
+      FloatToStrF(IsolatedSurface[f],ffFixed,6,1),#9,
+      FloatToStrF(IsolatedSidechainSurface[f],ffFixed,6,1),#9,
+      FloatToStrF(SASurface[f],ffFixed,6,1),#9,
+      FloatToStrF(SASidechainSurface[f],ffFixed,6,1),#9);
     end;
 end;
+
+procedure FlushContact(Res1,Res2:TMolecule;Contact:TFloat);
+
+begin
+  WriteLn(Res1.Name,#9,Res1.ID,#9,
+          Res2.Name,#9,Res2.ID,#9,
+          FloatToStrF(Contact,ffFixed,6,1));
+end;
+
+procedure FlushInnerContacts(StructureIndex:Integer);
+
+var
+  r1,r2:Integer;
+  contacts:TMatrix;
+  surfrep:TSurfaceReport;
+begin
+  WriteLn();
+  WriteLn('Full, ',StructureIndex+1);
+  contacts:=descriptorgen.FullInnerContacts(StructureIndex);
+  surfrep:=descriptorgen.GetSurfaceData(StructureIndex);
+  for r1:=0 to High(contacts)-1 do
+    for r2:=r1+1 to High(contacts) do
+      if contacts[r1,r2]>0 then
+        FlushContact(surfrep.Residues[r1],surfrep.Residues[r2],contacts[r1,r2]);
+  WriteLn('Sidechain, ',StructureIndex+1);
+  contacts:=descriptorgen.SidechainInnerContacts(StructureIndex);
+  for r1:=0 to High(contacts)-1 do
+    for r2:=r1+1 to High(contacts) do
+      if contacts[r1,r2]>0 then
+        FlushContact(surfrep.Residues[r1],surfrep.Residues[r2],contacts[r1,r2]);
+
+end;
+
+
+procedure FlushCrossContacts;
+
+var
+  rt,rp:Integer;
+  contacts:TMatrix;
+  surft,surfp:TSurfaceReport;
+begin
+  WriteLn();
+  WriteLn('Full cross contacts');
+  contacts:=descriptorgen.FullCrossContacts;
+  surft:=descriptorgen.GetSurfaceData(TargetIndex);
+  surfp:=descriptorgen.GetSurfaceData(ProbeIndex);
+  for rt:=0 to High(contacts) do
+    for rp:=0 to High(contacts[0]) do
+      if contacts[rt,rp]>0 then
+        FlushContact(surft.Residues[rt],surfp.Residues[rp],contacts[rt,rp]);
+
+  WriteLn('Sidechain contacts');
+  contacts:=descriptorgen.SidechainCrossContacts;
+  for rt:=0 to High(contacts) do
+    for rp:=0 to High(contacts[0]) do
+      if contacts[rt,rp]>0 then
+        FlushContact(surft.Residues[rt],surfp.Residues[rp],contacts[rt,rp]);
+
+end;
+
+
+procedure FlushNeighbours(Index:Integer);
+
+var
+  f,n:Integer;
+  s:string;
+  res:TMolecule;
+  oix1,oix2:Integer;
+
+begin
+  WriteLn;
+  WriteLn('Neighbours ',Index);
+  with descriptorgen.Descriptors do
+    begin
+    for f:=0 to High(Neighbours[Index]) do
+      begin
+      s:='';
+      oix1:=SelectedIXs[Index,f];
+      for n:=0 to High(Neighbours[Index,f]) do
+        begin
+        res:=Selected[Index,Neighbours[Index,f,n]];
+        oix2:=SelectedIXs[Index,Neighbours[Index,f,n]];
+        s:=s+#9+res.Name+#9+IntToStr(res.ID)+#9+
+          IntToStr(Round(descriptorgen.SidechainInnerContacts(Index)[oix1,oix2]));
+        end;
+      WriteLn(Selected[Index,f].Name,#9,Selected[Index,f].ID,#9,s)
+      end;
+    end;
+end;
+
+procedure FlushSequences(DBIndex,Index:Integer);
+
+var
+  f:Integer;
+
+begin
+  WriteLn;
+  WriteLn('Sequences ',Index);
+  WriteLn('Database:',descriptorgen.Descriptors.MSADBNames[DBIndex]);
+  with descriptorgen.Descriptors do
+    for f:=0 to High(ResidueMSAs[Index]) do
+      WriteLn(Selected[Index,f].Name,#9,Selected[Index,f].ID,#9,ResidueMSAs[DBIndex,Index,f]);
+end;
+
 
 procedure WriteReport;
 
@@ -846,8 +366,8 @@ var
 begin
   with cdparams do
     begin
-    WriteLn(TargetPDB);
-    WriteLn(ProbePDB);
+    WriteLn(TargetPDBFile);
+    WriteLn(ProbePDBFile);
     WriteLn(FlattenStrings(TargetIDs,', '));
     WriteLn(FlattenStrings(ProbeIDs,', '));
     for f:=0 to High(TargetIndexes) do
@@ -858,23 +378,110 @@ begin
     end;
   FlushSurfaces(0);
   FlushSurfaces(1);
+  FlushInnerContacts(0);
+  FlushInnerContacts(1);
+  FlushCrossContacts;
+  FlushNeighbours(0);
+  FlushNeighbours(1);
+  for f:=0 to High(descriptorgen.Descriptors.MSADBNames) do
+    begin
+    FlushSequences(f,0);
+    FlushSequences(f,1);
+    end;
 end;
 
 var
   f,g,c:Integer;
+  //sl:TStringList;
 
 
 begin
-  descriptorgen:=TDescriptorGen.Create;
+  descriptorgen:=TDescriptorGen.Create(50);
   paramfile:=ParamStr(2);
   cdparams:=ReadParameters(paramfile);
 
-  descriptorgen.GenerateAllDescriptors(cdparams);
-
-  WriteReport;
-  descriptorgen.Free;
-
+  if HasOption('s','surface') then
+    descriptorgen.DistanceDescriptors(cdparams)
+  else
+    descriptorgen.GenerateAllDescriptors(cdparams);
+  descriptorgen.SaveDescriptors(HasOption('h','headers'), HasOption('c','contacts'));
+  if not(HasOption('s','surface') or HasOption('c','contacts')) then
+    descriptorgen.SaveRaw();
 end;
+
+procedure TPdbTools.MergeBLASTP(MaxSeqs:Integer=2000);
+
+var
+  fils:TSimpleStrings;
+  seqsset:TOCSequencesSet;
+  tmpseqs:TOCSequences;
+  f:Integer;
+  fastawriter:TFastaWriter;
+  tmpfastareader,fastareader:TFastaReader;
+
+begin
+  SetLength(fils,ParamCount-1);
+  SetLength(seqsset,ParamCount-2);
+  fastareader:=TFastaReader.Create(ParamStr(2));
+  for f:=3 to ParamCount do
+    begin
+    tmpseqs:=ReadEBIBlast(ParamStr(f));     // try ebi blastp xml format
+    if tmpseqs=nil then                     // try as fasta file
+      begin
+      tmpfastareader:=TFastaReader.Create(ParamStr(f));
+      tmpseqs:=tmpfastareader.AsOCSequences;
+      tmpfastareader.Free;
+      end;
+    seqsset[f-3]:=tmpseqs;
+    seqsset[f-3,0].Sequence:=fastareader.SequenceByID(seqsset[f-3,0].ID);
+    end;
+
+  seqsset:=FilterByCommonOrganisms(seqsset);
+
+  fastareader.Free;
+  fastawriter:=TFastaWriter.Create;
+
+  for f:=3 to ParamCount do
+    begin
+    fastawriter.clear;
+    if Length(seqsset[f-3])>MaxSeqs then
+      SetLength(seqsset[f-3],MaxSeqs);
+    fastawriter.AppendSeqs(seqsset[f-3],True);
+    fastawriter.SaveToFile(ChangeFileExt(ExtractFileName(ParamStr(f)),'.fas'));
+    end;
+
+  fastawriter.Free;
+end;
+
+procedure TPdbTools.ExportChainSequences;
+var
+  chainids:TSimpleStrings;
+  pdb,pdbname:string;
+  f:Integer;
+  pdblayerman:TPDBModelMan;
+  chains:TMolecules;
+begin
+  pdblayerman:=TPDBModelMan.Create(Config.MonomersPath);
+  SetLength(chainids,ParamCount-2);
+  pdb:=ParamStr(2);
+
+  //Delete extensions (.pdb or .pdb.gz, tipically)
+  pdbname:=ExtractFileName(pdb);
+  while (Length(pdbname)>1) and (Pos('.',pdbname)>0) do
+    delete(pdbname,Pos('.',pdbname),Length(pdbname));
+
+  for f:=3 to ParamCount do
+    chainids[f-3]:=ParamStr(f);
+  pdblayerman.LoadLayer(pdb);
+  chains:=pdblayerman.GetChains(0,chainids);
+  for f:=0 to High(chains) do
+    begin
+    WriteLn('>',pdbname+'_'+chains[f].name);
+    WriteLn(ChainSequence(chains[f]));
+    end;
+  pdblayerman.Free;
+end;
+
 
 constructor TPdbTools.Create(TheOwner: TComponent);
 begin
@@ -889,7 +496,7 @@ end;
 
 procedure TPdbTools.WriteHelp;
 begin
-  writeln('For pdb analysis:');
+  {writeln('For pdb analysis:');
   writeln('pdbtools pdb filemask [options]');
   writeln;
   writeln('filemask is the name of pdb file or files (e.g. 1dxg.pdb, *.pdb, ...).');
@@ -937,15 +544,35 @@ begin
   writeln('--msa filename: loads an msa file (fasta format)');
   writeln;
   writeln('--organisms filename: loads list of organisms to sort the msa mapping');
-  writeln;
-  writeln('For computing contact descriptors:');
-  writeln('pdbtools desc parameters');
-  writeln('Parmeters file contains (TODO)');
-  writeln('Surface exposure is computed with the whole structure, not just the specified chain');
-  writeln('The chain specified is the first chain with that chainID; all other repeats are ignored');
-  writeln('The first sequence in the MSA file must correspond to the sequence of the specified chain');
-  writeln('Can also use optional parameters, but must come *after* the main arguments');
+  writeln;}
 
+  writeln('For computing contact descriptors:');
+  writeln('pdbtools desc parameterFile [--headers -c -s]');
+  writeln('Parmeters file contains (TODO)');
+  writeln('Surface exposure is computed for the specified chains but considering');
+  writeln('all the structure, not just the specified chains');
+  writeln('Each chain specified is the first chain with that chainID; all other repeats are ignored');
+  writeln('The first sequence in the MSA file must correspond to the sequence of the specified chain');
+  writeln('Can also use optional parameters, but must come *after* the main arguments:');
+  writeln('--headers Include headers line in output');
+  writeln('-c --contacts output only actual contacts');
+  writeln('-s --surface compute only surface areas');
+  writeln();
+  writeln('For exporting sequences:');
+  writeln('pdbtools seq pdbFile chainIds');
+  writeln('E.g. pdbtools seq 1dxg.pdb.gz A B');
+  writeln('Writes .fas files in current folder');
+  writeln();
+  writeln('For merging BLAST results, filtering by organism:');
+  writeln('pdbtools merge query res1 res2 ...');
+  writeln('E.g. pdbtools merge query res1.xml res2.xml');
+  writeln('query is a FASTA file containing the query sequences identified by their ID');
+  writeln('Writes .fas files in current folder containing all sequences from organisms');
+  writeln('present in all BLAST files, with one sequence for each organism.');
+  writeln('Query result files can be either in EBI xml format or Fasta format with organisms');
+  writeln('indicated on the ID line with OS="species" or [organism=species]');
+  writeln('However, if in fasta format then the first sequence must have the query ID (although the');
+  writeln('sequence itself may be empty)');
 
 
 end;

@@ -19,7 +19,21 @@ unit basetypes;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils,
+  {$IFDEF MSWINDOWS}
+    Windows;
+  {$ELSE}
+    LclIntf;
+  {$ENDIF}
+
+const
+  //Tiny is a small number that generally should be rounded to zero,
+  //as in most cases it is due to rounding errors.
+  {$IFDEF SINGLEPRECISION}
+  Tiny = 1e-6;
+  {$ELSE}
+  Tiny = 1e-12;
+  {$ENDIF}
 
 type
   TSimpleStrings = array of string;
@@ -34,9 +48,16 @@ type
   TMatrix= array of TFloats;
   TCoord = array [0..2] of TFloat; //3D coords ou 3D vector
   TCoords = array of TCoord;
+  TCoordGroups = array of TCoords;
   TIntegers = array of Integer;
   TCardinals = array of Cardinal;
   TBooleans = array of Boolean;
+
+  TCuboid=array[0..1] of TCoord;
+  TCuboids=array of TCuboid;
+
+  procedure ForceNotZero(var Val:TFloat);
+    //ensures Val<=-Tiny or Val>=Tiny
 
   procedure AddToArray(i:Integer; var a:TIntegers); overload;
   procedure AddToArray(s:string; var a:TSimpleStrings); overload;
@@ -64,6 +85,12 @@ type
   function Concatenate(Coords1,Coords2:TCoords):TCoords;overload;
   function Concatenate(A1,A2:TSimpleStrings):TSimpleStrings;overload;
 
+  function Slice(const Ints:TIntegers;Ix1,Ix2:Integer):TIntegers;overload;
+  function Slice(const Floats:TFloats;Ix1,Ix2:Integer):TFloats;overload;
+
+  function CountInArray(I:Integer; const Ints:TIntegers):Integer;overload;
+
+
   procedure AddUniqueToArray(const Elm:string;var Arr:TSimpleStrings);overload;
   procedure AddUniqueToArray(const Elm:Cardinal;var Arr:TCardinals);overload;
   procedure AddUniqueToArray(const Elm:Integer;var Arr:TIntegers);overload;
@@ -72,36 +99,56 @@ type
   procedure AppendToArray(const Suffix:TSimpleStrings; var Arr:TSimpleStrings);overload;
   procedure AppendToArray(const Suffix:TCardinals; var Arr:TCardinals);overload;
   procedure AppendToArray(const Suffix:TIntegers; var Arr:TIntegers);overload;
-
-
+  procedure AppendToArray(const Suffix:TFloats; var Arr:TFloats);overload;
 
   function Min(vals:TFLoats):TFLoat;overload;
   function Max(vals:TFLoats):TFLoat;overload;
   function Min(vals:TMatrix):TFLoat;overload;
   function Max(vals:TMatrix):TFLoat;overload;
+  function Min(vals:TCoords):TCoord;overload;
+  function Max(vals:TCoords):TCoord;overload;
+
 
   function MinIx(vals:TFLoats):Integer;overload;
   function MaxIx(vals:TFLoats):Integer;overload;
 
   function Sum(vals:TIntegers):Integer;overload;
   function Sum(vals:TFloats):TFloat;overload;
-
+  function Sum(const Vals1,Vals2:TFloats):TFloats;overload;
 
   function Min(const C1,C2:TCoord):TCoord;overload;
   function Max(const C1,C2:TCoord):TCoord;overload;
+  function Min(const F1,F2:TFloat):TFloat;overload;
+  function Max(const F1,F2:TFloat):TFloat;overload;
+  function Min(const I1,I2:Integer):Integer;overload;
+  function Max(const I1,I2:Integer):Integer;overload;
   function Coord(X,Y,Z:TFloat):TCoord;
 
-  function StringToFloats(S:string):TFloats;
-    //converts a string of numbers, separated by white spaces
-
-  // Array generation utils
-  function FilledInts(Len,Val: Integer): TIntegers;
+  function IsEqual(A1,A2:TIntegers):Boolean;overload;
 
   function StringToFloat(const S:String): TFloat;
     //tries comma and point as decimal separator
+
+  function StringToFloats(S:string):TFloats;
+    //converts a string of numbers, separated by white spaces
+    //tries comma and point as decimal separator (uses StringToFloat)
+
+  function StringsToFloats(SS:TSimpleStrings):TFloats;
+    //converts to float using StringToFloat
+
+  // Array generation utils
+  function FilledInts(Len,Val: Integer): TIntegers;
+  function FilledFloats(Len:Integer;Val:TFloat):TFLoats;
+
   function ScaleMatrix(Mat:TMatrix;Scale:TFloat):TMatrix;
   function AddMatrices(Mat1,Mat2:TMatrix):TMatrix;
+  function InContact(Cuboid1,Cuboid2:TCuboid):Boolean;
+  function Average(Fs:TFloats):TFloat;
+  function Variance(Fs:TFloats;Avrg:TFloat):TFloat;
 
+  //for time profiling
+  function GetTickCount : DWORD;
+  function GetTimeInteval(var StartTick:DWORD):Integer;
 
 
 const
@@ -132,6 +179,14 @@ procedure AddToArray(c:TCoord; var a:TCoords); overload;
 begin
   SetLength(a,Length(a)+1);
   a[High(a)]:=c;
+end;
+
+procedure ForceNotZero(var Val: TFloat);
+begin
+  if (Val<0) and (Val>-Tiny) then
+    Val:=-Tiny
+  else if (Val>=0) and (Val<Tiny) then
+    Val:=Tiny;
 end;
 
 procedure AddToArray(i:Integer; var a:TIntegers); overload;
@@ -219,6 +274,36 @@ begin
     Result[f]:=A1[f];
   for f:=len1 to High(Result) do
     Result[f]:=A2[f-len1];
+end;
+
+function Slice(const Ints: TIntegers; Ix1, Ix2: Integer): TIntegers;
+
+var f:Integer;
+
+begin
+  SetLength(Result,Ix2-Ix1+1);
+  for f:=Ix1 to Ix2 do
+    Result[f-Ix1]:=Ints[f];
+end;
+
+function Slice(const Floats: TFloats; Ix1, Ix2: Integer): TFloats;
+
+var f:Integer;
+
+begin
+  SetLength(Result,Ix2-Ix1+1);
+  for f:=Ix1 to Ix2 do
+    Result[f-Ix1]:=Floats[f];
+end;
+
+function CountInArray(I: Integer; const Ints: TIntegers): Integer;
+
+var f:Integer;
+
+begin
+  Result:=0;
+  for f:=0 to High(Ints) do
+    if Ints[f]=I then Inc(Result);
 end;
 
 function IndexOf(const i:Integer; const a:TIntegers):Integer;
@@ -346,6 +431,21 @@ begin
     end;
 end;
 
+procedure AppendToArray(const Suffix: TFloats; var Arr: TFloats);
+
+var
+  f,len:Integer;
+
+begin
+  if Suffix<>nil then
+    begin
+      len:=Length(Arr);
+      SetLength(Arr,len+Length(Suffix));
+      for f:=0 to High(Suffix) do
+        Arr[f+len]:=Suffix[f];
+    end;
+end;
+
 
 function Min(vals: TFLoats): TFLoat;
 
@@ -406,6 +506,35 @@ begin
     end;
 end;
 
+function Min(vals: TCoords): TCoord;
+
+var f:Integer;
+
+begin
+  if Length(vals)>0 then
+    begin
+    Result:=vals[0];
+    for f:=1 to High(vals) do
+      Result:=Min(Result,vals[f]);
+    end
+  else Result:=NullVector;
+end;
+
+function Max(vals: TCoords): TCoord;
+
+var f:Integer;
+
+begin
+  if Length(vals)>0 then
+    begin
+    Result:=vals[0];
+    for f:=1 to High(vals) do
+      Result:=Max(Result,vals[f]);
+    end
+  else Result:=NullVector;
+end;
+
+
 function Min(const C1,C2:TCoord):TCoord;overload;
 
 begin
@@ -421,6 +550,31 @@ begin
   if C1[1]>C2[1] then Result[1]:=C1[1] else Result[1]:=C2[1];
   if C1[2]>C2[2] then Result[2]:=C1[2] else Result[2]:=C2[2];
 end;
+
+function Min(const F1,F2:TFloat):TFloat;overload;
+begin
+  if F1<F2 then Result:=F1 else Result:=F2;
+end;
+
+function Max(const F1,F2:TFloat):TFloat;overload;
+
+begin
+  if F1>F2 then Result:=F1 else Result:=F2;
+end;
+
+function Min(const I1,I2:Integer):Integer;overload;
+
+begin
+  if I1<I2 then Result:=I1 else Result:=I2;
+end;
+
+
+function Max(const I1,I2:Integer):Integer;overload;
+
+begin
+  if I1>I2 then Result:=I1 else Result:=I2;
+end;
+
 
 function MinIx(vals:TFLoats):Integer;overload;
 
@@ -474,6 +628,17 @@ begin
     Result:=Result+vals[f];
 end;
 
+function Sum(const Vals1, Vals2: TFloats): TFloats;
+
+var f,len:Integer;
+
+begin
+  len:=Min(Length(Vals1),Length(Vals2));
+  SetLength(Result,len);
+  for f:=0 to High(Result) do
+    Result[f]:=Vals1[f]+Vals2[f];
+end;
+
 function Sum(vals:TIntegers):Integer;overload;
 
 var f:Integer;
@@ -493,6 +658,16 @@ begin
   Result[2]:=Z;
 end;
 
+function StringsToFloats(SS: TSimpleStrings): TFloats;
+
+var f:Integer;
+
+begin
+  SetLength(Result,Length(SS));
+  for f:=0 to High(SS) do
+    Result[f]:=StringToFloat(SS[f]);
+end;
+
 function FilledInts(Len,Val: Integer): TIntegers;
 
 var f:Integer;
@@ -500,6 +675,30 @@ var f:Integer;
 begin
   SetLength(Result,Len);
   for f:=0 to Len-1 do Result[f]:=Val
+end;
+
+function FilledFloats(Len: Integer; Val: TFloat): TFLoats;
+
+var f:Integer;
+
+begin
+  SetLength(Result,Len);
+  for f:=0 to Len-1 do Result[f]:=Val
+end;
+
+function IsEqual(A1, A2: TIntegers): Boolean;
+
+var f:Integer;
+
+begin
+  Result:=Length(A1)=Length(A2);
+  if Result then
+    for f:=0 to High(A1) do
+      if A1[f]<>A2[f] then
+        begin
+        Result:=False;
+        Break;
+        end;
 end;
 
 function StringToFloat(const S: String): TFloat;
@@ -537,7 +736,6 @@ begin
 end;
 
 
-
 function StringToFloats(S:string):TFloats;
 
 var
@@ -554,10 +752,22 @@ begin
     else
       if t<>'' then
         begin
-        AddToArray(StrToFloat(t),Result);
+        AddToArray(StringToFloat(t),Result);
         t:='';
         end;
     end;
+  if t<>'' then
+     AddToArray(StringToFloat(t),Result);
+end;
+
+function InContact(Cuboid1,Cuboid2:TCuboid):Boolean;
+
+var c1,c2:TCoord;
+
+begin
+  c1:=Max(Cuboid1[0],Cuboid2[0]);
+  c2:=Min(Cuboid1[1],Cuboid2[1]);
+  Result:=(c1[0]<=c2[0]) and (c1[1]<=c2[1]) and (c1[2]<=c2[2]);
 end;
 
 procedure InitializeGlobals;
@@ -565,11 +775,62 @@ procedure InitializeGlobals;
 begin
   PointSeparator := DefaultFormatSettings;
   PointSeparator.DecimalSeparator := '.';
-  PointSeparator.ThousandSeparator := '#';
+  PointSeparator.ThousandSeparator := ',';
   CommaSeparator := DefaultFormatSettings;
   CommaSeparator.DecimalSeparator := ',';
-  CommaSeparator.ThousandSeparator := '#';
+  CommaSeparator.ThousandSeparator := '.';
 end;
+
+function Average(Fs:TFloats):TFloat;
+
+var f:Integer;
+
+begin
+  Result:=0;
+  for f:=0 to High(Fs) do
+    Result:=Result+Fs[f];
+  Result:=Result/Length(Fs);
+end;
+
+function Variance(Fs:TFloats;Avrg:TFloat):TFloat;
+
+var f:Integer;
+
+begin
+  Result:=0;
+  for f:=0 to High(Fs) do
+    Result:=Result+Sqr(Fs[f]-Avrg);
+  Result:=Result/Length(Fs);
+end;
+
+function GetTickCount: DWORD;
+  //(from OrphPort package)
+   {On Windows, this is number of milliseconds since Windows was
+   started. On non-Windows platforms, LCL returns number of
+   milliseconds since Dec. 30, 1899, wrapped by size of DWORD.
+   This value can overflow LongInt variable when checks turned on,
+   so "wrap" value here so it fits within LongInt.
+  Also, since same thing could happen with Windows that has been
+   running for at least approx. 25 days, override it too.}
+begin
+{$IFDEF MSWINDOWS}
+  Result := Windows.GetTickCount mod High(LongInt);
+{$ELSE}
+  Result := LclIntf.GetTickCount mod High(LongInt);
+{$ENDIF}
+end;
+
+function GetTimeInteval(var StartTick: DWORD): Integer;
+//returns time interval and resets timer
+
+var endtick:DWORD;
+
+begin
+  endtick:=GetTickCount;
+  Result:=endtick-StartTick;
+  StartTick:=endtick;
+end;
+
 
 initialization
   InitializeGlobals;

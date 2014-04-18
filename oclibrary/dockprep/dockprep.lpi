@@ -1,0 +1,132 @@
+<?xml version="1.0"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="9"/>
+    <PathDelim Value="\"/>
+    <General>
+      <Flags>
+        <MainUnitHasCreateFormStatements Value="False"/>
+      </Flags>
+      <SessionStorage Value="InProjectDir"/>
+      <MainUnit Value="0"/>
+      <Title Value="dockprep"/>
+      <UseAppBundle Value="False"/>
+      <ResourceType Value="res"/>
+    </General>
+    <i18n>
+      <EnableI18N LFM="False"/>
+    </i18n>
+    <VersionInfo>
+      <StringTable ProductVersion=""/>
+    </VersionInfo>
+    <BuildModes Count="1">
+      <Item1 Name="Default" Default="True"/>
+    </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+      <IncludeFileFilter Value="*.(pas|pp|inc|lfm|lpr|lrs|lpi|lpk|sh|xml)"/>
+      <ExcludeFileFilter Value="*.(bak|ppu|o|so);*~;backup"/>
+    </PublishOptions>
+    <RunParams>
+      <local>
+        <FormatVersion Value="1"/>
+      </local>
+    </RunParams>
+    <RequiredPackages Count="3">
+      <Item1>
+        <PackageName Value="LCL"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="LCLBase"/>
+      </Item2>
+      <Item3>
+        <PackageName Value="LazUtils"/>
+      </Item3>
+    </RequiredPackages>
+    <Units Count="8">
+      <Unit0>
+        <Filename Value="dockprep.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="dockprep"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="..\docking\docktasks.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="docktasks"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="..\..\sharedunits\utils\geomutils.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="geomutils"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="..\..\sharedunits\general\basetypes.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="basetypes"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="..\molecule\molecules.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="molecules"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="..\base\oclconfiguration.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="oclconfiguration"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="..\..\sharedunits\utils\stringutils.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="stringutils"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="..\..\sharedunits\utils\quicksort.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="quicksort"/>
+      </Unit7>
+    </Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <PathDelim Value="\"/>
+    <Target>
+      <Filename Value="dockprep"/>
+    </Target>
+    <SearchPaths>
+      <IncludeFiles Value="$(ProjOutDir)"/>
+      <OtherUnitFiles Value="..\docking;..\..\sharedunits\utils;..\..\sharedunits\general;..\molecule;..\base"/>
+      <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+    <CodeGeneration>
+      <Checks>
+        <IOChecks Value="True"/>
+        <RangeChecks Value="True"/>
+        <OverflowChecks Value="True"/>
+        <StackChecks Value="True"/>
+      </Checks>
+      <VerifyObjMethodCallValidity Value="True"/>
+      <Optimizations>
+        <OptimizationLevel Value="0"/>
+      </Optimizations>
+    </CodeGeneration>
+    <Other>
+      <CompilerMessages>
+        <MsgFileName Value=""/>
+      </CompilerMessages>
+      <CompilerPath Value="$(CompPath)"/>
+    </Other>
+  </CompilerOptions>
+  <Debugging>
+    <Exceptions Count="3">
+      <Item1>
+        <Name Value="EAbort"/>
+      </Item1>
+      <Item2>
+        <Name Value="ECodetoolError"/>
+      </Item2>
+      <Item3>
+        <Name Value="EFOpenError"/>
+      </Item3>
+    </Exceptions>
+  </Debugging>
+</CONFIG>

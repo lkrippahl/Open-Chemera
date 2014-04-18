@@ -87,8 +87,43 @@ type
     procedure Clear;
   end;
 
+  function AtomRecord(AtomName,ResName,ChainName:string;AtomId,ResId:Integer;Position:TCoord):string;
 
 implementation
+
+function AtomRecord(AtomName, ResName, ChainName: string; AtomId,
+  ResId: Integer; Position: TCoord): string;
+
+{
+1 - 6          Record name     "ATOM"
+7 - 11         Integer         serial        Atom serial number
+13 - 16        Atom            name          Atom name
+17             Character       altLoc        Alternate location indicator
+18 - 20        Residue name    resName       Residue name
+22             Character       chainID       Chain identifier
+23 - 26        Integer         resSeq        Residue sequence number
+27             Character       iCode         Code for insertion of residues
+31 - 38        Real(8.3)       x             Orthogonal coordinates for X
+39 - 46        Real(8.3)       y             Orthogonal coordinates for Y
+47 - 54        Real(8.3)       z             Orthogonal coordinates for Z
+55 - 60        Real(6.2)       occupancy     Occupancy
+61 - 66        Real(6.2)       tempFactor    Temperature factor
+68 - 70        Integer         ftNote        Footnote number, being deprecated
+73 - 76        LString(4)      segID         Segment identifier, left-justified
+77 - 78        LString(2)      element       Element symbol, right-justified
+79 - 80        LString(2)      charge        Charge on the atom, IUPAC form}
+
+begin
+  Result:='ATOM  '+
+          RightJustify(AtomId,5)+' '+
+          LeftJustify(AtomName,4)+' '+
+          LeftJustify(ResName,3)+' '+
+          LeftJustify(ChainName,1)+
+          RightJustify(ResId,4)+'    '+
+          RightJustify(Position[0],8,3)+
+          RightJustify(Position[1],8,3)+
+          RightJustify(Position[2],8,3);
+end;
 
 { TPDBReader }
 
@@ -149,17 +184,22 @@ procedure TPDBReader.ReadFromList(Buf: TStringList);
 77 - 78        LString(2)      element       Element symbol, right-justified
 79 - 80        LString(2)      charge        Charge on the atom, IUPAC form}
 
-function GetPdbAtom(s:string):TPDBAtom;
+function GetPdbAtom(s:string;var OldChain:string):TPDBAtom;
 
 begin
   with Result do
       begin
       IsHet:=False;
       Serial:=GetInteger(s,7,11);
-      AtomName:=GetString(s,13,16);
+      AtomName:=Deblank(GetString(s,13,16));
       AltLoc:=GetString(s,17,17);
       ResName:=GetString(s,18,20);
       ChainID:=GetString(s,22,22);
+      if ChainId<>OldChain then
+        begin
+        Inc(FChainCount);
+        OldChain:=ChainId;
+        end;
       ResSeq:=GetInteger(s,23,26);
       ICode:=GetString(s,27,27);
       Coords[0]:=GetFloat(s,31,38);
@@ -200,15 +240,18 @@ procedure ReadLines;
 
 var
   f:Integer;
-  s:string;
+  s,oldchain:string;
 
 begin
+  FChainCount:=-1;
+  oldchain:='***';
+  //FChainCount is increased by GetPDBAtom whenever the chain changes
   for f:=0 to Buf.Count-1 do
     begin
     s:=buf.Strings[f];
     if (Pos('ATOM ',s)=1) or (Pos('HETATM',s)=1) then
       begin
-      FAtoms[FAtomCount]:=GetPDBAtom(s);
+      FAtoms[FAtomCount]:=GetPDBAtom(s,oldchain);
       FAtoms[FAtomCount].IsHet:=(Pos('HETATM',s)=1);
       Inc(FAtomCount);
       end
@@ -217,7 +260,10 @@ begin
       SetLength(FConnections,Length(FConnections)+1);
       FConnections[High(FConnections)]:=GetPdbConnect(s);
       end
-    else if Pos('TER',s)=1 then Inc(FChainCount)
+    else if Pos('TER',s)=1 then
+        oldchain:='***'
+          //This forces an FChainCount increase
+          //even if the chain ID remains the same
     else if Pos('MODEL',s)=1 then Inc(FModelCount);
     end;
 end;
