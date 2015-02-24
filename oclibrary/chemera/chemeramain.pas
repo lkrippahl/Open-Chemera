@@ -36,16 +36,19 @@ type
     MenuItem5: TMenuItem;
     MenuItem6: TMenuItem;
     MenuItem7: TMenuItem;
+    MenuItem8: TMenuItem;
     OpenDlg: TOpenDialog;
     OpenMn: TMenuItem;
     procedure FormActivate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure FormDropFiles(Sender: TObject; const FileNames: array of String);
     procedure MenuItem2Click(Sender: TObject);
     procedure MenuItem3Click(Sender: TObject);
     procedure MenuItem4Click(Sender: TObject);
     procedure MenuItem5Click(Sender: TObject);
     procedure MenuItem6Click(Sender: TObject);
     procedure MenuItem7Click(Sender: TObject);
+    procedure MenuItem8Click(Sender: TObject);
     procedure OpenMnClick(Sender: TObject);
   private
     { private declarations }
@@ -62,6 +65,7 @@ type
     procedure TestConstraints;
     procedure TestAngles;
 
+    procedure LoadFile(FileName:string);
     procedure InitChemera;
   public
     { public declarations }
@@ -79,6 +83,16 @@ implementation
 procedure TCmMainForm.FormCreate(Sender: TObject);
 begin
   FInitializing:=True;
+end;
+
+procedure TCmMainForm.FormDropFiles(Sender: TObject;
+  const FileNames: array of String);
+
+var f:Integer;
+
+begin
+  for f:=0 to High(FileNames) do
+    LoadFile(FileNames[f]);
 end;
 
 procedure TCmMainForm.MenuItem2Click(Sender: TObject);
@@ -111,19 +125,31 @@ begin
   TestAngles;
 end;
 
-procedure TCmMainForm.OpenMnClick(Sender: TObject);
+procedure TCmMainForm.MenuItem8Click(Sender: TObject);
 
-var mol:TMolecule;
+var
+  Bmp:TBitMap;
+  f:Integer;
+  s:string;
+
+begin
+  for f:=1 to 72 do
+    begin
+    FDisplay.RotateMatrix(5,0);
+    Bmp:=FDisplay.GetImage;
+    s:=IntToStr(f);
+    while Length(s)<4 do s:='0'+s;
+    Bmp.SaveToFile('G:\test'+s+'.bmp');
+    Bmp.Free;
+    end;
+end;
+
+procedure TCmMainForm.OpenMnClick(Sender: TObject);
 
 begin
   OpenDlg.Filter:='';//Pdb file|*.pdb;GZipped PDB file|*.gz';
   if OpenDlg.Execute then
-    begin
-    mol:=FMolecules.LoadLayer(OpenDlg.FileName);
-    mol.Transform(Simmetric(FindCenter(mol)));
-    FDispMan.Attach(mol);
-    FDispMan.Render;
-    end;
+    LoadFile(OpenDlg.FileName);
 end;
 
 
@@ -560,6 +586,17 @@ begin
 
 end;
 
+procedure TCmMainForm.LoadFile(FileName: string);
+
+var mol:TMolecule;
+
+begin
+    mol:=FMolecules.LoadLayer(FileName);
+    mol.Transform(Simmetric(FindCenter(mol)));
+    FDispMan.Attach(mol);
+    FDispMan.Render;
+end;
+
 procedure TCmMainForm.InitChemera;
 
 procedure TestIntersect;
@@ -596,6 +633,7 @@ begin
   LoadAtomData;
   LoadAAData;
   FDisplay:=TOpenGLForm.Create(Self);
+  FDisplay.OnDropFiles:=@FormDropFiles;
   FDisplay.Show;
   FDispMan:=TDisplayManager.Create(FDisplay);
 

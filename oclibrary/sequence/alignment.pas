@@ -33,6 +33,15 @@ const
 
 type
 
+  //Record for returning pairwise alignment results (mapping and score)
+  TPairwiseAlignment=record
+    Map:TIntegers;
+      //indicates for each residue of molecule 1 which residue of 2 is a match.
+      //-1 if not matched
+    Score:TFloat;
+  end;
+
+
 {
   Sequences stored in these data structures are meant to be
   the alignment results, not the original sequences.
@@ -106,9 +115,12 @@ function ScoreSequencePair(const Seq1,Seq2:TOCCompressedSequence;
 
 
 function GapPenalty(const SubMat:TSubMatrix; GapLen: Integer): TFloat;
-function NeedlemanWunschAlign(Seq1Ix, Seq2Ix: TIntegers; const SubMat:TSubMatrix):TIntegers;
+function NeedlemanWunschAlign(Seq1Ix, Seq2Ix: TIntegers; const SubMat:TSubMatrix):TPairwiseAlignment;overload;
   //Sequences are the indexes in the SubMatrix scores.
   // Result is the mapping from Sequence 1 to 2
+
+function NeedlemanWunschAlign(Seq1, Seq2: string; const SubMat:TSubMatrix):TPairwiseAlignment;overload;
+  //Converts sequences to indeces, calls NeedlemanWunschAlign(Seq1Ix, Seq2Ix...
 
 function IndexSequence(Seq:string;SubMat:TSubMatrix):TIntegers;
   //Returns 0 based array with indexes for SubMat. -1 for not found
@@ -397,6 +409,18 @@ begin
   else Result:=SubMat.GapPenalty+GapLen*SubMat.GapExtension;
 end;
 
+function NeedlemanWunschAlign(Seq1, Seq2: string; const SubMat: TSubMatrix
+  ): TPairwiseAlignment;
+
+var
+   seq1ix,seq2ix:TIntegers;
+
+begin
+  seq1ix:=IndexSequence(Seq1,SubMat);
+  seq2ix:=IndexSequence(Seq2,SubMat);
+  Result:=NeedlemanWunschAlign(seq1ix, seq2ix, SubMat);
+end;
+
 function IndexSequence(Seq:string;SubMat:TSubMatrix):TIntegers;
 
 var f:Integer;
@@ -407,7 +431,7 @@ begin
     Result[f]:=Pos(Seq[f+1],SubMat.MonomerIndex)-1;
 end;
 
-function NeedlemanWunschAlign(Seq1Ix, Seq2Ix: TIntegers; const SubMat:TSubMatrix):TIntegers;
+function NeedlemanWunschAlign(Seq1Ix, Seq2Ix: TIntegers; const SubMat:TSubMatrix):TPairwiseAlignment;
 
 
 var
@@ -439,7 +463,7 @@ var
   t,tot,max:TFLoat;
 
 begin
-  if (Seq1Ix[I1]>=0) and (Seq1Ix[I1]>=0) then
+  if (Seq1Ix[I1]>=0) and (Seq2Ix[I2]>=0) then
     tot:=SubMat.Matrix[Seq1Ix[I1],Seq2Ix[I2]]
   //if one residue is not present in the substitution matrix
   //then the score starts at 0.
@@ -498,15 +522,16 @@ var
   t,max:TFLoat;
 
 begin
-  Max:=0;
+  max:=0;
   s1:=I1+1;
   s2:=I2+1;
   I1:=Length(ScoreMat);
   I2:=Length(ScoreMat[0]);
+  try
   for x:=s1 to High(ScoreMat) do
     begin
     t:=TotalVal(s1-1,x,s2,s2);
-    if Max<t then
+    if max<t then
       begin
       max:=t;
       I1:=x;
@@ -516,13 +541,18 @@ begin
   for y:=s2 to High(ScoreMat[0]) do
     begin
     t:=TotalVal(s1,s1,s2-1,y);
-    if Max<t then
+    if max<t then
       begin
       max:=t;
       I1:=s1;
       I2:=y;
       end;
     end;
+  except
+    writeln(s1,' ',s2,' ',length(scoremat),' ',length(scoremat[0]));
+  end;
+  if max>Result.Score then
+    Result.Score:=max;
 end;
 
 
@@ -530,25 +560,24 @@ begin
   NI1:=-1;
   NI2:=-1;
   repeat
-    // DebugReport('1'+IntToStr(NI1)+':'+IntToStr(High(Seq1Ix)));
-    // DebugReport('2'+IntToStr(NI2)+':'+IntToStr(High(Seq2Ix)));
     NextLine(NI1,NI2);
     if (NI1<=High(Seq1Ix)) and (NI2<=High(Seq2Ix)) then
-      Result[NI1]:=NI2;
-  until (NI1>=High(Seq1Ix)) or (NI2>High(Seq2Ix));
+      Result.Map[NI1]:=NI2;
+  until (NI1>=High(Seq1Ix)) or (NI2>=High(Seq2Ix));
 end;
 
 var f:Integer;
 
 begin
-  SetLength(Result,Length(Seq1Ix));
+  SetLength(Result.Map,Length(Seq1Ix));
+  for f:=0 to High(Result.Map) do Result.Map[f]:=-1;
   if (Seq1Ix<>nil) and (Seq2Ix<>nil) then
     begin
     try
-      for f:=0 to High(Result) do Result[f]:=-1;
       taskstep:=2/Length(Seq1Ix)/Length(Seq2Ix)/(Length(Seq1Ix)+Length(Seq2Ix));
       task:=NewTask(False,'Aligning');
       BuildMat;
+      Result.Score:=ScoreMat[0,0];
       Align;
     finally
       FreeTask(task);

@@ -48,8 +48,6 @@ const
   ColorDkGray:T4FArray=(0.2,0.2,0.2,1);
   ColorLtGray:T4FArray=(0.9,0.9,0.9,1);
 
-
-
 type
   TQuad=array[0..3] of Integer;     //vertex indexes for a quad
   TQuads=array of TQuad;
@@ -68,8 +66,11 @@ type
   //Material specifications. Should have the most features implemented
   T3DMaterial=record
     Diffuse,Specular,Ambient:TRGBAColor;
+    Shine:TFloat;
     Texture:string;
   end;
+
+  T3DMaterials=array of T3DMaterial;
 
   T3DObject=record
     case ObjectType:Integer of
@@ -108,6 +109,10 @@ function QuadCube:TQuadMesh;
 function Quad(P1,P2,P3,P4:Integer):TQuad;
 function DefaultMaterial:T3DMaterial;
 function ColorMaterial(R,G,B,A:TFloat):T3DMaterial;
+function IsSameMaterial(const Mat1,Mat2:T3DMaterial):Boolean;
+function IsSameColor(const Col1,Col2:TRGBAColor):Boolean;
+
+
 
 implementation
 
@@ -355,6 +360,23 @@ begin
   Result:=DefaultMaterial;
   Result.Diffuse:=RGBAColor(R,G,B,A);
   Result.Ambient:=Result.Diffuse;
+end;
+
+function IsSameMaterial(const Mat1, Mat2: T3DMaterial): Boolean;
+begin
+  Result := IsSameColor(Mat1.Diffuse, Mat2.Diffuse) and
+            IsSameColor(Mat1.Specular, Mat2.Specular) and
+            IsSameColor(Mat1.Ambient, Mat2.Ambient) and
+            (Mat1.Shine = Mat2.Shine) and
+            (Mat1.Texture = Mat2.Texture);
+end;
+
+function IsSameColor(const Col1, Col2: TRGBAColor): Boolean;
+begin
+  Result := (Col1[0] = Col2[0]) and
+            (Col1[1] = Col2[1]) and
+            (Col1[2] = Col2[2]) and
+            (Col1[3] = Col2[3]);
 end;
 
 end.

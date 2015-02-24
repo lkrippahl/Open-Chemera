@@ -59,6 +59,7 @@ const
 procedure LoadAtomData;
 procedure LoadAAData;
 function AtomicNumber(Symbol:string):Integer;
+function VdWRadius(AtomicNumber:Integer):TFloat;
 function AAIndex(Code:string):Integer;
 function AAOneLetterCode(TLC:string):string;
 
@@ -189,6 +190,13 @@ begin
   while (Result>=0) and (AtomData[Result].Symbol<>Symbol) do
     Dec(Result);
   if Result>=0 then Inc(Result);
+end;
+
+function VdWRadius(AtomicNumber: Integer): TFloat;
+begin
+  if AtomicNumber<0 then
+    Result:=Config.DefaultAtomicRadius
+  else Result:=AtomData[AtomicNumber-1].VdWRadius;
 end;
 
 function AAIndex(Code: string): Integer;

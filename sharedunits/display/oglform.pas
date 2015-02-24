@@ -29,6 +29,7 @@ type
 
   TOpenGLForm = class(TForm,IBase3DDisplay)
     OGLPb: TOpenGLControl;
+    procedure FormDropFiles(Sender: TObject; const FileNames: array of String);
     procedure FormResize(Sender: TObject);
     procedure OGLPbMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -40,8 +41,11 @@ type
       MousePos: TPoint; var Handled: Boolean);
     procedure OGLPbPaint(Sender: TObject);
     procedure OGLPbResize(Sender: TObject);
+
   private
     { private declarations }
+    procedure ResetMouseRotation;
+
   protected
       FInitialized:Boolean;
       FDistanceToCenter:TFLoat;
@@ -49,6 +53,7 @@ type
       FDisplayLists:array of GLUInt;
       FObjectLists: array of T3DObjectList;
       FDisplayColors: array of TGluRGBA; //colors for displaylists
+      FDisplayShine: array of TGLFloat; //colors for displaylists
       FBackground:TGluRGBA;
 
       //mouse tracking
@@ -73,7 +78,8 @@ type
       procedure ResizeForm(NewWidth,NewHeight:Longint);
       procedure Refresh;
       procedure SetQuality(Quality:Integer);
-
+      function GetImage:TBitMap;
+      procedure RotateMatrix(Horizontal,Vertical:TFLoat);
   end;
 
 
@@ -134,12 +140,36 @@ begin
     end;
 end;
 
+procedure TOpenGLForm.RotateMatrix(Horizontal, Vertical: TFLoat);
+begin
+  //Set rotation and reset X Y
+  glLoadIdentity;
+  glRotatef(Horizontal,0,1,0);
+  glRotatef(Vertical,1,0,0);
+  glMultMatrixf(FModelMat);
+  glGetFloatv(GL_MODELVIEW_MATRIX,FModelMat);
+end;
+
+procedure TOpenGLForm.ResetMouseRotation;
+begin
+  //Set rotation and reset X Y
+  RotateMatrix(0.5*(FCX-FOX),0.5*(FCY-FOY));
+  FOX:=FCX;
+  FOY:=FCY;
+end;
+
 procedure TOpenGLForm.FormResize(Sender: TObject);
 begin
   OGlPb.Top:=3;
   OGlPb.Left:=3;
   OGlPb.Width:=Width-6;
   OGlPb.Height:=Height-6;
+
+end;
+
+procedure TOpenGLForm.FormDropFiles(Sender: TObject;
+  const FileNames: array of String);
+begin
 
 end;
 
@@ -167,7 +197,7 @@ end;
 procedure TOpenGLForm.OGLPbMouseWheel(Sender: TObject; Shift: TShiftState;
   WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
 begin
-  FDistanceToCenter:=FDistanceToCenter-WheelDelta/10;
+  FDistanceToCenter:=FDistanceToCenter-WheelDelta/20;
   OGLPb.Invalidate;
 end;
 
@@ -265,7 +295,8 @@ end;
 
 procedure TOpenGLForm.SetMaterial(Material: T3DMaterial);
 
-var colix:Integer;
+var
+  colix:Integer;
 
 begin
   with Material do
@@ -285,6 +316,9 @@ begin
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, FDisplayColors[colix+1]);
     FDisplayColors[colix+2]:=RGBAToGlu(Material.Specular);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, FDisplayColors[colix+2]);
+    SetLength(FDisplayShine,Length(FDisplayShine)+1);
+    FDisplayShine[High(FDisplayShine)]:=Material.Shine;
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, @FDisplayShine[High(FDisplayShine)]);
     end;
 end;
 
@@ -293,9 +327,9 @@ procedure TOpenGLForm.InitOGL;
 procedure InitLights;
 
 begin
-  FLAmbient:=GluColor(0.2, 0.2, 0.2, 1 );
+  FLAmbient:=GluColor(1, 1, 1, 1 );
   FLDiffuse:=GluColor( 1, 1, 1, 1 );
-  FLSpecular:=GluColor( 0, 0, 0, 1 );
+  FLSpecular:=GluColor( 1, 1, 1, 1 );
   FLPosition:=GluColor( 1.0, 1.0, 1, 0 );
 end;
 
@@ -339,7 +373,6 @@ begin
   glDepthFunc(GL_LEQUAL);           // the type of depth test to do
   glEnable(GL_DEPTH_TEST);          // enables depth testing
   glShadeModel(GL_SMOOTH);          // enables smooth color shading
-
   glEnable(GL_LIGHTING);
 
 
@@ -374,6 +407,8 @@ end;
 procedure TOpenGLForm.ClearObjectLists;
 begin
   FObjectLists:=nil;
+  FDisplayColors:=nil;
+  FDisplayShine:=nil;
 end;
 
 procedure TOpenGLForm.Compile;
@@ -414,16 +449,10 @@ begin
 
   glPushMatrix;
 
-  //Set rotation and reset X Y
-  glLoadIdentity;
-  glRotatef(0.2*(FCX-FOX),0,1,0);
-  glRotatef(0.2*(FCY-FOY),1,0,0);
-  glMultMatrixf(FModelMat);
-  glGetFloatv(GL_MODELVIEW_MATRIX,FModelMat);
-  FOX:=FCX;
-  FOY:=FCY;
+
 
   //set objects in place and rotation
+  ResetMouseRotation;
   glLoadIdentity;
   glTranslatef(0,0,-FDistanceToCenter);
   glMultMatrixf(FModelMat);
@@ -432,6 +461,7 @@ begin
     glCallList(FDisplayLists[f]);
   glPopMatrix;
   OGLPb.SwapBuffers;
+  glFinish()
 
 end;
 
@@ -441,6 +471,41 @@ begin
   FBaseSphere:=QuadSphere(Quality);
   FBaseCube:=QuadCube;
 end;
+
+function TOpenGLForm.GetImage: TBitMap;
+
+
+var
+  buffer,p:PByte;
+  r,g,b,a:Byte;
+  y,x:Integer;
+
+begin
+  Result:=TBitMap.Create;
+  Result.PixelFormat := pf32bit;
+  Result.Width:=OGLPb.Width;
+  Result.Height:=OGLPb.Height;
+  GetMem( buffer, OGLPb.Width*OGLPb.Height*SizeOf(DWord));
+  Refresh;
+  glReadBuffer(GL_Front);
+  glPixelStorei(GL_PACK_ALIGNMENT, 4);
+  glReadPixels( 0, 0, OGLPb.Width,OGLPb.Height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+  p:=buffer;
+  Result.BeginUpdate(True);
+  for y:=Result.Height-1 downto 0 do
+    for x:=0 to Result.Width-1 do
+      begin
+      r:=p^;Inc(p);
+      g:=p^;Inc(p);
+      b:=p^;Inc(p);
+      Result.Canvas.Pixels[x,y]:=r+g shl 8 +b shl 16+$02000000;
+      Inc(p);
+      end;
+  Result.EndUpdate(False);
+  FreeMem(buffer);
+  writeln('ok');
+end;
+
 
 procedure TOpenGLForm.ResizeForm(NewWidth, NewHeight: Longint);
 begin

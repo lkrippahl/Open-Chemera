@@ -28,7 +28,7 @@ uses
   {$ENDIF}{$ENDIF}
   Classes, SysUtils, geomhash, CustApp, linegrids, dockdomains, geomutils,
   basetypes, dockconstraints, bogie, surface, docktasks, biggerman,
-  oclconfiguration, rmsd, cgradient;
+  oclconfiguration, alignment, rmsd, cgradient, base3ddisplay, progress;
 
 type
 

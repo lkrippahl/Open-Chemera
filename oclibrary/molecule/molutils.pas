@@ -17,7 +17,7 @@ unit molutils;
 interface
 
 uses
-  Classes, SysUtils, basetypes, geomutils, molecules, selections;
+  Classes, SysUtils, basetypes, geomutils, molecules, selections, geomhash;
 
 procedure CenterMolecule(Molecule:TMolecule;Selection:TSelection=nil);
 function FindCenter(Molecule:TMolecule;Selection:TSelection=nil):TCoord;
@@ -34,9 +34,15 @@ function CalcHulls(Groups:TMolecules;Rad:TFloat):TCuboids;
 function CalcCenterHull(Atoms:TAtoms;Dist:TFloat):TCuboid;
   //Returns the cuboid region defined by all atom centers expanded by the Dist value
 procedure GroupsInContact(const Groups1, Groups2: TMolecules; const Dist: TFloat;
-            out Interface1,Interface2:TMolecules);
-  //returns all groups of each Mol1 and Mol2 within distance of the other
+            out Interface1,Interface2:TIntegers);
+  //returns indexes of groups of each Mol1 and Mol2 within distance of the other
   //groups must be terminal (with only atoms, not groups)
+  //**Not efficient**
+
+function NeighbourIndexes(FromCoords,ToCoords:TCoords;Dist:TFloat):TIntegers;
+  //returns an array with the indexes of FromCoords that are within Dist of any ToCoords
+  //uses geomhash for efficiency
+
 
 implementation
 
@@ -201,7 +207,7 @@ begin
 end;
 
 procedure GroupsInContact(const Groups1, Groups2: TMolecules; const Dist: TFloat;
-          out Interface1,Interface2:TMolecules);
+          out Interface1,Interface2:TIntegers);
 
 var
   hulls1,hulls2:TCuboids;
@@ -224,14 +230,35 @@ begin
   Interface1:=nil;
   for f:=0 to High(interfixs1) do
     if interfixs1[f]>0 then
-        AppendGroupToArray(Groups1[f],Interface1);
+        AddToArray(f,Interface1);
   Interface2:=nil;
   for f:=0 to High(interfixs2) do
     if interfixs2[f]>0 then
-        AppendGroupToArray(Groups2[f],Interface2);
+        AddToArray(f,Interface2);
 end;
 
+function NeighbourIndexes(FromCoords, ToCoords: TCoords; Dist: TFloat
+  ): TIntegers;
 
+var
+  f,ix:Integer;
+  hasher:TGeomHasher;
+  tmprads:TFloats;
+
+begin
+  SetLength(Result,Length(FromCoords));
+  tmprads:=FilledFloats(Length(ToCoords),Dist);
+  hasher:=TGeomHasher.Create(ToCoords,Dist,tmprads);
+  ix:=0;
+  for f:=0 to High(FromCoords) do
+    if hasher.IsInnerPoint(FromCoords[f]) then
+        begin
+        Result[ix]:=f;
+        Inc(ix);
+        end;
+  SetLength(Result,ix);
+  hasher.Free;
+end;
 
 end.
 

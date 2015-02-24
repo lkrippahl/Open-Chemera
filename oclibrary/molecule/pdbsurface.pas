@@ -163,9 +163,7 @@ begin
     points[f]:=Atoms[f].Coords;
     radii[f]:=Atoms[f].Radius+FProbeRadius;
     end;
-
   Result:=SRSurface(points,radii,FGoldenSphere,FMinHashCell);
-
 end;
 
 

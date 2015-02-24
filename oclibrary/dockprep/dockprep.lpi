@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
     <Version Value="9"/>
@@ -43,7 +43,7 @@
         <PackageName Value="LazUtils"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="8">
+    <Units Count="13">
       <Unit0>
         <Filename Value="dockprep.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -84,6 +84,31 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="quicksort"/>
       </Unit7>
+      <Unit8>
+        <Filename Value="..\molecule\molfit.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="molfit"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="..\..\sharedunits\display\base3ddisplay.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="base3ddisplay"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="..\sequence\alignment.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="alignment"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="..\..\sharedunits\forms\progress.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="progress"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="..\..\sharedunits\utils\geomhash.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="geomhash"/>
+      </Unit12>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -94,7 +119,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\docking;..\..\sharedunits\utils;..\..\sharedunits\general;..\molecule;..\base"/>
+      <OtherUnitFiles Value="..\docking;..\..\sharedunits\utils;..\..\sharedunits\general;..\molecule;..\base;..\..\sharedunits\display;..\sequence;..\..\sharedunits\forms"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <CodeGeneration>

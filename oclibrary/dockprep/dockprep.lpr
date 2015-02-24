@@ -60,8 +60,15 @@ Purpose:
 
     -intrmsd complex.pdb
       computes the interface residues RMSD using the alfa carbon of all residues within
-      5A (the interface)
+      5A (the interface) or the distance specified in intdist
 
+    -intdist distance_in_A
+
+    (both require a substitution matrix and a minimum alignment match)
+
+    -submat filename
+
+    -minalign (value from 0 to 1)
 
 
     -delscores
@@ -87,7 +94,10 @@ Purpose:
 
     summary:
     -summary [h]
-    outputs summary to screen, with headers if h
+        outputs summary to screen, with headers if h
+        -maxmodels NN;NN2;...
+          maximum number of models to use per constraint
+
 
 
 
@@ -104,8 +114,9 @@ uses
   {$IFDEF UNIX}{$IFDEF UseCThreads}
   cthreads,
   {$ENDIF}{$ENDIF}
-  Classes, SysUtils, docktasks, molecules, pdbmolecules, oclconfiguration, geomutils,
-  stringutils, quicksort, basetypes, CustApp
+  Classes, SysUtils, docktasks, molecules, pdbmolecules, molfit,
+  oclconfiguration, alignment, geomutils, stringutils, quicksort, geomhash,
+  basetypes, base3ddisplay, progress, CustApp
   { you can add units after this };
 
 type
@@ -134,20 +145,24 @@ var
   center:Boolean;
   rotprobe,appendjobs:Boolean;
   rmsdtemplate,intrmsdtemplate:string;
-  intdistance:TFloat;
+  submatfile:string;
+  intdist,minalign:TFloat;
   contactfile:string;
   unconstrainedmodels,unconstrainedoverlap:Integer;
-
+  submat:TSubMatrix;
+  maxmodels:TIntegers;
+  tmps:TSimpleStrings;
 
   procedure GetOptions;
 
   var
     tmp:string;
     tmps:TSimpleStrings;
+    f:Integer;
 
   begin
-    intdistance:=5;
-    { TODO : add this to some parameter }
+    minalign:=0.9;
+    intdist:=5.0;
 
     targetfile:=GetOptionValue('t');
     probefile:=GetOptionValue('p');
@@ -159,12 +174,34 @@ var
     center:=HasOption('center');
     rotprobe:=HasOption('randomize');
     rmsdtemplate:=GetOptionValue('rmsd');
+    submatfile:=GetOptionValue('submat');
+    if submatfile<>'' then
+      submat:=ReadBLASTMatrix(submatfile);
+
     intrmsdtemplate:=GetOptionValue('intrmsd');
     appendjobs:=HasOption('append');
     contactfile:=GetOptionValue('contacts');
     maxcontacts:=0;
     tmp:=GetOptionValue('maxcontacts');
     if tmp<>'' then maxcontacts:=StrToInt(tmp);
+    tmp:=GetOptionValue('minalign');
+    if tmp<>'' then minalign:=StrToFloat(tmp);
+    tmp:=GetOptionValue('intdist');
+    if tmp<>'' then intdist:=StrToFloat(tmp);
+    tmp:=GetOptionValue('maxmodels');
+    if tmp<>'' then
+        begin
+        tmps:=SplitString(tmp,';');
+        SetLength(maxmodels,Length(tmps));
+        for f:=0 to High(tmps) do
+          maxmodels[f]:=StrToInt(tmps[f]);
+        end
+    else
+      begin
+      SetLength(maxmodels,1);
+      maxmodels[0]:=5000;
+      end;
+
     unconstrainedmodels:=-1;
     unconstrainedoverlap:=200;
     tmp:=GetOptionValue('unconstrained');
@@ -300,9 +337,9 @@ var
       begin
       FDockMan.PreparePartners;
       if rmsdtemplate<>'' then
-        FDockMan.AddRMSDScore(rmsdtemplate);
+        FDockMan.AddRMSDScore(rmsdtemplate,submat,minalign);
       if intrmsdtemplate<>'' then
-        FDockMan.AddInterfaceRMSDScore(intrmsdtemplate,intdistance);
+        FDockMan.AddInterfaceRMSDScore(intrmsdtemplate,intdist,submat,minalign);
       end;
     FDockMan.SaveOrders(False);
   end;
@@ -314,12 +351,21 @@ var
 
     procedure WriteHeaders;
 
+    var f:Integer;
+        s:string;
+
     begin
+      s:='';
+      for f:=0 to High(maxmodels) do
+        s:=s+'High '+IntToStr(maxmodels[f])+#9+'Good '+IntToStr(maxmodels[f])+#9+
+          'Acceptable '+IntToStr(maxmodels[f])+#9+'Min RMSD '+IntToStr(maxmodels[f])+#9+
+          'Min IntRMSD '+IntToStr(maxmodels[f])+#9;
       //WriteLn(#9+FlattenStrings(ComputedScores(runs[0].ConstraintSets[0]),#9+#9));
-      WriteLn('Name'+#9+'High'+#9+'Good'+#9+'Acceptable'+#9);
+      WriteLn('Name'+#9+s+'Constraints TC'+#9+'Digitization TC'+#9+'Domain TC'+#9+'Scoring TC'+#9+
+        'Total Rotations'+#9+'Done rotations');
     end;
 
-    function Counts(MaxModels:Integer):string;
+    function Counts(NumModels:Integer):string;
 
 
     const
@@ -328,33 +374,48 @@ var
 
     var
       c,m,hi,good,accept:Integer;
-      lscore,iscore:TFloat;
+      lscore,iscore,miniscore,minlscore:TFloat;
 
     begin
       hi:=0;
       good:=0;
       accept:=0;
+      minlscore:=100000;
+      miniscore:=100000;
       for c:=0 to High(runs[0].ConstraintSets) do
         for m:=0 to High(runs[0].ConstraintSets[c].ScoreResults[0].ScoreVals) do
           begin
           lscore:=runs[0].ConstraintSets[c].ScoreResults[LigandScore].ScoreVals[m];
           iscore:=runs[0].ConstraintSets[c].ScoreResults[InterfaceScore].ScoreVals[m];
+          if lscore<minlscore then minlscore:=lscore;
+          if iscore<miniscore then miniscore:=iscore;
           if (lscore<1) or (iscore<1) then Inc(hi)
           else if (lscore<5) or (iscore<2) then Inc(good)
           else if (lscore<10) or (iscore<4) then Inc(accept);
-          if m>=MaxModels then Break;
+          if m>=NumModels then Break;
           end;
-      Result:=IntToStr(hi)+#9+IntToStr(good)+#9+IntToStr(accept);
+
+      Result:=IntToStr(hi)+#9+IntToStr(good)+#9+IntToStr(accept)+
+              #9+FloatToStrF(minlscore,ffFixed,2,2)+#9+FloatToStrF(miniscore,ffFixed,2,2);
     end;
+
+  var
+    f:Integer;
+    rep:string;
 
   begin
     runs:=LoadOrders(jobfile);
     if GetOptionValue('summary')='h' then
       WriteHeaders;
-    WriteLn(jobfile{+#9+Counts(999)},#9,runs[0].Stats.ConstraintsTickCount+
-        runs[0].Stats.DigitizationTickCount +
-        runs[0].Stats.DomainTickCount +
-        runs[0].Stats.ScoringTickCount);
+    rep:=ExtractFileName(jobfile)+#9;
+    for f:=0 to High(maxmodels) do
+      rep:=rep+Counts(maxmodels[f])+#9;
+    WriteLn(rep,runs[0].Stats.ConstraintsTickCount,#9,
+        runs[0].Stats.DigitizationTickCount,#9,
+        runs[0].Stats.DomainTickCount,#9,
+        runs[0].Stats.ScoringTickCount, #9,
+        runs[0].TotalAngles,#9,
+        runs[0].CompletedAngles);
     FreeOrders(runs);
   end;
 
@@ -373,6 +434,8 @@ begin
 
 
   { add your program here }
+  LoadAtomData;
+  LoadAAData;
 
   GetOptions;
   if jobfile='' then
@@ -406,7 +469,9 @@ begin
           else probeout:=probefile;
         FDockMan.SetPDBFiles(targetout,probeout);
         if rmsdtemplate<>'' then
-          FDockMan.AddRMSDScore(rmsdtemplate);
+          FDockMan.AddRMSDScore(rmsdtemplate,submat,minalign);
+        if intrmsdtemplate<>'' then
+          FDockMan.AddInterfaceRMSDScore(rmsdtemplate,intdist,submat,minalign);
         if contactfile<>'' then
           FDockMan.AddResidueContacts(contactfile, maxcontacts);
         if unconstrainedmodels>0 then
@@ -435,9 +500,16 @@ end;
 procedure TDockPrep.WriteHelp;
 begin
   { add your help code here }
-  writeln('Usage: ',ExeName,' -T"target.pdb/target.pdb.gz" -P"probe.pdb/target.pdb.gz" '+
-          '--tchainsTargetChains --pchainsProbeChains --contactsContactConstraintsFile --RMSDtemplate.pdb');
-  writeln('Usage: ',ExeName,' -h');
+  writeln('Usage: ',ExeName,' -T"target.pdb/target.pdb.gz" -P"probe.pdb/target.pdb.gz" ');
+  WriteLn('Options:');
+  WriteLn('--tchains TargetChains');
+  WriteLn('--pchains ProbeChains');
+  WriteLn('--contacts ContactConstraintsFile ');
+  WriteLn('--rmsd template.pdb');
+  WriteLn('--minalign minimum alignment match for *rmsd, from 0 to 1');
+  WriteLn('--submat substitution_matrix.txt');
+  WriteLn('--intrmsd template.pdb');
+  WriteLn('--intdist interface distance, A');
 end;
 
 var

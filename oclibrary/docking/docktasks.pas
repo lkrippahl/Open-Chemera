@@ -23,7 +23,8 @@ interface
 
 uses
   Classes, SysUtils, basetypes,geomutils, molecules, pdbmolecules, molutils,
-  stringutils, oclconfiguration, quicksort, laz2_DOM, laz2_XMLRead, laz2_XMLWrite;
+  molfit, alignment, stringutils, oclconfiguration, quicksort,
+  laz2_DOM, laz2_XMLRead, laz2_XMLWrite;
 
 const
   //current orders version
@@ -175,6 +176,11 @@ type
       FCurrentDock:Integer;
       FJobFile:string;
       function GetLayer(LayerName:string):TPDBModel;
+      procedure MagicFitToTemplate(Template:TMolecule;
+                                   SubMat:TSubMatrix; MinSequenceMatch:TFloat;
+                                    out TargetFit, ProbeFit:TFitCoordsResult);
+        //uses MagicFit to find the matches and returns the alpha carbon coordinates
+
     public
       property Target:TMolecule read FTarget;
       property Probe:TMolecule read FProbe;
@@ -191,14 +197,9 @@ type
         //each line has target chain space target res ID space probe chain space probe res ID space distance
         //each line is an independent distance constraint between the atoms in those residues
 
-      procedure AddRMSDScore(TemplateFile:string);
-      { TODO : only works if same as target and probe files
-        Must implement chain mapping with sequence comparisons to generalize
-        Currently is fixed on fitting target and measuing probe}
+      procedure AddRMSDScore(TemplateFile:string; SubMat:TSubMatrix; MinSequenceMatch:TFloat);
 
-      procedure AddInterfaceRMSDScore(TemplateFile:string;Dist:TFloat);
-      { TODO : only works if same as target and probe files
-        Must implement chain mapping with sequence comparisons to generalize }
+      procedure AddInterfaceRMSDScore(TemplateFile:string;Dist:TFloat; SubMat:TSubMatrix; MinSequenceMatch:TFloat);
 
       procedure AddNullConstraintSet(NumModels,MinOverlap:Integer);
         //for unconstrained docking
@@ -310,7 +311,6 @@ var
 
  var
    tmp,pointset:TDOMNode;
-   f:Integer;
 
  begin
     tmp:=Doc.CreateElement('RMSDScore');
@@ -353,7 +353,7 @@ var
 
   var
     setnode,constnode,modelset,model,scoreset,score:TDOMNode;
-    pointset,pair,point:TDOMNode;
+    pointset:TDOMNode;
     f,g:Integer;
 
   begin
@@ -474,9 +474,7 @@ var
   function ReadTextNode(Name:string;Parent:TDOMNode):string;
 
   begin
-    //WriteLn(Name,':',Parent.NodeName);
     Result:=Parent.FindNode(Name).FirstChild.NodeValue;
-    //WriteLn(Name,':',Result);
   end;
 
   function ReadBooleanAttribute(Node:TDOMNode;Name:string):Boolean;
@@ -555,8 +553,6 @@ var
     Result[2]:=StrToFloat(TDOMElement(tmp).GetAttribute('j'));
     Result[3]:=StrToFloat(TDOMElement(tmp).GetAttribute('k'));
   end;
-
-
 
   procedure AddConstraintSet(DockIx:Integer;Node:TDomNode);
 
@@ -1033,6 +1029,24 @@ begin
     end;
 end;
 
+procedure TDockOrdersManager.MagicFitToTemplate(Template: TMolecule;
+  SubMat: TSubMatrix; MinSequenceMatch: TFloat; out TargetFit, ProbeFit:TFitCoordsResult);
+
+var
+  f:Integer;
+  exclusions:TIntegers;
+
+begin
+  TargetFit:=MagicFitAlphaCoords(FTarget,Template,SubMat, nil, MinSequenceMatch);
+  exclusions:=nil;
+  //prevent repeated chain assignments between target and probe
+  for f:=0 to High(targetfit.FitResult.Map) do
+    if targetfit.FitResult.Map[f]>=0 then
+      AddToArray(targetfit.FitResult.Map[f],exclusions);
+  ProbeFit:=MagicFitAlphaCoords(FProbe,Template,SubMat, exclusions, MinSequenceMatch);
+
+end;
+
 constructor TDockOrdersManager.Create(AJobFile:string);
 begin
   inherited Create;
@@ -1164,37 +1178,23 @@ begin
   sl.Free;
 end;
 
-procedure TDockOrdersManager.AddRMSDScore(TemplateFile: string);
-      { TODO : only works if same as target and probe files
-        Must implement chain mapping with sequence comparisons to generalize }
+procedure TDockOrdersManager.AddRMSDScore(TemplateFile: string; SubMat:TSubMatrix; MinSequenceMatch:TFloat);
 
 var
   layer:TPDBModel;
   realcoords,predcoords,tmpcoords:TCoords;
   firstprobe,f:Integer;
   rmsd:TRMSDScoreDef;
+  targetfit, probefit:TFitCoordsResult;
 
 begin
-  predcoords:=nil;
-  realcoords:=nil;
   layer:=GetLayer(TemplateFile);
-  //build target coords
-  for f:=0 to High(FTarget.Groups) do
-    begin
-    AppendToArray(ListCoords(FTarget.Groups[f],'CA'),predcoords);
-    AppendToArray(ListCoords(layer.Molecule.GetGroup(FTarget.Groups[f].Name),'CA'),
-                    realcoords);
-    end;
-  firstprobe:=Length(predcoords);
+  MagicFitToTemplate(layer.Molecule, SubMat, MinSequenceMatch,
+                      targetfit, probefit);
 
-  //build probe coords
-  for f:=0 to High(FProbe.Groups) do
-    begin
-    AppendToArray(ListCoords(FProbe.Groups[f],'CA'),predcoords);
-    AppendToArray(ListCoords(layer.Molecule.GetGroup(FProbe.Groups[f].Name),'CA'),
-                    realcoords);
-    end;
-  WriteLn(length(predcoords),' ', Length(realcoords));
+  realcoords:=Concatenate(targetfit.TargetCoords,probefit.TargetCoords);
+  predcoords:=Concatenate(targetfit.ProbeCoords,probefit.ProbeCoords);
+  firstprobe:=Length(targetfit.ProbeCoords);
   with FDockRuns[FCurrentDock] do
     begin
     rmsd:=TRMSDScoreDef.Create('RMSD to '+ExtractFileName(TemplateFile));
@@ -1206,41 +1206,57 @@ begin
     SetLength(ScoreDefs,Length(ScoreDefs)+1);
     ScoreDefs[High(ScoreDefs)]:=rmsd;
     end;
+
 end;
 
-procedure TDockOrdersManager.AddInterfaceRMSDScore(TemplateFile: string;Dist:TFloat);
+procedure TDockOrdersManager.AddInterfaceRMSDScore(TemplateFile: string;
+  Dist: TFloat; SubMat: TSubMatrix; MinSequenceMatch: TFloat);
 var
   layer:TPDBModel;
   realcoords,predcoords,tmpcoords:TCoords;
-  firstprobe,f:Integer;
-  templatet,templatep:TMolecules;
-  interfacet,interfacep:TMolecules;
+  targcs,probecs:TCoords;
+  firstprobe,f,ix:Integer;
   rmsd:TRMSDScoreDef;
+  targpred,targtemp,probepred,probetemp:TMolecules;
+  targixs,probeixs:TIntegers;
+  targetfit, probefit:TFitCoordsResult;
+
+  procedure PushCoords(atomr,atomp:TAtom);
+
+  begin
+    if (atomr<>nil) and (atomp<>nil) then
+      begin
+      realcoords[ix]:=atomr.Coords;
+      predcoords[ix]:=atomp.Coords;
+      inc(ix);
+      end;
+  end;
+
 
 begin
-  predcoords:=nil;
-  realcoords:=nil;
-  templatet:=nil;
-  templatep:=nil;
   layer:=GetLayer(TemplateFile);
-  //build template interface groups
-  for f:=0 to High(FTarget.Groups) do
-    AppendGroupsToArray(templatet,layer.GetChain(FTarget.Groups[f].Name).AllTerminalGroups);
-  for f:=0 to High(FProbe.Groups) do
-    AppendGroupsToArray(templatep,layer.GetChain(FProbe.Groups[f].Name).AllTerminalGroups);
-  GroupsInContact(templatet, templatep, Dist, interfacet, interfacep);
+  MagicFitToTemplate(layer.Molecule, SubMat, MinSequenceMatch,
+                       targetfit, probefit);
+  GetMatchingResidues(FTarget, layer.Molecule, targetfit.FitResult, targpred, targtemp);
+  GetMatchingResidues(FProbe, layer.Molecule, probefit.FitResult, probepred, probetemp);
 
-  for f:=0 to High(interfacet) do
-    begin
-    AppendToArray(ListCoords(interfacet[f],'CA'),realcoords);
-    AppendToArray(ListCoords(GetResidue(FTarget,interfacet[f].Parent.Name,interfacet[f].Id),'CA'),predcoords);
-    end;
-  firstprobe:=Length(predcoords);
-  for f:=0 to High(interfacep) do
-    begin
-    AppendToArray(ListCoords(interfacep[f],'CA'),realcoords);
-    AppendToArray(ListCoords(GetResidue(FProbe,interfacep[f].Parent.Name,interfacep[f].Id),'CA'),predcoords);
-    end;
+  GroupsInContact(targtemp,probetemp,Dist,targixs,probeixs);
+
+  SetLength(realcoords,Length(targixs)+Length(probeixs));
+  SetLength(predcoords,Length(targixs)+Length(probeixs));
+
+  ix:=0;
+  for f:=0 to High(targixs) do
+    PushCoords(targtemp[targixs[f]].GetAtom('CA'),targpred[targixs[f]].GetAtom('CA'));
+
+  firstprobe:=ix;
+
+  for f:=0 to High(probeixs) do
+    PushCoords(probetemp[probeixs[f]].GetAtom('CA'),probepred[probeixs[f]].GetAtom('CA'));
+
+  SetLength(realcoords,ix);
+  SetLength(predcoords,ix);
+
   with FDockRuns[FCurrentDock] do
     begin
     rmsd:=TRMSDScoreDef.Create('Interface RMSD to '+

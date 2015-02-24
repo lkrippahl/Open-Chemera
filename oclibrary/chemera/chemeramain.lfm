@@ -7,6 +7,7 @@ object CmMainForm: TCmMainForm
   Menu = MainMenu
   OnActivate = FormActivate
   OnCreate = FormCreate
+  OnDropFiles = FormDropFiles
   LCLVersion = '1.0.4.0'
   object MainMenu: TMainMenu
     left = 40
@@ -43,6 +44,10 @@ object CmMainForm: TCmMainForm
       object MenuItem7: TMenuItem
         Caption = 'Test Angles'
         OnClick = MenuItem7Click
+      end
+      object MenuItem8: TMenuItem
+        Caption = 'Save Rotation'
+        OnClick = MenuItem8Click
       end
     end
   end

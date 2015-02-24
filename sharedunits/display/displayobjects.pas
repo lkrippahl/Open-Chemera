@@ -5,8 +5,8 @@ This work is public domain (see README.TXT).
 Author: Ludwig Krippahl
 Date: 9.1.2011
 Purpose:
-  Manages the display of molecules and other objects. Stores all display
-  settings.
+  Manages the display of molecules and other objects. Display settings are kept
+  in the external TSettingsManager on selections module
 
 Requirements:
 Revisions:
@@ -23,18 +23,9 @@ interface
 
 uses
   Classes, SysUtils, basetypes, base3ddisplay,LCLProc, molecules, oclconfiguration,
-  linegrids, geomutils;
+  linegrids, geomutils, selections;
 
 type
-  TAtomSettings=record
-    Atom:TAtom;
-  end;
-  TAtomSettingsArray=array of TAtomSettings;
-  TBondSettings=record
-    BondIx:Integer;
-    Molecule:TMolecule;
-  end;
-  TBondSettingsArray=array of TBondSettings;
 
   TGridSettings=record
     Grid:TGridPlane;
@@ -53,11 +44,11 @@ type
     //This form neither creates nor destroys them
     FDisplay:IBase3DDisplay;        //Interface to display window
     FLayers:TMolecules;
-    FGrids:TGridSettingsArray;
+
 
     //SettingsLists
-    FAtoms:TAtomSettingsArray;
-    FBonds:TBondSettingsArray;
+    FGrids:TGridSettingsArray;
+    FSettings:TSettingsManager;
     function GridAsObjects(Grid: TGridPlane;TransVec:TCoord;Res:TFloat;
                   Cubes:Boolean=True):T3DObjects;
 
@@ -130,6 +121,8 @@ constructor TDisplayManager.Create(Display: IBase3DDisplay);
 begin
   inherited Create;
   SetDisplay(Display);
+  FSettings:=TSettingsManager.Create();
+  FSettings.CreateCPKMaterials;
 end;
 
 procedure TDisplayManager.SetDisplay(Display: IBase3DDisplay);
@@ -144,7 +137,11 @@ procedure TDisplayManager.Attach(Molecule: TMolecule);
 begin
   SetLength(FLayers,Length(FLayers)+1);
   FLayers[High(FLayers)]:=Molecule;
+  FSettings.AttachMolecule(Molecule);
   DebugLn('Attached:'+Molecule.Name);
+  FSettings.AssignCPK(Molecule);
+  FSettings.CreateMaterialTable(Molecule);
+
 end;
 
 procedure TDisplayManager.Attach(AGrid:TGridPlane;ATransVec:TCoord;AResolution:TFloat;AColor:TRGBAColor);
@@ -183,7 +180,8 @@ begin
         tmp[c]:=FLayers[f];
         Inc(c);
         end;
-    //TO DO: Remove display settings, display lists, etc
+    FSettings.DetachMolecule(Molecule);
+    //TO DO: Remove display lists, etc
     FLayers:=tmp;
     end;
 end;
@@ -198,36 +196,32 @@ end;
 procedure TDisplayManager.RenderLayers;
 //TO DO: mostly everything. Still just for testing
 //TO DO: should check which have changed
-//TO DO: group objects by material
 
 var
-  f,g:Integer;
+  f,g,h,molix:Integer;
   al:TAtoms;
   ol:T3DObjectList;
 
 begin
   for f:=0 to High(FLayers) do
     begin
-    al:=FLayers[f].AllAtoms;
-    SetLength(ol.Objects,1);
-    ol.Material:=DefaultMaterial;
-    for g:=0 to High(al) do
-        begin
-        if al[g].AtomicNumber>=0 then
-          with AtomData[al[g].AtomicNumber-1] do
+    molix:=FSettings.IndexFromMolecule(FLayers[f]);
+    with FSettings.MolSettings[molix] do
+      begin
+      for g:=0 to High(AtomTable) do
+        if AtomTable[g]<>nil then
+          begin
+          SetLength(ol.Objects,Length(AtomTable[g]));
+          ol.Material:=FSettings.Materials[g];
+          for h:=0 to High(AtomTable[g]) do
             begin
-            ol.Material.Ambient:=RGBAColor(CPKColor[0],CPKColor[1],CPKColor[2],1);
-            end
-          else
-            ol.Material:=DefaultMaterial;
-//        if f=0 then
-//          ol.Material.Ambient:=RGBAColor(1,0,0,1);
-        ol.Objects[0].ObjectType:=otSphere;
-        ol.Objects[0].sphC:=al[g].Coords;
-        ol.Objects[0].Rad:=al[g].Radius;
-        if f>0 then ol.Objects[0].Rad:=al[g].Radius/4;
-        FDisplay.AddObjectList(ol);
-        end;
+            ol.Objects[h].ObjectType:=otSphere;
+            ol.Objects[h].sphC:=AtomSettings[AtomTable[g,h]].Atom.Coords;
+            ol.Objects[h].Rad:=AtomSettings[AtomTable[g,h]].AtomRad;
+            end;
+          FDisplay.AddObjectList(ol);
+          end;
+      end;
     end;
 end;
 

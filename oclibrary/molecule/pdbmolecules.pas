@@ -31,6 +31,8 @@ To do:
   TPDBInfo should belong to a TPDBFile (or TPDBLayer) intermediate class above
   the TPDBModel, as one file can contain multiple models
 
+  PDB data is being replaced with template data (charges, elements, ...). This
+  may not be desireable (in LoadPDB)
 
 *******************************************************************************}
 
@@ -42,9 +44,12 @@ interface
 
 uses
   Classes, SysUtils, basetypes, molecules, pdbparser, FileUtil, oclconfiguration,
-  stringutils,LCLProc;
+  stringutils,LCLProc,molutils;
 
 type
+
+  PDBChargeOrigin=(pdbNone,pdbOccTemp,pdbOccupancy,pdbCharge);
+  PDBResidueTypes=set of (resAA,resNonAA);
 
   TTemplate = record                    //residue templates
     Name: string;
@@ -73,6 +78,7 @@ type
     procedure Free;
     procedure ClearChains;
     procedure CreateChains(const IDs: TSimpleStrings);
+    procedure DeleteResidues(Options:PDBResidueTypes;ResTypes:TSimpleStrings=nil);
     function NewEmptyChain(ChainName: string; ChainID: integer): TMolecule;
     function NewChain(ChainName: string; ChainID, Size: integer): TMolecule;
     function GetChain(ChainIx: integer): TMolecule;overload;
@@ -81,7 +87,7 @@ type
     function GetResidue(ChainIx, ResIx: integer): TMolecule;
     function GetResidue(ChainName:string; ResId:Integer):TMolecule;
     function GetAtom(ChainIx, ResIx, AtomIx: integer): TAtom;
-    function LoadPDB(PdbFileName: string):TMolecule;
+    function LoadPDB(PdbFileName: string; ChargeFrom:PDBChargeOrigin=pdbNone):TMolecule;
     procedure ResetTemplates(ATemplates:TTemplates);
     function ChainCount:Integer;
     function ListChains:TSimpleStrings;
@@ -89,7 +95,6 @@ type
     procedure AssignAtomicData; //atomic number, vdW radius
     function TemplateIx(Name:string):Integer;
     function CopyChains(Chains:TSimpleStrings):TMolecule;
-    function InterfaceResidues(Chains1,Chains2:TSimpleStrings;ContactDistance:TFloat):TMolecules;
   end;
 
   TPDBModels = array of TPDBModel;
@@ -109,10 +114,12 @@ type
     function LayerByIx(Ix: integer): TPDBModel;
     function LayerByFileName(FileName: string): TPDBModel;
     function AddNewLayer: TPDBModel;
-    function LoadLayer(PdbFileName: string):TMolecule;
+    function LoadLayer(PdbFileName: string; ChargeFrom:PDBChargeOrigin=pdbNone):TMolecule;
     function GetChains(Layer: Integer; Indexes: TIntegers): TMolecules;overload;
     function GetChains(Layer: Integer; IDs: TSimpleStrings): TMolecules;overload;
     procedure ClearLayers;
+    procedure Free;
+
   end;
 
   function AtomIsAABackbone(Atom:TAtom):Boolean;
@@ -207,9 +214,11 @@ var
   atoms:TAtoms;
   f:Integer;
   res,chain:TMolecule;
+  oldchain:TMolecule;
   rname,chname:string;
   rid:Integer;
 begin
+  oldchain:=nil;
   sl:=TStringList.Create;
   atoms:=Molecule.AllAtoms;
   for f:=0 to High(atoms) do
@@ -224,7 +233,12 @@ begin
       rid:=res.ID;
       chain:=res.Parent;
       if chain<>nil then
+        begin
         chname:=chain.Name;
+        if (oldchain<>nil) and (oldchain<>chain) then
+          sl.Add('TER       ');
+        oldchain:=chain;
+        end;
       end;
     sl.Add(AtomRecord(atoms[f].Name,rname,chname,atoms[f].ID,rid,atoms[f].Coords));
     end;
@@ -274,6 +288,37 @@ var
 begin
   for f := 0 to High(IDs) do
     FProtein.NewGroup(IDs[f], f + 1);
+end;
+
+procedure TPDBModel.DeleteResidues(Options: PDBResidueTypes;
+  ResTypes: TSimpleStrings);
+
+var
+  c,r:Integer;
+  chain,res:TMolecule;
+
+  function ResidueToDelete(Residue:TMolecule):Boolean;
+
+  begin
+    Result:= ((resAA in Options) and (AAOneLetterCode(Residue.Name)<>'')) or
+             ((resNonAA in Options) and (AAOneLetterCode(Residue.Name)='')) or
+             (LastIndexOf(Residue.Name,ResTypes)>=0);
+  end;
+
+begin
+  for c:=0 to FProtein.GroupCount-1 do
+    begin
+    chain:=FProtein.GetGroup(c);
+    chain.TagAllAtoms(0);
+    for r:=0 to chain.GroupCount-1 do
+      begin
+      res:=chain.GetGroup(r);
+      if ResidueToDelete(res) then
+        res.TagAllAtoms(1);
+      end;
+    chain.DeleteTaggedAtoms(1);
+    end;
+  FProtein.DeleteEmptyGroups;
 end;
 
 function TPDBModel.NewEmptyChain(ChainName: string; ChainID: integer): TMolecule;
@@ -328,7 +373,8 @@ begin
   if mol <>nil then Result := mol.GetAtom(AtomIx);
 end;
 
-function TPDBModel.LoadPDB(PdbFileName: string):TMolecule;
+function TPDBModel.LoadPDB(PdbFileName: string; ChargeFrom: PDBChargeOrigin
+  ): TMolecule;
 
 var
   parser: TPDBReader;
@@ -361,14 +407,32 @@ begin
         end;
       atom:=cres.NewAtom(AtomName,Serial);
       atom.Coords:=Coords;
+      //element may be present in the PDB file
+      //However, this is superseded if there is monomer template data
+      atom.AtomicNumber:=AtomicNumber(Element);
+      atom.Radius:=VdWRadius(atom.AtomicNumber);
+      if ChargeFrom=pdbOccupancy then
+        atom.Charge:=Occupancy
+      else if ChargeFrom=pdbOccTemp then
+        atom.Charge:=OccTemp
+      else if ChargeFrom=pdbCharge then
+        begin
+        if Length(Charge)=2 then
+          begin
+          atom.Charge:=StrToFloat(Charge[1]);
+          if Charge[2]='-' then atom.Charge:=-atom.Charge;
+          end;
+        end;
       end;
 
-  //make extra connections
-  //TO DO:
+  { TODO : make extra connections }
   for f:=0 to High(parser.Connections) do
     begin
 
     end;
+  //assign element, radius, charge, et al, from the monomer templates
+  //will replace information on PDB
+  { TODO : It may not be desireable to discard charges and element data on PDB in favour of templates. Check this... }
   AssignAtomicData;
   Result:=FProtein;
 end;
@@ -385,12 +449,8 @@ end;
 
 function TPDBModel.ListChains: TSimpleStrings;
 
-var f:Integer;
-
 begin
-  SetLength(Result,Length(FProtein.Groups));
-  for f:=0 to High(FProtein.Groups) do
-    Result[f]:=FProtein.Groups[f].Name;
+  Result:=FProtein.ListGroupNames;
 end;
 
 function TPDBModel.ResidueCount(ChainIx: Integer): Integer;
@@ -408,8 +468,6 @@ begin
   atoms:=FProtein.AllAtoms;
   for f:=0 to High(atoms) do
     begin
-    atoms[f].AtomicNumber:=-1;
-    atoms[f].Radius:=Config.DefaultAtomicRadius;
     tempix:=TemplateIx(atoms[f].Parent.Name);
     if tempix>=0 then
       begin
@@ -446,11 +504,6 @@ begin
     end;
 end;
 
-function TPDBModel.InterfaceResidues(Chains1, Chains2: TSimpleStrings;
-  ContactDistance: TFloat): TMolecules;
-begin
-
-end;
 
 { TPDBModelMan }
 
@@ -555,10 +608,11 @@ begin
   FLayers[High(FLayers)] := Result;
 end;
 
-function TPDBModelMan.LoadLayer(PdbFileName: string):TMolecule;
+function TPDBModelMan.LoadLayer(PdbFileName: string; ChargeFrom: PDBChargeOrigin
+  ): TMolecule;
 
 begin
-  Result:=AddNewLayer.LoadPDB(PdbFileName);
+  Result:=AddNewLayer.LoadPDB(PdbFileName, ChargeFrom);
 end;
 
 function TPDBModelMan.GetChains(Layer: Integer; Indexes: TIntegers): TMolecules;
@@ -590,6 +644,15 @@ begin
   for f:=0 to High(FLayers) do
     FLayers[f].Free;
   FLayers:=nil;
+end;
+
+procedure TPDBModelMan.Free;
+begin
+  if Self<>nil then
+    begin
+    ClearLayers;
+    inherited;
+    end;
 end;
 
 end.

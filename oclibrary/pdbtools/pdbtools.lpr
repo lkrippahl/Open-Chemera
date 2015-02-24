@@ -26,7 +26,7 @@ uses
   interfaces, Classes, SysUtils, basetypes, CustApp, surface, pdbmolecules,
   molecules, geomhash, quicksort, pdbparser, mmcifparser, oclconfiguration,
   alignment, stringutils, progress, pdbsurface, contactprediction, ebiblastp,
-  sequence, fasta;
+  sequence, fasta,geomutils, base3ddisplay, molfit, molutils;
 
 type
 
@@ -64,8 +64,14 @@ type
     // procedure PDBAnalysis; TODO
     procedure MergeBLASTP(MaxSeqs:Integer=2000);
     // merges a set of xml files with results from BLASTP(EBI)
+    procedure SurfaceCharges(Headers:Boolean);
+    // computes the surface charges from a pdb file
+    // NOTE Assumes charge is in the occupancy field
+    procedure BuildComplex;
+    // generates complex from unbound and bound structures
     procedure ExportChainSequences;
 
+    procedure Silluette;
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
@@ -218,11 +224,15 @@ begin
   else if command='seq' then
     ExportChainSequences
   else if command='merge' then
-    MergeBLASTP;
-
+    MergeBLASTP
+  else if command='scharge' then
+    SurfaceCharges(HasOption('headers'))
+  else if command='build' then
+    BuildComplex
+  else if command='silluette' then
+    Silluette;
   report.Free;
   Terminate;
-
 end;
 
 procedure TPdbTools.DoContacDescriptors(Rad,MinSurf: TFloat);
@@ -404,7 +414,7 @@ begin
     descriptorgen.DistanceDescriptors(cdparams)
   else
     descriptorgen.GenerateAllDescriptors(cdparams);
-  descriptorgen.SaveDescriptors(HasOption('h','headers'), HasOption('c','contacts'));
+  descriptorgen.SaveDescriptors(HasOption('headers'), HasOption('c','contacts'));
   if not(HasOption('s','surface') or HasOption('c','contacts')) then
     descriptorgen.SaveRaw();
 end;
@@ -453,6 +463,199 @@ begin
   fastawriter.Free;
 end;
 
+procedure TPdbTools.SurfaceCharges(Headers: Boolean);
+
+var
+  surman:TPdbSurface;
+  pdblayerman:TPDBModelMan;
+  pdb:string;
+  atoms:TAtoms;
+  asas:TFloats;
+  totasa,totcharge,surfcharge:TFloat;
+  f:Integer;
+  dipole,center:TCoord;
+
+begin
+  pdblayerman:=TPDBModelMan.Create(Config.MonomersPath);
+  pdb:=ParamStr(2);
+  pdblayerman.LoadLayer(pdb,pdbOccTemp);
+  surman:=TPDBSurface.Create(50);
+  atoms:=pdblayerman.LayerByIx(0).Molecule.AllAtoms;
+  asas:=surman.CalcASAs(atoms);
+  if Headers then
+    WriteLn('PDB'+#9+'Total ASA (A^2)'+#9+'Total Charge (e)'+#9+
+            'Surface Charge (e)'+#9+'Charge Density (e/A^2)'+#9+'Dipole (D)');
+  totasa:=Sum(asas);
+  totcharge:=0;
+  surfcharge:=0;
+  //compute geometri center
+  center:=NullVector;
+  for f:=0 to High(atoms) do
+      center:=Add(center,atoms[f].Coords);
+  center:=Scaled(center,1/Length(atoms));
+
+  dipole:=NullVector;
+  for f:=0 to High(atoms) do
+    begin
+    totcharge:=totcharge+atoms[f].Charge;
+    dipole:=Add(dipole,Scaled(Subtract(atoms[f].Coords,center),atoms[f].Charge));
+    if asas[f]>0 then
+      surfcharge:=surfcharge+atoms[f].Charge;
+    end;
+  WriteLn(pdb+#9+FloatToStrF(totasa,ffFixed,3,1)+
+              #9+FloatToStrF(totcharge,ffFixed,3,1)+
+              #9+FloatToStrF(surfcharge,ffFixed,3,1)+
+              #9+FloatToStrF(surfcharge/totasa,ffExponent,3,1)+
+              #9+FloatToStrF(Norm(dipole)*0.20819434,ffExponent,3,1));
+  surman.Free;
+  pdblayerman.Free;
+end;
+
+procedure TPdbTools.BuildComplex;
+
+var
+  pdb1,pdb2,complex:string;
+  mols1,mols2,molsc,fitmol1,fitmol2,builtc:TMolecule;
+  pdblayerman:TPDBModelMan;
+  chainlist:TSimpleStrings;
+  submat:TSubMatrix;
+  fit1,fit2:TFitResult;
+  folder:string;
+  exclusions:TIntegers;
+  minscore:TFloat;
+
+  function GetLayer(PdbChains:string):TMolecule;
+
+  var
+    pdb,chains:string;
+    ix,f:Integer;
+    layer:TPDBModel;
+
+  begin
+    ix:=Pos('|',PdbChains);
+    if ix>0 then
+      begin
+      pdb:=Copy(PdbChains,1,ix-1);
+      chains:=Copy(PdbChains,ix+1,Length(PdbChains));
+      end
+    else
+      begin
+      pdb:=PdbChains;
+      chains:=''
+      end;
+  pdblayerman.ClearLayers;
+  pdblayerman.LoadLayer(pdb);
+  layer:=pdblayerman.LayerByIx(0);
+  layer.DeleteResidues([resNonAA]);
+  if chains<>'' then
+    begin
+    chainlist:=SplitChars(chains);
+    Result:=layer.CopyChains(chainlist);
+    end
+  else
+    Result:=TMolecule.CopyFrom(layer.Molecule,nil);
+
+  end;
+
+  function NewMoleculeFromFit(Original,Template:TMolecule;Fit:TFitResult):TMolecule;
+
+  var
+    f:Integer;
+    chn:TMolecule;
+
+  begin
+    Result:=TMolecule.Create('',0,nil);
+    for f:=0 to High(Fit.Map) do
+      if Fit.Map[f]>=0 then
+        begin
+        chn:=Original.GetGroup(f);
+        chn.Name:=Template.GetGroup(Fit.Map[f]).Name;
+        Result.AddGroup(TMolecule.CopyFrom(chn,Result));
+        end;
+  end;
+
+  procedure WriteReport;
+
+  var
+    report:string;
+    f,g,count:Integer;
+
+  begin
+    report:=ParamStr(2)+#9+ParamStr(3)+#9+ParamStr(4)+#9;
+    if (fit1.rmsd>0) and (fit2.rmsd>0) then
+      begin
+      report:=report+FlattenStrings(fitmol1.ListGroupNames,'')+#9+
+                     FlattenStrings(fitmol2.ListGroupNames,'')+#9+
+                     FloatToStrF(fit1.Rmsd,ffFixed,3,3)+#9+
+                     FloatToStrF(fit2.Rmsd,ffFixed,3,3);
+      report:=report+#9;
+      for f:=0 to High(fit1.Map) do
+        report:=report+IntToStr(fit1.Map[f])+' ';
+      report:=report+#9;
+      for f:=0 to High(fit2.Map) do
+        report:=report+IntToStr(fit2.Map[f])+' ';
+      report:=report+IntToStr(CountResidueMatches(fit1))+' ';
+      report:=report+IntToStr(CountResidueMatches(fit2))+' ';
+      end
+    else
+      begin
+      if fit1.rmsd<0 then
+        report:=report+'Failed on '+ParamStr(2)+#9;
+      if fit2.rmsd<0 then
+        report:=report+'Failed on '+ParamStr(3)+#9;
+      end;
+    WriteLn(report);
+  end;
+
+var f:Integer;
+
+begin
+  if ParamCount<8 then
+    begin
+    WriteLn('Insufficient parameters '+IntToStr(ParamCount));
+    WriteLn('(pdb1 pdb2 complex submat out1 out2 outcomplex [minscore]');
+    Exit();
+    end;
+  minscore:=0.7;
+  if ParamCount>=9 then
+    minscore:=StrToFloat(ParamStr(9));
+  pdb1:=ParamStr(2);
+  pdb2:=ParamStr(3);
+  complex:=ParamStr(4);
+  pdblayerman:=TPDBModelMan.Create(Config.MonomersPath);
+  mols1:=GetLayer(pdb1);
+  mols2:=GetLayer(pdb2);
+  molsc:=GetLayer(complex);
+  submat:=ReadBLASTMatrix(ParamStr(5));
+
+  fit1:=MagicFit(mols1,molsc,SubMat,nil,minscore);
+  exclusions:=nil;
+  for f:=0 to High(fit1.Map) do
+      if fit1.Map[f]>=0 then AddToArray(fit1.Map[f],exclusions);
+  fit2:=MagicFit(mols2,molsc,SubMat,exclusions,minscore);
+  if (fit1.Rmsd>0) and (fit2.Rmsd>0) then
+    begin
+    fitmol1:=NewMoleculeFromFit(mols1,molsc,fit1);
+    fitmol2:=NewMoleculeFromFit(mols2,molsc,fit2);
+    SaveToPDB(fitmol1,ParamStr(6));
+    SaveToPDB(fitmol2,ParamStr(7));
+    fitmol1.Transform(fit1.Center,fit1.Rotation,fit1.Translation);
+    fitmol2.Transform(fit2.Center,fit2.Rotation,fit2.Translation);
+    builtc:=TMolecule.Create('',0,nil);
+    for f:=0 to fitmol1.GroupCount-1 do
+      builtc.AddGroup(TMolecule.CopyFrom(fitmol1.GetGroup(f),builtc));
+    for f:=0 to fitmol2.GroupCount-1 do
+      builtc.AddGroup(TMolecule.CopyFrom(fitmol2.GetGroup(f),builtc));
+    builtc.RenumberAtoms;
+    SaveToPDB(builtc,ParamStr(8));
+    end;
+  WriteReport;
+  pdblayerman.Free;
+  builtc.Free;
+  fitmol1.Free;
+  fitmol2.Free;
+end;
+
 procedure TPdbTools.ExportChainSequences;
 var
   chainids:TSimpleStrings;
@@ -480,6 +683,105 @@ begin
     WriteLn(ChainSequence(chains[f]));
     end;
   pdblayerman.Free;
+end;
+
+procedure TPdbTools.Silluette;
+//computes the silluette of the pdb file in a number of directions
+
+
+  function Area(var Coords:TCoords;const Rads:TFloats;MaxRad:TFloat):Integer;
+
+  var
+    f:Integer;
+    hasher:TGeomHasher;
+    minc,maxc:TCoord;
+    x,y:TFloat;
+
+  begin
+    for f:=0 to High(Coords) do
+      Coords[f,2]:=0;
+    hasher:=TGeomHasher.Create(Coords,MaxRad,Rads);
+    minc:=Min(Coords);
+    maxc:=Max(Coords);
+    Result:=0;
+    x:=minc[0]+0.5-maxrad;
+    while x<=maxc[0]+1+maxrad do
+      begin
+      y:=minc[1]+0.5-maxrad;
+      while y<=maxc[1]+1+maxrad do
+        begin
+        if hasher.IsInnerPoint(Coord(x,y,0)) then
+          Inc(Result);
+        y:=y+1;
+        end;
+      x:=x+1;
+      end;
+    hasher.Free;
+  end;
+
+  function UniformSampleAngles(NumAxes:Integer):TQuaternions;
+
+  //Generates rotation quaternions evenly spread around sphere
+
+var
+  sphere:TCoords;
+  f,g,ix:Integer;
+  zaxis:TCoord;
+begin
+  if NumAxes<=1 then
+    begin
+    SetLength(Result,1);
+    Result[0]:=IdentityQuaternion;
+    end
+  else
+    begin
+    zaxis:=Coord(0,0,1);
+    //get ZSteps^2 points uniformly distributed around a sphere
+    sphere:=GoldenSpiralPoints(NumAxes);
+    SetLength(Result,Length(sphere));
+    ix:=0;
+    zaxis:=Coord(0,0,1);
+    for g:=0 to High(sphere) do
+      Result[g]:=RotationTo(zaxis,sphere[g]);
+    end;
+end;
+
+var
+  pdb:string;
+  angles:Integer;
+  added:TFloat;
+  coords,rotcoords:TCoords;
+  rotations:TQuaternions;
+  pdblayerman:TPDBModelMan;
+  rads:TFloats;
+  maxrad:TFloat;
+  areas:TIntegers;
+  f:Integer;
+
+begin
+  pdblayerman:=TPDBModelMan.Create(Config.MonomersPath);
+  pdb:=ParamStr(2);
+  pdblayerman.LoadLayer(pdb);
+  angles:=StrToInt(ParamStr(3));
+  rotations:=UniformSampleAngles(angles);
+  added:=StrToFloat(ParamStr(4));
+  coords:=ListCoords(pdblayerman.LayerByIx(0).Molecule);
+  rads:=ListRadii(pdblayerman.LayerByIx(0).Molecule);
+  for f:=0 to High(rads) do rads[f]:=rads[f]+added;
+  maxrad:=Max(rads);
+  SetLength(areas,length(rotations));
+  for f:=0 to High(rotations) do
+    begin
+    rotcoords:=Rotate(coords,rotations[f]);
+    areas[f]:=Area(rotcoords,rads,maxrad);
+    end;
+  if HasOption('headers') then
+    WriteLn('PDB'+#9+'Angles'+#9+'Average'+#9+'Median'+#9+'Max'+#9+'Min');
+    WriteLn(pdb+#9+IntToStr(Round(angles))+#9+
+                   IntToStr(Round(Average(areas)))+#9+
+                   IntToStr(Round(Median(areas)))+#9+
+                   IntToStr(Round(Max(areas)))+#9+
+                   IntToStr(Round(Min(areas))));
 end;
 
 
@@ -573,6 +875,17 @@ begin
   writeln('indicated on the ID line with OS="species" or [organism=species]');
   writeln('However, if in fasta format then the first sequence must have the query ID (although the');
   writeln('sequence itself may be empty)');
+  writeln();
+  writeln('For computing surface charges:');
+  writeln('pdbtools scharge [--headers] pdbq_file');
+  writeln('NOTE: Assumes that charge is in the occupancy field');
+  writeln();
+  writeln('For creating a complex from unbound and bound structures:');
+  writeln('pdbtools build pdb1[|chains] pdb2[|chains] complex[|chains] submatrix out1 out2 outcomplex [minscore]');
+  writeln('Output is out1 out2 outcomplex files with the selected chains and built complex');
+  writeln();
+  writeln('For computing the silluette of a pdb file:');
+  writeln('pdbtools silluette pdb num_angles added_radius [--headers]');
 
 
 end;

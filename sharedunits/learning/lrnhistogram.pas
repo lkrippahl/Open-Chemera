@@ -136,6 +136,7 @@ var
 
 begin
   buffer:=TFileBuffer.Create;
+  WriteLn(FileName);
   buffer.LoadFromFile(FileName);
   SetLength(Hists,buffer.GetInteger);
   if Hists<>nil then

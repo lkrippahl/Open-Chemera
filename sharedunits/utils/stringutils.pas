@@ -20,10 +20,13 @@ interface
 uses
   Classes, SysUtils, basetypes,strutils;
 
+function CopyWord(const Text:string; const Sep:string=' '):string;
+  //Returns substring to separator. Text is not altered
 
 function GrabWord(var Text:string;const Sep:string=' '):string;
   //deletes separator if found at beginning
   //Returns substring to separator deleting that from Text
+
 
 function GrabBetween(var Text:string;const Sep1,Sep2:string):string;
   //returns substring between separators deleting that from Text
@@ -35,6 +38,8 @@ procedure SplitString(Text:string;Words:TStrings;const Sep:string=' ');overload;
   //created by caller
 function SplitString(Text:string):TSimpleStrings;overload;
   //splits on all whitespace (<=32)
+function SplitLines(Text:string):TSimpleStrings;
+    //splits on all end of line chars (10) rejecting #13 but keeping empty lines)
 function SplitChars(Text:string):TSimpleStrings;
   //split one char per string
 
@@ -45,9 +50,11 @@ function GetFloat(AString:string;Start,Finish:Integer):Double;overload;
 function GetString(AString:string;Start,Finish:Integer):string;
 function LastIndexOf(s:string;a:TSimpleStrings):Integer;overload;
 function LastIndexOf(I:Integer;a:TIntegers):Integer;overload;
+function LastIndexOf(const SubS,S:string):Integer;overload;
   // returns last index of string, -1 if not found
 function FirstIndexOf(s:string;a:TSimpleStrings):Integer;overload;
 function FirstIndexOf(I:Integer;a:TIntegers):Integer;overload;
+function FirstIndexOf(const SubS,S:string):Integer;overload;
   // -1 if not found
 
 function FirstByPrefix(Prefix:string;SStrings:TSimpleStrings):Integer;
@@ -68,6 +75,9 @@ function FlattenStrings(SS:TSimpleStrings;Sep:string):string;
 function SnipString(var S:string;const Spacer:string):string;
   //cuts S to first spacer, removing spacer, returns part before spacer
   //returns empty string and leaves S if spacer is not found
+function SnipStringAll(var S:string;const Spacer:string):string;
+  //cuts S to first spacer, removing spacer, returns part before spacer
+  //returns S and empties S if spacer is not found
 function CountInString(const S:string; const C:Char):Integer;
 function CleanString(const S:string; const C:Char):string;overload;
   //returns S minus all instances of C
@@ -120,6 +130,18 @@ function LeftJustify(Text:string;Len:Integer):string;overload;
 
 
 implementation
+
+function CopyWord(const Text: string; const Sep: string): string;
+
+var p:Integer;
+
+begin
+  p:=Pos(Sep,Text);
+  if p<=0 then
+    Result:=Text
+  else
+    Result:=Copy(Text,1,p-1);
+end;
 
 function GrabWord(var Text:string;const Sep:string=' '):string;
 //consumes the original string
@@ -190,6 +212,27 @@ begin
   if s<>'' then
     AddToArray(s,Result);
 end;
+
+function SplitLines(Text: string): TSimpleStrings;
+
+var
+  f:Integer;
+  s:string;
+begin
+  s:='';
+  Result:=nil;
+  for f:=1 to Length(Text) do
+    if Text[f]=#10 then
+      begin
+      AddToArray(s,Result);
+      s:='';
+      end
+    else if Text[f]<>#13 then
+      s:=s+Text[f];
+  if s<>'' then
+    AddToArray(s,Result);
+end;
+
 
 function SplitChars(Text: string): TSimpleStrings;
 
@@ -290,6 +333,28 @@ begin
     Dec(Result);
 end;
 
+function LastIndexOf(const SubS, S: string): Integer;
+
+var
+  f,g:Integer;
+  len:Integer;
+begin
+  Result:=-1;
+  len:=Length(SubS);
+  for f:=Length(S)-Length(SubS) downto 0 do
+    begin
+    g:=1;
+    while (g<=len) and (SubS[g]=S[f+g]) do
+      Inc(g);
+    if g<len then
+      begin
+      Result:=f+1;
+      Break;
+      end;
+    end;
+end;
+
+
 function FirstIndexOf(s:string;a:TSimpleStrings):Integer;
 
 var f:Integer;
@@ -316,6 +381,27 @@ begin
       Result:=f;
       Break;
       end;
+end;
+
+function FirstIndexOf(const SubS, S: string): Integer;
+
+var
+  f,g:Integer;
+  len:Integer;
+begin
+  Result:=-1;
+  len:=Length(SubS);
+  for f:=0 to Length(S)-Length(SubS) do
+    begin
+    g:=1;
+    while (g<=len) and (SubS[g]=S[f+g]) do
+      Inc(g);
+    if g<len then
+      begin
+      Result:=f+1;
+      Break;
+      end;
+    end;
 end;
 
 
@@ -412,6 +498,16 @@ begin
     begin
     Result:=Copy(S,1,Ix-1);
     Delete(S,1,Ix+Length(Spacer)-1);
+    end;
+end;
+
+function SnipStringAll(var S: string; const Spacer: string): string;
+begin
+  Result:=SnipString(S,Spacer);
+  if Result='' then
+    begin
+    Result:=S;
+    S:='';
     end;
 end;
 
@@ -842,7 +938,9 @@ begin
       begin
       tmp:=SplitString(s,'=');
       AddToArray(TrimmedBlanks(tmp[0]),Keys);
-      AddToArray(TrimmedBlanks(tmp[1]),Values);
+      if Length(tmp)>1 then
+        AddToArray(TrimmedBlanks(tmp[1]),Values)
+      else AddToArray('',Values);
       end;
     end;
 end;
@@ -852,7 +950,6 @@ function RightJustify(Int, Len: Integer): string;
 var
   tmp:string;
   dif,f:Integer;
-
 
 begin
   SetLength(Result,Len);

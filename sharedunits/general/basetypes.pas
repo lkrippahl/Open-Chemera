@@ -50,6 +50,7 @@ type
   TCoords = array of TCoord;
   TCoordGroups = array of TCoords;
   TIntegers = array of Integer;
+  TIntegerTable = array of TIntegers;
   TCardinals = array of Cardinal;
   TBooleans = array of Boolean;
 
@@ -59,6 +60,11 @@ type
   procedure ForceNotZero(var Val:TFloat);
     //ensures Val<=-Tiny or Val>=Tiny
 
+  //inserts at the beginning of the array
+  procedure PushIntoArray(I:Integer; var A:TIntegers); overload;
+  procedure PushIntoArray(I:string; var A:TSimpleStrings); overload;
+
+  //Appends at the end of the array
   procedure AddToArray(i:Integer; var a:TIntegers); overload;
   procedure AddToArray(s:string; var a:TSimpleStrings); overload;
   procedure AddToArray(c:TCoord; var a:TCoords); overload;
@@ -88,6 +94,9 @@ type
   function Slice(const Ints:TIntegers;Ix1,Ix2:Integer):TIntegers;overload;
   function Slice(const Floats:TFloats;Ix1,Ix2:Integer):TFloats;overload;
 
+  function Slice(const Coords:TCoords;Ixs:TIntegers):TCoords;overload;
+
+
   function CountInArray(I:Integer; const Ints:TIntegers):Integer;overload;
 
 
@@ -107,6 +116,9 @@ type
   function Max(vals:TMatrix):TFLoat;overload;
   function Min(vals:TCoords):TCoord;overload;
   function Max(vals:TCoords):TCoord;overload;
+  function Min(vals:TIntegers):Integer;overload;
+  function Max(vals:TIntegers):Integer;overload;
+
 
 
   function MinIx(vals:TFLoats):Integer;overload;
@@ -114,6 +126,7 @@ type
 
   function Sum(vals:TIntegers):Integer;overload;
   function Sum(vals:TFloats):TFloat;overload;
+  function Sum(vals:TCoords):TCoord;overload;
   function Sum(const Vals1,Vals2:TFloats):TFloats;overload;
 
   function Min(const C1,C2:TCoord):TCoord;overload;
@@ -143,7 +156,12 @@ type
   function ScaleMatrix(Mat:TMatrix;Scale:TFloat):TMatrix;
   function AddMatrices(Mat1,Mat2:TMatrix):TMatrix;
   function InContact(Cuboid1,Cuboid2:TCuboid):Boolean;
-  function Average(Fs:TFloats):TFloat;
+  function Average(Fs:TFloats):TFloat;overload;
+  function Average(Ints:TIntegers):TFloat;overload;
+
+  function Median(Fs:TFloats):TFloat;overload;
+  function Median(Ints:TIntegers):Integer;overload;
+
   function Variance(Fs:TFloats;Avrg:TFloat):TFloat;
 
   //for time profiling
@@ -163,6 +181,8 @@ const
   {$ENDIF}
 
 implementation
+
+uses quicksort;
 
 var
   PointSeparator, CommaSeparator: TFormatSettings;
@@ -187,6 +207,28 @@ begin
     Val:=-Tiny
   else if (Val>=0) and (Val<Tiny) then
     Val:=Tiny;
+end;
+
+procedure PushIntoArray(I: Integer; var A: TIntegers);
+
+var f:Integer;
+
+begin
+  SetLength(A,Length(A)+1);
+  for f:=High(A) downto 1 do
+    A[f]:=A[f-1];
+  A[0]:=I;
+end;
+
+procedure PushIntoArray(I: string; var A: TSimpleStrings);
+
+var f:Integer;
+
+begin
+  SetLength(A,Length(A)+1);
+  for f:=High(A) downto 1 do
+    A[f]:=A[f-1];
+  A[0]:=I;
 end;
 
 procedure AddToArray(i:Integer; var a:TIntegers); overload;
@@ -294,6 +336,16 @@ begin
   SetLength(Result,Ix2-Ix1+1);
   for f:=Ix1 to Ix2 do
     Result[f-Ix1]:=Floats[f];
+end;
+
+function Slice(const Coords: TCoords; Ixs: TIntegers): TCoords;
+
+var f:Integer;
+
+begin
+  SetLength(Result,Length(Ixs));
+  for f:=0 to High(Ixs) do
+    Result[f]:=Coords[Ixs[f]];
 end;
 
 function CountInArray(I: Integer; const Ints: TIntegers): Integer;
@@ -534,6 +586,34 @@ begin
   else Result:=NullVector;
 end;
 
+function Min(vals: TIntegers): Integer;
+
+var f:Integer;
+
+begin
+  Result:=0;
+  if vals<>nil then
+    begin
+    Result:=vals[0];
+    for f:=1 to High(vals) do
+      if vals[f]<Result then Result:=vals[f];
+    end;
+end;
+
+function Max(vals: TIntegers): Integer;
+
+var f:Integer;
+
+begin
+  Result:=0;
+  if vals<>nil then
+    begin
+    Result:=vals[0];
+    for f:=1 to High(vals) do
+      if vals[f]>Result then Result:=vals[f];
+    end;
+end;
+
 
 function Min(const C1,C2:TCoord):TCoord;overload;
 
@@ -626,6 +706,21 @@ begin
   Result:=0;
   for f:=0 to High(vals) do
     Result:=Result+vals[f];
+end;
+
+function Sum(vals: TCoords): TCoord;
+
+var f:Integer;
+
+begin
+  Result:=NullVector;
+  if Length(vals)=0 then
+    for f:=0 to High(vals) do
+      begin
+      Result[0]:=Result[0]+vals[f,0];
+      Result[1]:=Result[1]+vals[f,1];
+      Result[2]:=Result[2]+vals[f,2];
+      end;
 end;
 
 function Sum(const Vals1, Vals2: TFloats): TFloats;
@@ -787,9 +882,58 @@ var f:Integer;
 
 begin
   Result:=0;
-  for f:=0 to High(Fs) do
-    Result:=Result+Fs[f];
-  Result:=Result/Length(Fs);
+  if Length(Fs)>0 then
+    begin
+    for f:=0 to High(Fs) do
+      Result:=Result+Fs[f];
+    Result:=Result/Length(Fs);
+    end;
+end;
+
+function Average(Ints:TIntegers):TFloat;
+
+var f:Integer;
+
+begin
+  Result:=0;
+  if Length(Ints)>0 then
+    begin
+    for f:=0 to High(Ints) do
+      Result:=Result+Ints[f];
+    Result:=Result/Length(Ints);
+    end;
+end;
+
+function Median(Fs: TFloats): TFloat;
+
+var
+  ixs:TIntegers;
+  ix:Integer;
+
+begin
+  Result:=0;
+  if Length(Fs)>0 then
+    begin
+    ixs:=QSAscendingIndex(Fs);
+    ix:=Trunc(Length(Fs)/2);
+    Result:=Fs[ix];
+    end;
+end;
+
+function Median(Ints: TIntegers):Integer;
+
+var
+  ixs:TIntegers;
+  ix:Integer;
+
+begin
+  Result:=0;
+  if Length(Ints)>0 then
+    begin
+    ixs:=QSAscendingIndex(Ints);
+    ix:=Trunc(Length(Ints)/2);
+    Result:=Ints[ix];
+    end;
 end;
 
 function Variance(Fs:TFloats;Avrg:TFloat):TFloat;

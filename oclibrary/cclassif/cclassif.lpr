@@ -131,14 +131,33 @@ begin
               'H:\Coevol\bindata\FullASA5A64_test\SelectedFeatures.txt',
               'H:\Coevol\bindata\FullASA5A64_test\Test.txt',
               'H:\Coevol\bindata\fullASA5A64_test\contacts');}
-  NBEvaluate('H:\Coevol\bindata\FullASA5_test',
+  {NBEvaluate('H:\Coevol\bindata\FullASA5_test',
               'H:\Coevol\bindata\FullASA5_test\data.bin',
               'H:\Coevol\bindata\FullASA5_test\SelectedFeatures.txt',
               'H:\Coevol\bindata\FullASA5_test\Test.txt',
-              'H:\Coevol\bindata\fullASA5_test\contacts');
+              'H:\Coevol\bindata\fullASA5_test\contacts');}
   {last argument is to folder where to save contact files to use in docking; ranked by classification}
 
-  DisplayHistogramStats('H:\Coevol\5A_38cutoff\bindata\FullASA5',5);
+  //DisplayHistogramStats('H:\Coevol\5A_38cutoff\bindata\FullASA5',5);
+
+  {***************************
+  ****** Unbound tests *******
+  ****************************}
+
+
+  {CompileBinaryData('C:\My Documents\Research\coevol\SVM-experiment\Unbound\G-testset.txt',
+                      'H:\_Research\Coevol\data',
+                      'H:\_Research\Coevol\FullASA5_unbound_test',
+                      'Full Contact ASA',
+                      'H:\_Research\Coevol\5A_38cutoff\bindata\FullASA5\data.bin');}
+
+  //Copy selected features and 0.hist from FullASA5_test
+
+  NBEvaluate('H:\_Research\Coevol\FullASA5_unbound_test',
+              'H:\_Research\Coevol\FullASA5_unbound_test\data.bin',
+              'H:\_Research\Coevol\FullASA5_unbound_test\SelectedFeatures.txt',
+              'H:\_Research\Coevol\FullASA5_unbound_test\Test.txt',
+              'H:\_Research\Coevol\FullASA5_unbound_test\contacts');
 
 
   // stop program loop
@@ -859,7 +878,7 @@ var HistSets:array of THistMatrix;
       s:string;
       labels:TSimpleStrings;
       classes:TIntegers;
-      seps:TSimpleStrings;
+      seps,sepst,sepsp:TSimpleStrings;
 
     begin
       labels:=Data.Tables[TableIx].GetLabels;
@@ -868,8 +887,10 @@ var HistSets:array of THistMatrix;
       for f:=0 to High(SortedIxs) do
        begin
        seps:=SplitString(labels[SortedIxs[f]],':');
-       s:=seps[0,6]+' '+Copy(seps[0],12,Length(seps[0]))+' '+
-          seps[1,6]+' '+Copy(seps[1],12,Length(seps[1]))+
+       sepst:=SplitString(seps[0],'-');
+       sepsp:=SplitString(seps[1],'-');
+       s:=sepst[High(sepst)-2]+' '+sepst[High(sepst)]+' '+
+          sepsp[High(sepsp)-2]+' '+sepsp[High(sepsp)]+' '+
           ' 5 200 200';
        sl.Add(s+' '+labels[SortedIxs[f]]+' '+FloatToStrF(Scores[SortedIxs[f]],ffFixed,0,3)
               +' '+IntToStr(classes[SortedIxs[f]]));
@@ -1007,16 +1028,16 @@ begin
     s:=s+#9+IntToStr(Sum(data.Tables[g].DataClasses));
   sl.Add(s);
 
-
   for f:=0 to High(cols) do
     begin
+    writeln(f);
     scores[f]:=RPrecision(data,cols[f],bests[f],
                 (ContactsFolder<>'') and (f=0));
     writeln(scores[f]);
     s:=IntToStr(Length(cols[f]))+#9+FloatToStr(scores[f]);
     for g:=0 to colcount-1 do
       if g<=High(cols[f]) then s:=s+#9+cols[f,g]
-    else s:=s+#9;
+      else s:=s+#9;
     for g:=0 to High(bests[f]) do s:=s+#9+IntToStr(bests[f,g]);
     sl.Add(s);
     end;

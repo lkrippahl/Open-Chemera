@@ -89,7 +89,6 @@ begin
               ScoreId:=ScoreDefs[score].Name;
               ScoreVals:=ComputeScore(ScoreDefs[score],ConstraintSets[constraint].DockModels);
               end;
-
             end;
     end;
 end;
@@ -214,9 +213,7 @@ begin
     rmsdcalc.Minimise(100000,0.001);
     fixed:=GetCoords(rdef.Actual,Rdef.ProbeStart,rdef.ScoreTarget,rdef.ScoreProbe);
     mobile:=GetCoords(tmpcoords,Rdef.ProbeStart,rdef.ScoreTarget,rdef.ScoreProbe);
-    //WriteLn(Length(fixed),'--',length(mobile));
     mobile:=rmsdcalc.TransformedCoords(mobile);
-    //WriteLn(Length(fixed),' ',length(mobile));
     Result[f]:=StaticRMSD(fixed,mobile);
     end;
   rmsdcalc.Free;
@@ -326,4 +323,4 @@ begin
 end;
 
 end.
-
+

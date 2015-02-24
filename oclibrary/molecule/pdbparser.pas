@@ -10,7 +10,8 @@ Requirements:
   Record supported:
   ATOM / HETATM
   CONNECT
-  MODEL: increments model counter only
+  MODEL: assigns number to model
+  ENDMDL: Increments model number
   TER: increments chain counter.
 
 Revisions:
@@ -40,10 +41,11 @@ type
     ICode:string[1];
     Coords:TCoord;
     Occupancy:Single;
+    OccTemp:Single;     //merge of occupation and temp, as used in some cases
     Temp:Single;
     Element:string[2];
     Charge:string[2];
-    ModelNum:Integer;   //continuous count incremented on MODEL keyword, -1 if no MODEL
+    ModelNum:Integer;   //given by MODEL or 1 if no MODEL; incremented by ENDMDL
     ChainNum:Integer;
       //count incremented on TER, starting at 0. Can be used to index the chainIDs
     end;
@@ -192,6 +194,7 @@ begin
       IsHet:=False;
       Serial:=GetInteger(s,7,11);
       AtomName:=Deblank(GetString(s,13,16));
+
       AltLoc:=GetString(s,17,17);
       ResName:=GetString(s,18,20);
       ChainID:=GetString(s,22,22);
@@ -207,8 +210,13 @@ begin
       Coords[2]:=GetFloat(s,47,54);
       Occupancy:=GetFloat(s,55,60);
       Temp:=GetFloat(s,61,66);
+      OccTemp:=GetFloat(s,55,66);
       Element:=GetString(s,77,78);
-      ModelNum:=FModelCount-1; //-1 indicates ocurred before MODEL keyword
+       // sometimes charge comes right after the element name
+      if (Length(Element)>1) and
+         (not (Element[2] in ['a'..'z'])) then
+        Element:=Element[1];
+      ModelNum:=FModelCount; //-1 indicates ocurred before MODEL keyword
       ChainNum:=FChainCount;
       end
 end;
@@ -264,7 +272,18 @@ begin
         oldchain:='***'
           //This forces an FChainCount increase
           //even if the chain ID remains the same
-    else if Pos('MODEL',s)=1 then Inc(FModelCount);
+    else if Pos('MODEL',s)=1 then
+        try
+          FModelCount:=StrToInt(Deblank(Copy(s,8,Length(s))));
+        except
+          Inc(FModelCount);
+        end
+    else if Pos('ENDMDL',s)=1 then
+        Inc(FModelCount);
+
+    { TODO : This only reads the first model. Fix to split into different models }
+    if (FAtomCount>0) and (FModelCount<>FAtoms[0].ModelNum) then
+      Break;
     end;
 end;
 
@@ -276,7 +295,7 @@ begin
   if FAtomCount>0 then
     begin
     FChainCount:=FAtoms[High(FAtoms)].ChainNum+1; // in case one TER was missing
-    FModelCount:=FAtoms[High(FAtoms)].ModelNum+1; // 0 if no models. This may be redundant, but with PDB files one never knows...
+    FModelCount:=FAtoms[High(FAtoms)].ModelNum; // 0 if no models. This may be redundant, but with PDB files one never knows...
     IndexChains;
     end;
 end;

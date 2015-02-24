@@ -625,8 +625,10 @@ begin
     SetLength(minrs.Values,Length(Selected[0]),Length(Selected[1]));
     SetLength(maxrs.Values,Length(Selected[0]),Length(Selected[1]));
 
+
     ScoreSubstitutions(0,scores[0],averages[0]);
     ScoreSubstitutions(1,scores[1],averages[1]);
+
 
     maxs.Id:=MaxSubFraction+'('+MSADBNames[DBIndex]+')';
     mins.Id:=MinSubFraction+'('+MSADBNames[DBIndex]+')';
@@ -958,8 +960,10 @@ begin
     begin
     Report('  '+Parameters.MSADatabaseNames[f]);
     AddSequenceConservation(f);
+    writeln('add');
     for g:=0 to High(Parameters.ContactMatrixFiles) do
       begin
+      writeln(g);
       Report('    '+Parameters.ContactMatrixFiles[g]);
       FDescriptors.ContactMatrix:=ReadBLASTMatrix(Parameters.ContactMatrixFiles[g]);
       AddContactScores(f,ExtractFileName(Parameters.ContactMatrixFiles[g]));

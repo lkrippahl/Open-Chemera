@@ -5,7 +5,7 @@
 *****************                        ******************
 ***********************************************************
        Open source library for Chemera and BiGGER
-                     Version: 0.14
+                     Version: 0.15
 
 
 ***********************************************************
@@ -15,7 +15,20 @@ This software is provided "as is", with no explicit or
 implied warranties. None whatsoever. I mean it. I would 
 even write all this in caps if only it didn't look so ugly.
 
-Use this software at your own risk.
+The author and contributors disclaim any express or implied
+warranties, including, but not limited to, the implied 
+warranties of merchantability and fitness for a particular 
+purpose. In no event shall the author or contributors be
+liable for any direct, indirect, incidental, special, 
+exemplary, or consequential damages (including, but not 
+limited to, procurement of substitute goods or services; 
+loss of use, data, or profits; or business interruption)
+however caused and on any theory of liability, whether in 
+contract, strict liability, or tort (including negligence 
+or otherwise) arising in any way out of the use of this 
+software, even if advised of the possibility of such damage.
+
+In other words, use this software at your own risk. 
 
 ***********************************************************
 ******                   Copyright                   ******
@@ -78,6 +91,9 @@ dockprep
   
 pdbtools
   Utility for processing pdb structures and sequences
+  
+cclassif
+  Classifier for contact predictions
 
   
 ***********************************************************
