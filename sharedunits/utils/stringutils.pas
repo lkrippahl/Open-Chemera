@@ -33,11 +33,17 @@ function GrabBetween(var Text:string;const Sep1,Sep2:string):string;
 
 function SplitString(Text:string;const Sep:string):TSimpleStrings;overload;
   //splits using grabword (i.e. skipping repeated separators)
+
 procedure SplitString(Text:string;Words:TStrings;const Sep:string=' ');overload;
   //same as above, but adds result to the Words TStringList, which must have been
   //created by caller
 function SplitString(Text:string):TSimpleStrings;overload;
   //splits on all whitespace (<=32)
+
+function SplitOnAll(Text:string;const Sep:string):TSimpleStrings;
+  //splits string on all separators, including empty strings if repeated separators
+
+
 function SplitLines(Text:string):TSimpleStrings;
     //splits on all end of line chars (10) rejecting #13 but keeping empty lines)
 function SplitChars(Text:string):TSimpleStrings;
@@ -213,6 +219,33 @@ begin
     AddToArray(s,Result);
 end;
 
+function SplitOnAll(Text: string; const Sep: string): TSimpleStrings;
+
+var
+  s:string;
+  f,c:Integer;
+
+begin
+  Result:=nil;
+  c:=Length(Sep);
+  s:='';
+  f:=1;
+  while f<=Length(Text) do
+    begin
+    if Copy(Text,f,c)=Sep then
+      begin
+      AddToArray(s,Result);
+      s:='';
+      Inc(f,c);
+      end
+    else
+      begin
+      s:=s+Text[f];
+      Inc(f);
+      end;
+    end;
+end;
+
 function SplitLines(Text: string): TSimpleStrings;
 
 var
@@ -229,8 +262,7 @@ begin
       end
     else if Text[f]<>#13 then
       s:=s+Text[f];
-  if s<>'' then
-    AddToArray(s,Result);
+  AddToArray(s,Result);
 end;
 
 

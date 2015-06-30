@@ -44,7 +44,7 @@ interface
 
 uses
   Classes, SysUtils, basetypes, molecules, pdbparser, FileUtil, oclconfiguration,
-  stringutils,LCLProc,molutils;
+  stringutils,LCLProc;
 
 type
 
@@ -78,7 +78,13 @@ type
     procedure Free;
     procedure ClearChains;
     procedure CreateChains(const IDs: TSimpleStrings);
-    procedure DeleteResidues(Options:PDBResidueTypes;ResTypes:TSimpleStrings=nil);
+    procedure DeleteResidues(Options:PDBResidueTypes;
+                             ResTypes:TSimpleStrings=nil;
+                             OnDelete:TOnDeleteCallback=nil);overload;
+    procedure DeleteResidues(Name: string; OnDelete: TOnDeleteCallback=nil);overload;
+    procedure DeleteNonAAResidues(OnDelete: TOnDeleteCallback=nil);
+    procedure DeleteWater(OnDelete: TOnDeleteCallback=nil);
+    procedure DeleteChainsByName(ChainName:string;OnDelete:TOnDeleteCallback=nil);
     function NewEmptyChain(ChainName: string; ChainID: integer): TMolecule;
     function NewChain(ChainName: string; ChainID, Size: integer): TMolecule;
     function GetChain(ChainIx: integer): TMolecule;overload;
@@ -91,6 +97,7 @@ type
     procedure ResetTemplates(ATemplates:TTemplates);
     function ChainCount:Integer;
     function ListChains:TSimpleStrings;
+    procedure RenameChains(FirstChar:Char='A';LastChar:Char='Z');
     function ResidueCount(ChainIx:Integer):Integer;
     procedure AssignAtomicData; //atomic number, vdW radius
     function TemplateIx(Name:string):Integer;
@@ -291,7 +298,7 @@ begin
 end;
 
 procedure TPDBModel.DeleteResidues(Options: PDBResidueTypes;
-  ResTypes: TSimpleStrings);
+  ResTypes: TSimpleStrings;OnDelete:TOnDeleteCallback=nil);
 
 var
   c,r:Integer;
@@ -316,7 +323,7 @@ begin
       if ResidueToDelete(res) then
         res.TagAllAtoms(1);
       end;
-    chain.DeleteTaggedAtoms(1);
+    chain.DeleteTaggedAtoms(1,OnDelete);
     end;
   FProtein.DeleteEmptyGroups;
 end;
@@ -453,6 +460,23 @@ begin
   Result:=FProtein.ListGroupNames;
 end;
 
+procedure TPDBModel.RenameChains(FirstChar: Char; LastChar: Char);
+
+var
+  f:Integer;
+  name:Char;
+
+begin
+  name:=FirstChar;
+  for f:=0 to FProtein.GroupCount-1 do
+    begin
+    FProtein.GetGroup(f).Name:=name;
+    name:=Succ(name);
+    if name>LastChar then
+      name:=FirstChar;
+    end;
+end;
+
 function TPDBModel.ResidueCount(ChainIx: Integer): Integer;
 begin
   Result:=FProtein.GetGroup(ChainIx).GroupCount;
@@ -502,6 +526,45 @@ begin
     for f:=0 to High(Chains) do
       Result.AddGroup(TMolecule.CopyFrom(FProtein.GetGroup(Chains[f]),Result));
     end;
+end;
+
+procedure TPDBModel.DeleteResidues(Name: string;OnDelete:TOnDeleteCallback=nil);
+
+var
+  names:TSimpleStrings;
+
+begin
+  SetLength(names,1);
+  names[0]:=Name;
+  DeleteResidues([],names,OnDelete);
+end;
+
+procedure TPDBModel.DeleteNonAAResidues(OnDelete:TOnDeleteCallback=nil);
+
+begin
+  DeleteResidues([resNonAA],nil,OnDelete);
+end;
+
+procedure TPDBModel.DeleteWater(OnDelete:TOnDeleteCallback=nil);
+begin
+  DeleteResidues('HOH',OnDelete);
+end;
+
+procedure TPDBModel.DeleteChainsByName(ChainName: string;OnDelete:TOnDeleteCallback=nil);
+var
+  c:Integer;
+  chain:TMolecule;
+
+begin
+  FProtein.TagAllAtoms(0);
+  for c:=0 to FProtein.GroupCount-1 do
+    begin
+    chain:=FProtein.GetGroup(c);
+    if chain.Name=ChainName then
+      chain.TagAllAtoms(1);
+    end;
+  FProtein.DeleteTaggedAtoms(1,OnDelete);
+  FProtein.DeleteEmptyGroups;
 end;
 
 

@@ -101,6 +101,8 @@ type
       //refreshing currently rendered objects
     procedure SetQuality(Quality:Integer);
       //Render dependent. Set base quality for rendering (e.g. number of polygons)
+    procedure CameraPos(out X, Y, Z: TFLoat);
+      //Return coordinates of camera
   end;
 
 function RGBAColor(R,G,B,A:TFloat):TRGBAColor;

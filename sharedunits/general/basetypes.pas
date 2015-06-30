@@ -916,7 +916,7 @@ begin
     begin
     ixs:=QSAscendingIndex(Fs);
     ix:=Trunc(Length(Fs)/2);
-    Result:=Fs[ix];
+    Result:=Fs[ixs[ix]];
     end;
 end;
 
@@ -932,7 +932,7 @@ begin
     begin
     ixs:=QSAscendingIndex(Ints);
     ix:=Trunc(Length(Ints)/2);
-    Result:=Ints[ix];
+    Result:=Ints[ixs[ix]];
     end;
 end;
 

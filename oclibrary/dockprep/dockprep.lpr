@@ -91,12 +91,17 @@ Purpose:
     -outfile filename.pdb
     -constraintset number
     -model  id
+    -minscore scoreix
+    -maxscore scoreix
+      (if scoreix<0 then it refers to geometry)
 
     summary:
     -summary [h]
         outputs summary to screen, with headers if h
         -maxmodels NN;NN2;...
           maximum number of models to use per constraint
+        -rmsdixs Nprobe;Nint
+          indexes of the rmsd scores to be used for probe and interface
 
 
 
@@ -142,9 +147,8 @@ var
   targetout,probeout:string;
   jobfile:string;
   tchains,pchains:string;
-  center:Boolean;
+  dormsd,center:Boolean;
   rotprobe,appendjobs:Boolean;
-  rmsdtemplate,intrmsdtemplate:string;
   submatfile:string;
   intdist,minalign:TFloat;
   contactfile:string;
@@ -152,6 +156,10 @@ var
   submat:TSubMatrix;
   maxmodels:TIntegers;
   tmps:TSimpleStrings;
+  fixedzrotation:TFloat;
+  planemargin:TFLoat;
+  LigandScore,InterfaceScore:Integer;
+
 
   procedure GetOptions;
 
@@ -162,6 +170,8 @@ var
 
   begin
     minalign:=0.9;
+    fixedzrotation:=-1;
+    planemargin:=-1;
     intdist:=5.0;
 
     targetfile:=GetOptionValue('t');
@@ -173,21 +183,30 @@ var
     pchains:=GetOptionValue('pchains');
     center:=HasOption('center');
     rotprobe:=HasOption('randomize');
-    rmsdtemplate:=GetOptionValue('rmsd');
     submatfile:=GetOptionValue('submat');
+    dormsd:=false;
     if submatfile<>'' then
+      begin
       submat:=ReadBLASTMatrix(submatfile);
+      dormsd:=HasOption('rmsd') or HasOption('intrmsd') or HasOption('fullrmsd');
+      end;
 
-    intrmsdtemplate:=GetOptionValue('intrmsd');
+
     appendjobs:=HasOption('append');
     contactfile:=GetOptionValue('contacts');
     maxcontacts:=0;
+    tmp:=GetOptionValue('symmetry');
+    if tmp<>'' then planemargin:=StrToFloat(tmp);
     tmp:=GetOptionValue('maxcontacts');
     if tmp<>'' then maxcontacts:=StrToInt(tmp);
     tmp:=GetOptionValue('minalign');
     if tmp<>'' then minalign:=StrToFloat(tmp);
     tmp:=GetOptionValue('intdist');
     if tmp<>'' then intdist:=StrToFloat(tmp);
+    tmp:=GetOptionValue('fixedzrotation');
+    if tmp<>'' then
+      fixedzrotation:=StrToFloat(tmp)/180*pi;
+
     tmp:=GetOptionValue('maxmodels');
     if tmp<>'' then
         begin
@@ -201,8 +220,23 @@ var
       SetLength(maxmodels,1);
       maxmodels[0]:=5000;
       end;
+    tmp:=GetOptionValue('rmsdixs');
+    if tmp<>'' then
+        begin
+        tmps:=SplitString(tmp,';');
+        LigandScore:=StrToInt(tmps[0]);
+        InterfaceScore:=StrToInt(tmps[1]);
+        end
+    else
+      begin
+      LigandScore:=-1;
+      InterfaceScore:=-1;
+      end;
 
-    unconstrainedmodels:=-1;
+    unconstrainedmodels:=5000;
+    //No unconstrained models by default if
+    if HasOption('contacts') or HasOption('symmetry') then
+      unconstrainedmodels:=-1;
     unconstrainedoverlap:=200;
     tmp:=GetOptionValue('unconstrained');
     if tmp<>'' then
@@ -247,21 +281,36 @@ var
   procedure ExportStructures;
 
   var
-    infile,outfile:string;
-    constraintset,modelid:Integer;
+    outfile:string;
+    constraintset,modelid,minscoreix,maxscoreix:Integer;
     model:TMolecule;
     runs:TDockRuns;
 
   begin
-    infile:=GetOptionValue('export');
     outfile:=GetOptionValue('outfile');
     constraintset:=StrToInt(GetOptionValue('constraintset'));
     modelid:=StrToInt(GetOptionValue('model'));
-    runs:=LoadOrders(infile);
-    model:=GetModel(runs[0],constraintset,modelid);
+    minscoreix:=StrToInt(GetOptionValue('minscore'));
+    maxscoreix:=StrToInt(GetOptionValue('maxscore'));
+
+    runs:=LoadOrders(jobfile);
+    if HasOption('model') then
+      model:=GetModel(runs[0],constraintset,modelid);
     SaveToPDB(model,outfile);
     FreeOrders(runs);
     model.Free;
+  end;
+
+  procedure AddRmsd;
+
+  begin
+    if HasOption('rmsd') then
+      FDockMan.AddRMSDScore(GetOptionValue('rmsd'),submat,minalign,[rmsdFitTarget,rmsdScoreProbe],'Probe RMSD');
+    if HasOption('intrmsd') then
+      FDockMan.AddInterfaceRMSDScore(GetOptionValue('intrmsd'),intdist,submat,minalign);
+    if HasOption('fullrmsd') then
+      FDockMan.AddRMSDScore(GetOptionValue('fullrmsd'),submat,minalign,
+        [rmsdFitTarget,rmsdFitProbe,rmsdScoreTarget,rmsdScoreProbe],'Full RMSD');
   end;
 
   procedure ExportModels;
@@ -333,13 +382,10 @@ var
     FDockMan.LoadJobFile;
     if HasOption('delscores') then
       FDockMan.DeleteScores;
-    if (rmsdtemplate<>'') or (intrmsdtemplate<>'') then
+    if dormsd then
       begin
       FDockMan.PreparePartners;
-      if rmsdtemplate<>'' then
-        FDockMan.AddRMSDScore(rmsdtemplate,submat,minalign);
-      if intrmsdtemplate<>'' then
-        FDockMan.AddInterfaceRMSDScore(intrmsdtemplate,intdist,submat,minalign);
+      AddRmsd;
       end;
     FDockMan.SaveOrders(False);
   end;
@@ -368,15 +414,16 @@ var
     function Counts(NumModels:Integer):string;
 
 
-    const
-      LigandScore=0;
-      InterfaceScore=1;
 
     var
       c,m,hi,good,accept:Integer;
       lscore,iscore,miniscore,minlscore:TFloat;
 
     begin
+      { TODO : Auto detect probe and interface rmsd scores if LigandScore or InterfaceScore <0 }
+      {LigandScore=0;
+      InterfaceScore=1;}
+
       hi:=0;
       good:=0;
       accept:=0;
@@ -468,12 +515,14 @@ begin
         if probeout<>'' then SaveToPDB(FDockMan.Probe,probeout)
           else probeout:=probefile;
         FDockMan.SetPDBFiles(targetout,probeout);
-        if rmsdtemplate<>'' then
-          FDockMan.AddRMSDScore(rmsdtemplate,submat,minalign);
-        if intrmsdtemplate<>'' then
-          FDockMan.AddInterfaceRMSDScore(rmsdtemplate,intdist,submat,minalign);
+        if dormsd then
+          AddRmsd;
         if contactfile<>'' then
           FDockMan.AddResidueContacts(contactfile, maxcontacts);
+        if fixedzrotation>=0 then
+          FDOckMan.FixZRotation(fixedzrotation);
+        if planemargin>0 then
+          FDockMan.AddSymmetryConstraint(planemargin);
         if unconstrainedmodels>0 then
           FDockMan.AddNullConstraintSet(unconstrainedmodels,unconstrainedoverlap);
         FDockMan.SaveOrders(appendjobs);
@@ -500,16 +549,44 @@ end;
 procedure TDockPrep.WriteHelp;
 begin
   { add your help code here }
-  writeln('Usage: ',ExeName,' -T"target.pdb/target.pdb.gz" -P"probe.pdb/target.pdb.gz" ');
-  WriteLn('Options:');
-  WriteLn('--tchains TargetChains');
-  WriteLn('--pchains ProbeChains');
-  WriteLn('--contacts ContactConstraintsFile ');
-  WriteLn('--rmsd template.pdb');
-  WriteLn('--minalign minimum alignment match for *rmsd, from 0 to 1');
-  WriteLn('--submat substitution_matrix.txt');
-  WriteLn('--intrmsd template.pdb');
-  WriteLn('--intdist interface distance, A');
+  writeln('Usage: ',ExeName,' -t "target.pdb/target.pdb.gz" -p "probe.pdb/probe.pdb.gz" -j jobfile');
+  WriteLn('Docking Options:');
+  WriteLn('-tchains TargetChains');
+  WriteLn('-pchains ProbeChains');
+  WriteLn('  Specify which chains to use, generating new pdb files (-tout -pout)');
+  WriteLn('-tout pdbfile');
+  WriteLn('-pout pdbfile');
+  WriteLn('  Mandatory if center, chains or randomize');
+  WriteLn('-center : centers both target and probe');
+  WriteLn('-randomize : randomizes orientation of probe');
+  WriteLn('-fixedzrotation Angle');
+  WriteLn('  probe will be rotated only this angle (degrees) for each rotation axis');
+  WriteLn('-symmetry margin');
+  WriteLn('  probe will be restricted to a plane perpendicular to the rotation axis, intersecting the center of the target');
+  WriteLn('-contacts ContactConstraintsFile ');
+  WriteLn('-minalign minimum alignment match for *rmsd, from 0 to 1');
+  WriteLn('-submat substitution_matrix.txt');
+  WriteLn('-rmsd template.pdb : scores probe by fitting target');
+  WriteLn('-intrmsd template.pdb : scores interface region');
+  WriteLn('-fullrmsd template.pdb :scores whole complex');
+  WriteLn('-intdist interface distance, A');
+  WriteLn('-append');
+  WriteLn('-maxcontacts');
+  WriteLn('-unconstrained models:minoverlap');
+  WriteLn('  default is 5000 models, 200 of min overlap');
+  WriteLn('  or no models if -contacts is specified');
+  WriteLn('Processing existing files (requires existing -j file):');
+  WriteLn('-summary: stats for scores');
+  WriteLn('   -maxmodels: ; separated values for maximum number of models considered in summary');
+  WriteLn('   -rmsdixs: ; separated values for the index of probe and interface rmsd');
+
+  {  'export') then
+    'models') then
+    'table') then
+    'modify') then
+
+}
+
 end;
 
 var

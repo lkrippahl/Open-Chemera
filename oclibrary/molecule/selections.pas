@@ -43,6 +43,7 @@ type
     Atom:TAtom;
     AtomRad:TFloat;
     Highlight:Integer;
+    IsVisible:Boolean;
     MaterialIX:Integer; //Index to material in the display manager
   end;
 
@@ -106,6 +107,7 @@ begin
     MaterialIx:=-1;
     AtomRad:=0;
     Atom:=AAtom;
+    IsVisible:=True;
     if AAtom<>nil then
       begin
       AtomRad:=AAtom.Radius;

@@ -24,6 +24,7 @@ uses
 type
   //color format compatible with glu
   TGluRGBA=array[0..3] of GLFloat;
+  TGluMatrix=array[0..15] of GLFLoat;
 
   { TOpenGLForm }
 
@@ -56,10 +57,13 @@ type
       FDisplayShine: array of TGLFloat; //colors for displaylists
       FBackground:TGluRGBA;
 
+      FCameraX,FCameraY,FCameraZ:TFloat;
+
       //mouse tracking
       FCX,FCY:Integer;                   //current mouse position
       FOX,FOY:Integer;                   //old mouse position
-      FModelMat:array [0..15] of GlFloat;//rotation matrix
+      FModelMat:TGluMatrix;              //rotation matrix
+      FModelViewMat:TGluMatrix;         //Full model view matrix
       //Light attributes
       FLAmbient,FLDiffuse,FLPosition,FLSpecular: TGluRGBA;
 
@@ -70,6 +74,8 @@ type
       procedure SetMaterial(Material:T3DMaterial);
       procedure InitOGL;
     public
+      property ModelViewMat:TGluMatrix read FModelViewMat;
+      property ZDist:TFloat read FDistanceToCenter;
       constructor Create(TheOwner: TComponent); override;
       //IBase3DInterface functions
       procedure AddObjectList(ObjectList:T3DObjectList);
@@ -80,6 +86,7 @@ type
       procedure SetQuality(Quality:Integer);
       function GetImage:TBitMap;
       procedure RotateMatrix(Horizontal,Vertical:TFLoat);
+      procedure CameraPos(out X,Y,Z:TFLoat);
   end;
 
 
@@ -135,7 +142,7 @@ begin
     glViewport (0, 0, OGLPb.Width, OGLPb.Height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(60.0, OGLPb.Width/OGLPb.Height, 1, 600.0);
+    gluPerspective(30.0, OGLPb.Width/OGLPb.Height, 1, 600.0);
     glMatrixMode(GL_MODELVIEW);
     end;
 end;
@@ -148,6 +155,14 @@ begin
   glRotatef(Vertical,1,0,0);
   glMultMatrixf(FModelMat);
   glGetFloatv(GL_MODELVIEW_MATRIX,FModelMat);
+end;
+
+procedure TOpenGLForm.CameraPos(out X, Y, Z: TFLoat);
+
+begin
+  X:=FCameraX;
+  Y:=FCameraY;
+  Z:=FCameraZ;
 end;
 
 procedure TOpenGLForm.ResetMouseRotation;
@@ -434,6 +449,31 @@ procedure TOpenGLForm.Refresh;
   //This is the drawing function, called by DisplayWindow, which is called by
   //the Open GL
 
+procedure RecomputeCamera;
+var
+  viewport:array[0..3] of Integer;
+  model,proj:array [0..15] of GLDouble;
+  glX,glY,glZ:PGLDouble;
+
+begin
+  New(glX);
+  New(glY);
+  New(glZ);
+  glGetIntegerv(GL_VIEWPORT, viewport);
+  glGetDoublev(GL_MODELVIEW_MATRIX,model);
+  glGetFloatv(GL_MODELVIEW_MATRIX,FModelViewMat);
+  glGetDoublev(GL_PROJECTION_MATRIX,proj);
+  gluUnProject((viewport[2]-viewport[0])/2 , (viewport[3]-viewport[1])/2,0.0,
+        model, proj, viewport, glX,glY,glZ);
+  FCameraX:=glX^;
+  FCameraY:=glY^;
+  FCameraZ:=glZ^;
+
+  Dispose(glX);
+  Dispose(glY);
+  Dispose(glZ);
+end;
+
 var
   f:Integer;
 
@@ -459,6 +499,9 @@ begin
 
   for f:=0 to High(FDisplayLists) do
     glCallList(FDisplayLists[f]);
+
+  RecomputeCamera;
+
   glPopMatrix;
   OGLPb.SwapBuffers;
   glFinish()

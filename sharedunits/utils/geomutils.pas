@@ -451,6 +451,7 @@ begin
   Result[1]:=sint*Axis[0];
   Result[2]:=sint*Axis[1];
   Result[3]:=sint*Axis[2];
+  Normalize(Result);
 end;
 
 function RotationTo(const VFrom,VTo: TCoord): TQuaternion;

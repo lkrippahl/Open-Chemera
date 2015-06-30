@@ -72,17 +72,15 @@ var score,constraint :Integer;
 begin
   with FJobs[Ix] do
     begin
-
     if (TotalAngles<0) or (CompletedAngles<TotalAngles) then
       RunGeometric(Ix);
-
 
     for score:=0 to High(ScoreDefs) do
       for constraint:=0 to High(ConstraintSets) do
         if not Computed(ScoreDefs[score].Name, ConstraintSets[constraint].ScoreResults) then
           with ConstraintSets[constraint] do
             begin
-            WriteLn(score,' of ',constraint);
+            WriteLn('Computing ',ScoreDefs[score].Name,' of ',constraint);
             SetLength(ScoreResults,Length(ScoreResults)+1);
             with ScoreResults[High(ScoreResults)] do
               begin
@@ -98,7 +96,7 @@ procedure TBiGGERManager.RunGeometric(Ix: Integer);
 var
   targetrads,proberads:TFloats;
   targetcoords,probecoords:TCoords;
-  initialtime,lasttime,currenttime,lastsave:DWORD;
+  initialtime,lasttime,currenttime,lastsave:Int64;
   totalsecs:TFloat;
   target,probe:TMolecule;
   dockman:TDockManager;
@@ -123,7 +121,7 @@ begin
              Resolution);
     dockman.ImportConstraintSets(FJobs[Ix].ConstraintSets);
     dockman.BuildTargetGrid;
-    dockman.BuildRotations(NumAxisSteps);
+    dockman.BuildRotations(NumAxisSteps,FixedZRotation);
     TotalAngles:=dockman.TotalRotations;
     dockman.CurrentRotation:=CompletedAngles-1;
 
@@ -198,10 +196,12 @@ var
   end;
 
 begin
+  WriteLn(ScoreDef.Name);
   rmsdcalc:=TRMSDCalculator.Create;
   rdef:=TRMSDScoreDef(ScoreDef);
   tmpcoords:=Copy(rdef.Predicted,0,Length(rdef.Predicted));
   SetLength(Result,Length(DockModels));
+  WriteLn(Length(DockModels));
   for f:=0 to High(DockModels) do
     begin
     for g:=rdef.ProbeStart to High(tmpcoords) do

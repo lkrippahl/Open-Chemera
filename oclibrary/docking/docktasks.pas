@@ -36,6 +36,7 @@ const
   CLinearDistance=1;
   CEuclideanDistance=2;
   CContactCount=3;
+  CNormalPlane=4;     //plane normal to the rotation axis
 
   //Score types
   ScoreNone=0;
@@ -43,6 +44,7 @@ const
   ScoreContacts=1;
 
 type
+  TRMSDOptions=set of (rmsdScoreTarget,rmsdScoreProbe,rmsdFitTarget,rmsdFitProbe);
   TDockModel=record
     TransVec:TCoord;
     Rotation:TQuaternion;
@@ -70,6 +72,7 @@ type
       //CLinearDistance:
       //CEuclideanDistance:
       CContactCount: ( MinContacts:Integer;  MaxContacts:Integer);
+      //CNormalPlane:
   end;
 
   TConstraintDefs=array of TConstraintDef;
@@ -158,6 +161,7 @@ type
     Resolution,AddedRadius:TFloat;
     NumAxisSteps,
     SecondsBetweenSaves:Integer;
+    FixedZRotation:TFloat;          //z rotation for probe, -1 if not used
     CompletedAngles,TotalAngles:Integer;
     ConstraintSets:TConstraintSets;
     ScoreDefs:TScoreDefs;
@@ -192,12 +196,20 @@ type
       procedure PreparePartners(JobIndex:Integer=0);overload;
         //prepares the docking partners for that job
       procedure SetPDBFiles(TargetFile,ProbeFile:string);
+
+      procedure FixZrotation(Angle:TFloat);
+        //fixes the Z rotation of probe to angle (in radians)
+
       procedure AddResidueContacts(ContactFile:string;MaxContacts:Integer=0);
         //text file containing one contact per line
         //each line has target chain space target res ID space probe chain space probe res ID space distance
         //each line is an independent distance constraint between the atoms in those residues
 
-      procedure AddRMSDScore(TemplateFile:string; SubMat:TSubMatrix; MinSequenceMatch:TFloat);
+      procedure AddSymmetryConstraint(Margin:TFloat);
+        //adds a normal plane constraint, currently working only at 0,0,0
+
+      procedure AddRMSDScore(TemplateFile:string; SubMat:TSubMatrix; MinSequenceMatch:TFloat;
+                                Options:TRMSDOptions;Tag:string);
 
       procedure AddInterfaceRMSDScore(TemplateFile:string;Dist:TFloat; SubMat:TSubMatrix; MinSequenceMatch:TFloat);
 
@@ -251,6 +263,8 @@ var
     AddTextNode('Resolution',FloatToStrF(DockRun.Resolution,ffFixed,0,2),Result);
     AddTextNode('AddedRadius',FloatToStrF(DockRun.AddedRadius,ffFixed,0,2),Result);
     AddTextNode('NumAxisSteps',IntToStr(DockRun.NumAxisSteps),Result);
+    if DockRun.FixedZRotation>=0 then
+      AddTextNode('FixedZRotation',FloatToStr(DockRun.FixedZRotation),Result);;
     AddTextNode('SecondsBetweenSaves',IntToStr(DockRun.SecondsBetweenSaves),Result);
     AddTextNode('CompletedRotations',IntToStr(DockRun.CompletedAngles),Result);
     AddTextNode('TotalRotations',IntToStr(DockRun.TotalAngles),Result);
@@ -372,6 +386,15 @@ var
           AddTextNode('Distance',FloatToStrF(ConstSet.Constraints[f].Distance,ffFixed,0,3),constnode);
           setnode.AppendChild(constnode);
           end;
+        CNormalPlane:
+          begin
+          WriteLn('Added plane constraint');
+          constnode:=Doc.CreateElement('NormalPlaneConstraint');
+          TDOMElement(constnode).SetAttribute('Name',ConstSet.Constraints[f].Name);
+          AddTextNode('Margin',FloatToStrF(ConstSet.Constraints[f].Distance,ffFixed,0,3),constnode);
+          setnode.AppendChild(constnode);
+          end;
+
       end;
     if ConstSet.DockModels<>nil then
       begin
@@ -471,10 +494,16 @@ var
   orders:TDOMNode;
   doc:TXMLDocument;
 
-  function ReadTextNode(Name:string;Parent:TDOMNode):string;
+  function ReadTextNode(Name:string;Parent:TDOMNode;Default:string=''):string;
+
+  var node:TDOMNode;
 
   begin
-    Result:=Parent.FindNode(Name).FirstChild.NodeValue;
+    node:=Parent.FindNode(Name);
+    if node<>nil then
+      Result:=node.TextContent
+    else
+      Result:=Default;
   end;
 
   function ReadBooleanAttribute(Node:TDOMNode;Name:string):Boolean;
@@ -525,6 +554,7 @@ var
       Resolution:=StrToFLoat(ReadTextNode('Resolution',Node));
       AddedRadius:=StrToFLoat(ReadTextNode('AddedRadius',Node));
       NumAxisSteps:=StrToInt(ReadTextNode('NumAxisSteps',Node));
+      FixedZRotation:=StrToFloat(ReadTextNode('FixedZRotation',Node,'-1'));
       SecondsBetweenSaves:=StrToInt(ReadTextNode('SecondsBetweenSaves',Node));
       CompletedAngles:=StrToInt(ReadTextNode('CompletedRotations',Node));
       TotalAngles:=StrToInt(ReadTextNode('TotalRotations',Node));
@@ -584,6 +614,16 @@ var
           Constraints[ix].TargetPoints:=ReadPointSet(child,'TargetPoints');
           Constraints[ix].ProbePoints:=ReadPointSet(child,'ProbePoints');
           Constraints[ix].Distance:=StrToFloat(ReadTextNode('Distance',child));
+          end
+        else if nodename='NORMALPLANECONSTRAINT' then
+          begin
+          ix:=Length(Constraints);
+          SetLength(Constraints,ix+1);
+          Constraints[ix].ConstraintType:=CNormalPlane;
+          Constraints[ix].Name:=TDOMElement(child).GetAttribute('Name');
+          Constraints[ix].TargetPoints:=nil;
+          Constraints[ix].ProbePoints:=nil;
+          Constraints[ix].Distance:=StrToFloat(ReadTextNode('Margin',child));
           end
         else if nodename='COMPUTEDMODELS' then
           begin
@@ -1072,6 +1112,7 @@ begin
     Resolution:=1;
     AddedRadius:=1.35;
     NumAxisSteps:=24;
+    FixedZRotation:=-1;
     SecondsBetweenSaves:=1000;
     CompletedAngles:=0;
     ConstraintSets:=nil;
@@ -1141,6 +1182,11 @@ begin
   FDockRuns[FCurrentDock].ProbeFile:=ProbeFile;
 end;
 
+procedure TDockOrdersManager.FixZrotation(Angle: TFloat);
+begin
+  FDockRuns[FCurrentDock].FixedZRotation:=Angle;
+end;
+
 procedure TDockOrdersManager.AddResidueContacts(ContactFile: string;
   MaxContacts: Integer);
 
@@ -1178,7 +1224,34 @@ begin
   sl.Free;
 end;
 
-procedure TDockOrdersManager.AddRMSDScore(TemplateFile: string; SubMat:TSubMatrix; MinSequenceMatch:TFloat);
+procedure TDockOrdersManager.AddSymmetryConstraint(Margin: TFloat);
+{ TODO : NumModels and MinOverlap as parameters }
+
+var
+  f:Integer;
+
+
+begin
+  with FDockRuns[FCurrentDock] do
+    begin
+    SetLength(ConstraintSets,Length(ConstraintSets)+1);
+    ConstraintSets[High(ConstraintSets)].NumModels:=5000;
+    ConstraintSets[High(ConstraintSets)].MinOverlap:=200;
+    ConstraintSets[High(ConstraintSets)].Name:='Symmetry Constraints';
+    SetLength(ConstraintSets[High(ConstraintSets)].Constraints,1);
+    with ConstraintSets[High(ConstraintSets)].Constraints[0] do
+      begin
+      Name:='Symmetry Constraint';
+      TargetPoints:=nil;
+      ProbePoints:=nil;
+      Distance:=Margin;
+      ConstraintType:=CNormalPlane;
+      end;
+    end;
+end;
+
+procedure TDockOrdersManager.AddRMSDScore(TemplateFile: string; SubMat:TSubMatrix;
+   MinSequenceMatch:TFloat;Options:TRMSDOptions;Tag:string);
 
 var
   layer:TPDBModel;
@@ -1197,12 +1270,12 @@ begin
   firstprobe:=Length(targetfit.ProbeCoords);
   with FDockRuns[FCurrentDock] do
     begin
-    rmsd:=TRMSDScoreDef.Create('RMSD to '+ExtractFileName(TemplateFile));
+    rmsd:=TRMSDScoreDef.Create(Tag+' to '+ExtractFileName(TemplateFile));
     rmsd.SetCoords(predcoords,realcoords,firstprobe);
-    rmsd.FitTarget:=True;
-    rmsd.FitProbe:=False;
-    rmsd.ScoreTarget:=False;
-    rmsd.ScoreProbe:=True;
+    rmsd.FitTarget:=rmsdFitTarget in Options;
+    rmsd.FitProbe:=rmsdFitProbe in Options;
+    rmsd.ScoreTarget:=rmsdScoreTarget in Options;
+    rmsd.ScoreProbe:=rmsdScoreProbe in Options;
     SetLength(ScoreDefs,Length(ScoreDefs)+1);
     ScoreDefs[High(ScoreDefs)]:=rmsd;
     end;

@@ -9,7 +9,7 @@ object OpenGLForm: TOpenGLForm
   ClientWidth = 593
   OnDropFiles = FormDropFiles
   OnResize = FormResize
-  LCLVersion = '1.0.4.0'
+  LCLVersion = '1.4.0.4'
   object OGLPb: TOpenGLControl
     Left = 8
     Height = 442

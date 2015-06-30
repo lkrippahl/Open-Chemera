@@ -103,6 +103,7 @@ type
   procedure DisplaceLine(var Line:TGridLine;Displacement:Integer);
   function IntegersToLine(const Ints:TIntegers;const Threshold:Integer=0;
               Limit1:Integer=-1;Limit2:Integer=-1):TGridLine;overload;
+  procedure SetIntegersLine(const Line:TGridLine;var Ints:TIntegers; Val:Integer);
   procedure ComputeShapeStats(var Shape:TGridShape);
   function CountSegments(const Grid:TGridPlane):Integer;
   function CountCells(const Grid:TGridPlane):Integer;overload;
@@ -210,6 +211,17 @@ begin
     end;
   if isin then Result[curr,1]:=Limit2;
   SetLength(Result,curr+1);
+end;
+
+procedure SetIntegersLine(const Line: TGridLine; var Ints: TIntegers;
+  Val: Integer);
+
+var f,ff:Integer;
+
+begin
+  for f:=0 to High(Line) do
+    for ff:=Line[f,0] to Line[f,1] do
+      Ints[ff]:=Val;
 end;
 
 procedure ComputeShapeStats(var Shape: TGridShape);

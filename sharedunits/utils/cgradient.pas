@@ -136,7 +136,8 @@ begin
 
 end;
 
-function Bracket(var ax,bx,cx,fa,fb,fc:TFloat):Boolean;
+function Bracket(var ax,bx:TFloat; out cx:TFloat;
+                 var fa,fb:TFLoat; out fc:TFloat):Boolean;
 
 var ulim,u,r,q,fu,dum:TFloat;
 

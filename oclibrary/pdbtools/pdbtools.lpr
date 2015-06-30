@@ -70,8 +70,8 @@ type
     procedure BuildComplex;
     // generates complex from unbound and bound structures
     procedure ExportChainSequences;
-
     procedure Silluette;
+    procedure Process;
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
@@ -230,7 +230,9 @@ begin
   else if command='build' then
     BuildComplex
   else if command='silluette' then
-    Silluette;
+    Silluette
+  else if command='process' then
+    Process;
   report.Free;
   Terminate;
 end;
@@ -777,11 +779,65 @@ begin
     end;
   if HasOption('headers') then
     WriteLn('PDB'+#9+'Angles'+#9+'Average'+#9+'Median'+#9+'Max'+#9+'Min');
-    WriteLn(pdb+#9+IntToStr(Round(angles))+#9+
-                   IntToStr(Round(Average(areas)))+#9+
-                   IntToStr(Round(Median(areas)))+#9+
-                   IntToStr(Round(Max(areas)))+#9+
-                   IntToStr(Round(Min(areas))));
+  WriteLn(pdb+#9+IntToStr(Round(angles))+#9+
+                 IntToStr(Round(Average(areas)))+#9+
+                 IntToStr(Round(Median(areas)))+#9+
+                 IntToStr(Round(Max(areas)))+#9+
+                 IntToStr(Round(Min(areas))));
+end;
+
+procedure TPdbTools.Process;
+{ For processing a pdb file:
+  pdbtools process pdb [--writestats] [--renamechains] [--save pdb]
+                       [--aaonly] [--headers]');
+  writestats: writes pdb stats (after processing)
+  renamechains: renames chains consecutively A...Z
+  aaonly: deletes all non amino acid residues and empty chains
+  headers: writes stats headers
+  deletechains Labels: deletes all chains with those Labels, separated by ; (after renaming)');
+}
+
+var
+  pdb,outfile:string;
+  layer:TMolecule;
+  pdblayerman:TPDBModelMan;
+  mol:TMolecule;
+
+procedure DeleteChains;
+
+var
+  f:Integer;
+  labels:TSimpleStrings;
+
+begin
+  labels:=SplitString(GetOptionValue('deletechains'),';');
+  for f:=0 to High(labels) do
+    pdblayerman.LayerByIx(0).DeleteChainsByName(labels[f]);
+end;
+
+var f:Integer;
+
+begin
+  pdblayerman:=TPDBModelMan.Create(Config.MonomersPath);
+  pdb:=ParamStr(2);
+  mol:=pdblayerman.LoadLayer(pdb);
+  if HasOption('aaonly') then
+    pdblayerman.LayerByIx(0).DeleteNonAAResidues;
+  if HasOption('renamechains') then
+    pdblayerman.LayerByIx(0).RenameChains;
+  if HasOption('deletechains') then
+    DeleteChains;
+  if HasOption('headers') then
+    WriteLn('PDB'+#9+'Chain'+#9+'Residues');
+  if HasOption('writestats') then
+    for f:=0 to mol.GroupCount-1 do
+      WriteLn(pdb+#9+mol.GetGroup(f).Name+#9+IntToStr(mol.GetGroup(f).GroupCount));
+  if HasOption('save') then
+    begin
+    outfile:=GetOptionValue('save');
+    SaveToPdb(mol,outfile);
+    end;
+  pdblayerman.Free;
 end;
 
 
@@ -885,7 +941,16 @@ begin
   writeln('Output is out1 out2 outcomplex files with the selected chains and built complex');
   writeln();
   writeln('For computing the silluette of a pdb file:');
-  writeln('pdbtools silluette pdb num_angles added_radius [--headers]');
+  writeln('pdbtools silluette pdb num_angles added_radius [-headers]');
+  writeln();
+  writeln('For processing a pdb file:');
+  writeln('pdbtools process pdb [-writestats -renamechains -save pdb]');
+  writeln('                     [-aaonly -headers -deletechain Label]');
+  writeln('writestats: writes pdb stats (after processing)');
+  writeln('renamechains: renames chains consecutively A...Z');
+  writeln('aaonly: deletes all non amino acid residues and empty chains');
+  writeln('deletechains Labels: deletes all chains with those Labels, separated by ; (after renaming)');
+
 
 
 end;

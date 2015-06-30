@@ -54,7 +54,8 @@ type
     function ZDomainAtXY(DomainX,DomainY:Integer):TGridLine;
     procedure LinearDistanceConstraint(const ATargetPoints,AProbePoints:TCoords;Dist:TFloat);
     procedure EuclideanDistanceConstraint(const ATargetPoints,AProbePoints:TCoords;Dist:TFloat);
-    procedure ImportConstraints(Constraints:TConstraintDefs;ProbeRot:TQuaternion);
+    procedure PlaneConstraint(const Point,Normal:TCoord;const Margin:TFloat);
+    procedure ImportConstraints(Constraints:TConstraintDefs;ProbeRot:TQuaternion; ProbeAxis:TCoord);
 
   end;
 
@@ -312,8 +313,85 @@ begin
 
 end;
 
+procedure TDockConstraintManager.PlaneConstraint(const Point, Normal: TCoord;
+  const Margin: TFloat);
+//NOTE: Normal vector must be normalized.
+
+var
+  planepoint,linetoplane:TCoord;
+  xflags,yflags,zflags:TIntegers;
+
+  griddist:TFloat;
+  dist:TFloat;
+  tres,pres:TFloat;
+
+  procedure SetZDomain(xx,yy:Integer);
+  //computes distance from point to plane for each point.
+  //this seems necessary to give the proper margin...
+
+  var zz,z:Integer;
+
+  begin
+    linetoplane:=Coord(planepoint[0]-xx,planepoint[1]-yy,planepoint[2]);
+    for z:=0 to High(FZDomainAtXY[xx,yy]) do
+      for zz:=FZDomainAtXY[xx,yy,z,0] to FZDomainAtXY[xx,yy,z,1] do
+        begin
+        linetoplane[2]:=planepoint[2]-zz;
+        dist:=Abs(DotProduct(linetoplane,Normal));
+        if dist<=Margin then
+          zflags[zz]:=1;
+        end;
+    FZDomainAtXY[xx,yy]:=IntegersToLine(zflags);
+    //cleanup zflags
+    SetIntegersLine(FZDomainAtXY[xx,yy],zflags,-1);
+  end;
+
+  procedure SetYDomain(xx:Integer);
+
+  var y,yy:Integer;
+
+  begin
+    for y:=0 to High(FYDomainAtX[xx]) do
+      for yy:=FYDomainAtX[xx,y,0] to FYDomainAtX[xx,y,1] do
+        begin
+        SetZDomain(xx,yy);
+        if FZDomainAtXY[xx,yy]<>nil then
+          yflags[yy]:=1;
+        end;
+    FYDomainAtX[xx]:=IntegersToLine(yflags);
+    //cleanup yflags
+    SetIntegersLine(FYDomainAtX[xx],yflags,-1);
+  end;
+
+var xx,x:Integer;
+
+begin
+
+  //scaling factors for the shapes
+  tres:=1/FTargetResolution;
+  pres:=1/FProbeResolution;
+
+  //plane and line variables
+  planepoint:=Subtract(Add(Point,Multiply(FTargetTransvec,tres)),Multiply(FProbeTransVec,pres));
+  planepoint:=Subtract(planepoint,Coord(FDomainBlock.XOffset,FDomainBlock.YOffset,FDomainBlock.ZOffset));
+
+  xflags:=FilledInts(FDomainBlock.DomainEndX+1,-1);
+  yflags:=FilledInts(FDomainBlock.DomainEndY+1,-1);
+  zflags:=FilledInts(FDomainBlock.DomainEndZ+1,-1);
+
+  for x:=0 to High(FXDomain) do
+    for xx:=FXDomain[x,0] to FXDomain[x,1] do
+      begin
+      SetYDomain(xx);
+      if FYDomainAtX[xx]<>nil then
+        xflags[xx]:=1;
+      end;
+  FXDomain:=IntegersToLine(xflags);
+
+end;
+
 procedure TDockConstraintManager.ImportConstraints(
-  Constraints: TConstraintDefs; ProbeRot: TQuaternion);
+  Constraints: TConstraintDefs; ProbeRot: TQuaternion; ProbeAxis:TCoord);
 
 var
   f:Integer;
@@ -324,6 +402,7 @@ begin
       CEuclideanDistance:
         EuclideanDistanceConstraint(Constraints[f].TargetPoints,
                 Rotate(Constraints[f].ProbePoints,ProbeRot),Constraints[f].Distance);
+      CNormalPlane:PlaneConstraint(Coord(0,0,0),ProbeAxis,Constraints[f].Distance);
     end;
 end;
 

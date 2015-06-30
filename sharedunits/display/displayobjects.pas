@@ -53,6 +53,7 @@ type
                   Cubes:Boolean=True):T3DObjects;
 
   public
+    property Settings:TSettingsManager read FSettings;
     constructor Create(Display:IBase3DDisplay);
     procedure SetDisplay(Display:IBase3DDisplay);
 
@@ -214,11 +215,12 @@ begin
           SetLength(ol.Objects,Length(AtomTable[g]));
           ol.Material:=FSettings.Materials[g];
           for h:=0 to High(AtomTable[g]) do
-            begin
-            ol.Objects[h].ObjectType:=otSphere;
-            ol.Objects[h].sphC:=AtomSettings[AtomTable[g,h]].Atom.Coords;
-            ol.Objects[h].Rad:=AtomSettings[AtomTable[g,h]].AtomRad;
-            end;
+            if AtomSettings[AtomTable[g,h]].IsVisible then
+              begin
+              ol.Objects[h].ObjectType:=otSphere;
+              ol.Objects[h].sphC:=AtomSettings[AtomTable[g,h]].Atom.Coords;
+              ol.Objects[h].Rad:=AtomSettings[AtomTable[g,h]].AtomRad;
+              end;
           FDisplay.AddObjectList(ol);
           end;
       end;

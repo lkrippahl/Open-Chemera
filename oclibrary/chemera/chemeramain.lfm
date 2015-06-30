@@ -8,15 +8,21 @@ object CmMainForm: TCmMainForm
   OnActivate = FormActivate
   OnCreate = FormCreate
   OnDropFiles = FormDropFiles
-  LCLVersion = '1.0.4.0'
+  LCLVersion = '1.2.6.0'
   object MainMenu: TMainMenu
     left = 40
-    top = 65533
     object FileMn: TMenuItem
       Caption = 'File'
       object OpenMn: TMenuItem
         Caption = 'Open'
         OnClick = OpenMnClick
+      end
+    end
+    object MenuItem9: TMenuItem
+      Caption = 'Edit'
+      object MenuItem10: TMenuItem
+        Caption = 'Backbone'
+        OnClick = MenuItem10Click
       end
     end
     object MenuItem1: TMenuItem
@@ -48,6 +54,18 @@ object CmMainForm: TCmMainForm
       object MenuItem8: TMenuItem
         Caption = 'Save Rotation'
         OnClick = MenuItem8Click
+      end
+      object SavePOVmi: TMenuItem
+        Caption = 'SavePovray'
+        OnClick = SavePOVmiClick
+      end
+      object MenuItem11: TMenuItem
+        Caption = 'Show Rotation'
+        OnClick = MenuItem11Click
+      end
+      object MenuItem12: TMenuItem
+        Caption = 'Test Symmetry'
+        OnClick = MenuItem12Click
       end
     end
   end

@@ -28,6 +28,8 @@ type
     public
       constructor Create;
       procedure Free;virtual;
+      procedure AddCodeLine(Line:string);
+      procedure SaveToFile(FileName:string);
   end;
 
 
@@ -46,6 +48,16 @@ begin
   FCode.Free;
   FCode:=nil;
   inherited Free;
+end;
+
+procedure TPovRayExport.AddCodeLine(Line: string);
+begin
+  FCode.Add(Line);
+end;
+
+procedure TPovRayExport.SaveToFile(FileName: string);
+begin
+  FCode.SaveToFile(FileName);
 end;
 
 end.

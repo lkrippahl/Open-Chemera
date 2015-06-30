@@ -11,7 +11,7 @@ uses
   selections, base3ddisplay, displaysettings, oglform, pdbparser,
   lazopenglcontext, oclconfiguration, geomhash, geomutils, moleculetree,
   notifications, molutils, surface, linegrids, povray, dockdomains,
-  dockconstraints, formdocker;
+  dockconstraints, alignment, formdocker;
 
 {$R *.res}
 

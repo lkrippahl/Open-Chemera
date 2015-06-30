@@ -40,22 +40,22 @@ implementation
 function GoldenSpiralPoints(Num:Integer):TCoords;
 
 var
-  inc,off,y,r,phi:TFloat;
+  inc,off,y,z,r,phi:TFloat;
   k:Integer;
 
 begin
-  SetLength(Result,Num);
-  inc:=Pi * (3 - Sqrt(5));
-  off:= 2 / Num;
-  for k:=0 to Num-1 do
+  SetLength(Result,Num+1);
+  inc:=3.6/Sqrt(Num);
+  phi:=0;
+  Result[0]:=Coord(0,0,-1);
+  for k:=1 to Num-2 do
     begin
-    y := k * off - 1 + (off / 2);
-    r := Sqrt(1 - y*y);
-    phi := k * inc;
-    Result[k,0]:=Cos(phi)*r;
-    Result[k,1]:=y;
-    Result[k,2]:= Sin(phi)*r;
+    z := -1 + 2*k/(Num-1);
+    r := Sqrt(1 - z*z);
+    phi := phi + inc/r;
+    Result[k]:=Coord(Cos(phi)*r,Sin(phi)*r,z);
     end;
+  Result[Num]:=Coord(0,0,1);
 end;
 
 function SRSurface(Points:TCoords;Radii:TFloats;SpherePoints:TCoords;MinHashCell:Single=0):TFloats;

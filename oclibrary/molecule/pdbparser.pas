@@ -274,16 +274,13 @@ begin
           //even if the chain ID remains the same
     else if Pos('MODEL',s)=1 then
         try
+          oldchain:='***';
           FModelCount:=StrToInt(Deblank(Copy(s,8,Length(s))));
         except
           Inc(FModelCount);
         end
     else if Pos('ENDMDL',s)=1 then
         Inc(FModelCount);
-
-    { TODO : This only reads the first model. Fix to split into different models }
-    if (FAtomCount>0) and (FModelCount<>FAtoms[0].ModelNum) then
-      Break;
     end;
 end;
 
