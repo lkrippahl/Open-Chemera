@@ -49,7 +49,7 @@ type
 
 implementation
 
-uses MiscUtils;
+uses miscutils;
 
 { TCGMinimiser }
 
