@@ -130,6 +130,7 @@ type
     function NewGroup(GName:string; GID:Integer):TMolecule; // creates and adds group
     function NewAtom(AName:string; AID:integer):TAtom;      //creates and adds atom;
     function AllAtoms:TAtoms;
+    function AllCoords:TCoords;
     function AllTerminalGroups:TMolecules;
     function AllBonds:TAtomBonds;
     function GroupCount:Integer;
@@ -159,7 +160,7 @@ type
     procedure Transform(Quat:TQuaternion);overload;
     procedure Transform(TranslationVec:TCoord;RotationMat:TRotMatrix);overload;
     procedure Transform(Center:TCoord;Rotation:TRotMatrix;Translation:TCoord);overload;
-    //Subtracts center, rotantes then translates
+    //Subtracts center, rotates then translates
 
     //These procedures clear all groups or atoms, respectively
     //They are meant to be used on empty molecules
@@ -454,6 +455,28 @@ begin
   for f:=0 to High(FGroups) do
     begin
     tmp:=FGroups[f].AllAtoms;
+    i:=Length(Result);
+    SetLength(Result,i+Length(tmp));
+    for g:=0 to High(tmp) do
+      Result[g+i]:=tmp[g];
+    end;
+end;
+
+function TMolecule.AllCoords: TCoords;
+//returns a copy of all coords in all atoms
+
+var
+  f,g,i:Integer;
+  tmp:TCoords;
+
+begin
+  SetLength(Result,Length(FAtoms));
+  for f:=0 to High(FAtoms) do Result[f]:=FAtoms[f].Coords;
+
+  //Add to this level all the offspring levels
+  for f:=0 to High(FGroups) do
+    begin
+    tmp:=FGroups[f].AllCoords;
     i:=Length(Result);
     SetLength(Result,i+Length(tmp));
     for g:=0 to High(tmp) do

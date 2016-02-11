@@ -44,7 +44,7 @@ var
   k:Integer;
 
 begin
-  SetLength(Result,Num+1);
+  SetLength(Result,Num);
   inc:=3.6/Sqrt(Num);
   phi:=0;
   Result[0]:=Coord(0,0,-1);
@@ -55,7 +55,7 @@ begin
     phi := phi + inc/r;
     Result[k]:=Coord(Cos(phi)*r,Sin(phi)*r,z);
     end;
-  Result[Num]:=Coord(0,0,1);
+  Result[Num-1]:=Coord(0,0,1);
 end;
 
 function SRSurface(Points:TCoords;Radii:TFloats;SpherePoints:TCoords;MinHashCell:Single=0):TFloats;

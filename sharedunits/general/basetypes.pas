@@ -79,6 +79,8 @@ type
   procedure RemoveFromArray(Ix:Integer;var A:TCardinals);overload;
   procedure RemoveFromArray(Ix:Integer;var A:TSimpleStrings);overload;
 
+  procedure RemoveFromArray(Ixs:TIntegers;var A:TIntegers);overload;
+
   //Return last index, or -1 if not found
   function IndexOf(const i:Integer; const a:TIntegers):Integer;overload;
   function IndexOf(const C:Cardinal; const A:TCardinals):Integer;overload;
@@ -93,9 +95,7 @@ type
 
   function Slice(const Ints:TIntegers;Ix1,Ix2:Integer):TIntegers;overload;
   function Slice(const Floats:TFloats;Ix1,Ix2:Integer):TFloats;overload;
-
   function Slice(const Coords:TCoords;Ixs:TIntegers):TCoords;overload;
-
 
   function CountInArray(I:Integer; const Ints:TIntegers):Integer;overload;
 
@@ -119,10 +119,11 @@ type
   function Min(vals:TIntegers):Integer;overload;
   function Max(vals:TIntegers):Integer;overload;
 
-
-
   function MinIx(vals:TFLoats):Integer;overload;
   function MaxIx(vals:TFLoats):Integer;overload;
+
+  procedure MinValIx(Vals:TFloats;out MinVal:TFloat;out MinIx:Integer);overload;
+  procedure MaxValIx(Vals: TFloats; out MinVal: TFloat; out MinIx: Integer);overload;
 
   function Sum(vals:TIntegers):Integer;overload;
   function Sum(vals:TFloats):TFloat;overload;
@@ -164,10 +165,11 @@ type
 
   function Variance(Fs:TFloats;Avrg:TFloat):TFloat;
 
+  function IsBetween(Val,Extreme1,Extreme2:TFloat):Boolean;
+
   //for time profiling
   function GetTickCount : DWORD;
   function GetTimeInteval(var StartTick:DWORD):Integer;
-
 
 const
   NullVector:TCoord=(0,0,0);
@@ -237,7 +239,7 @@ begin
   a[High(a)]:=i;
 end;
 
-procedure AddToArray(f:TFloat; var a:TFloats); overload;
+procedure AddToArray(f: TFLoat; var a: TFloats);
 begin
   SetLength(a,Length(a)+1);
   a[High(a)]:=f;
@@ -348,6 +350,7 @@ begin
     Result[f]:=Coords[Ixs[f]];
 end;
 
+
 function CountInArray(I: Integer; const Ints: TIntegers): Integer;
 
 var f:Integer;
@@ -356,6 +359,25 @@ begin
   Result:=0;
   for f:=0 to High(Ints) do
     if Ints[f]=I then Inc(Result);
+end;
+
+procedure RemoveFromArray(Ixs: TIntegers; var A: TIntegers);
+
+var f,top:Integer;
+
+begin
+  top:=Length(A);
+  f:=0;
+  while f<top do
+    begin
+    if IsInArray(f,Ixs) then
+      begin
+      Dec(top);
+      A[f]:=A[top];
+      end;
+    Inc(f);
+    end;
+  SetLength(A,top);
 end;
 
 function IndexOf(const i:Integer; const a:TIntegers):Integer;
@@ -734,6 +756,49 @@ begin
     Result[f]:=Vals1[f]+Vals2[f];
 end;
 
+procedure MinValIx(Vals: TFloats; out MinVal: TFloat; out MinIx: Integer);
+
+var
+  f:Integer;
+
+begin
+  MinIx:=-1;
+  MinVal:=0;
+  if vals<>nil then
+    begin
+    MinIx:=0;
+    MinVal:=Vals[0];
+    for f:=1 to High(Vals) do
+      if vals[f]<MinVal then
+        begin
+        MinVal:=Vals[f];
+        MinIx:=f;
+        end;
+    end;
+end;
+
+
+procedure MaxValIx(Vals: TFloats; out MinVal: TFloat; out MinIx: Integer);
+
+var
+  f:Integer;
+
+begin
+  MinIx:=-1;
+  MinVal:=0;
+  if vals<>nil then
+    begin
+    MinIx:=0;
+    MinVal:=Vals[0];
+    for f:=1 to High(Vals) do
+      if Vals[f]>MinVal then
+        begin
+        MinVal:=Vals[f];
+        MinIx:=f;
+        end;
+    end;
+end;
+
 function Sum(vals:TIntegers):Integer;overload;
 
 var f:Integer;
@@ -945,6 +1010,12 @@ begin
   for f:=0 to High(Fs) do
     Result:=Result+Sqr(Fs[f]-Avrg);
   Result:=Result/Length(Fs);
+end;
+
+function IsBetween(Val, Extreme1, Extreme2: TFloat): Boolean;
+begin
+  Result := ((Val>=Extreme1) and (Val<=Extreme2)) or
+            ((Val<=Extreme1) and (Val>=Extreme2));
 end;
 
 function GetTickCount: DWORD;

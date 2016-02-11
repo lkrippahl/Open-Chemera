@@ -9,6 +9,14 @@ Purpose:
 
 
   for docking:
+    Path options
+
+    -pdbpath path
+      path to pdb files, passed to jobfile loader
+
+    -outputpath
+      path for output files (for all reports, export, etc) TODO: implement on all
+
     Structure file options:
 
     -t target.pdb file to load (mandatory)
@@ -28,6 +36,7 @@ Purpose:
 
     -j jobfile.xml (mandatory)
 
+
     -append
       append to jobs file instead of replacing (default)
 
@@ -43,6 +52,23 @@ Purpose:
     -maxcontacts num
       number of contacts to read from contacts file. If absent or 0 reads all
 
+    -baseangles num
+      base number of angles for selection. Default 2000
+
+    -shapepoints num
+      number of points for defining molecule. Default 20
+
+    -displacement num
+      maximum displacement between axes, default 10
+
+    -maxaxes num
+      maximum number of axes after selection (overrides displacement)
+
+    -symmetry num
+      integer for using symmetry constraints on angles
+
+    -symmetryplane num
+      float for symmetry plane constraint, with plane width. Plane is perpendicular to axis
 
   Modifying job files
 
@@ -75,22 +101,35 @@ Purpose:
       deletes all additional scores
       TODO: enable specifying score id and deleting only those
 
+    -contactscore contactmatrix
+      loads contactmatrix, computes contact score
+      outputs to console! TODO: this should be added to xml to compute in bigger... (experimental only)
+
   Reading results
 
     list models in each constraintset
-    -table filename
+    -table ordersfile
     displays on screen, each constraint in one group of columns, then model id, overlap, other scores
 
 
     list all models
-    -models filename
+    -models ordersfile
     displays on screen table with single list of models and all scores (removes duplicates)
 
-    exports pdb
+    Export pdbs
     -export filename
+    -all
+       exports all pdb files as ordersfile_run_constreintset_id.pdb
+       this option ignores others but uses
+       -firstid
+       -lastid
+       for specifying range
+
     -outfile filename.pdb
     -constraintset number
     -model  id
+
+    TODO: score filters not implemented
     -minscore scoreix
     -maxscore scoreix
       (if scoreix<0 then it refers to geometry)
@@ -102,8 +141,12 @@ Purpose:
           maximum number of models to use per constraint
         -rmsdixs Nprobe;Nint
           indexes of the rmsd scores to be used for probe and interface
+        -list
+          lists ids of acceptable models (0 based)
 
-
+    ***TESTING***
+    ***This only works in development***
+    -test
 
 
 Requirements:
@@ -121,7 +164,7 @@ uses
   {$ENDIF}{$ENDIF}
   Classes, SysUtils, docktasks, molecules, pdbmolecules, molfit,
   oclconfiguration, alignment, geomutils, stringutils, quicksort, geomhash,
-  basetypes, base3ddisplay, progress, CustApp
+  basetypes, base3ddisplay, progress, CustApp, rotations,molutils,protinter
   { you can add units after this };
 
 type
@@ -140,6 +183,42 @@ type
 
 { TDockPrep }
 
+procedure RunTests;
+
+var
+  modman:TPDBModelMan;
+  pdb:TPDBModel;
+  axes,coords:TCoords;
+  distmatrix:TMatrix;
+  sl:TStringList;
+  x,y:Integer;
+  s:string;
+  matrix:TMatrix;
+begin
+  //distance matrix generation test
+  {modman:=TPDBModelMan.Create(Config.MonomersPath);
+  WriteLn('CreatedOK');
+  modman.LoadLayer('..\testfiles\1RPO-A-prob.pdb');
+  pdb:=modman.LayerByIx(0);
+  CenterMolecule(pdb.Molecule);
+  coords:=ListCoords(pdb.Molecule);
+  axes:=BaseSampleAxes(1000);
+  matrix:=AxialDisplacementMatrix(axes,coords);
+  sl:=TStringList.Create;
+  for x:=0 to High(matrix) do
+    begin
+    s:='';
+    for y:=0 to High(matrix[x]) do
+      begin
+      s:=s+FloatToStrF(matrix[x,y],ffFixed,7,2)+';';
+      end;
+    SetLength(s,Length(s)-1);
+    sl.Add(s);
+    end;
+  sl.SaveToFile('..\testfiles\Matrix.tsv')}
+
+end;
+
 procedure TDockPrep.DoRun;
 var
   f,maxcontacts:Integer;
@@ -156,9 +235,17 @@ var
   submat:TSubMatrix;
   maxmodels:TIntegers;
   tmps:TSimpleStrings;
-  fixedzrotation:TFloat;
-  planemargin:TFLoat;
+
+  //angle generation
+  baseangles,shapepoints,maxaxes:Integer;
+  displacement:TFloat;
+
+  //symmetry constraints
+  symmetry:Integer;
+  symmetryplane:TFloat;
+
   LigandScore,InterfaceScore:Integer;
+  pdbpath,outputpath:string;
 
 
   procedure GetOptions;
@@ -170,10 +257,23 @@ var
 
   begin
     minalign:=0.9;
-    fixedzrotation:=-1;
-    planemargin:=-1;
+
+    //angle generation
+    baseangles:=2000;
+    maxaxes:=2000;
+    shapepoints:=20;
+    displacement:=10;
+
+    //symmetry constraints
+    symmetry:=-1;
+    symmetryplane:=-1;
+
     intdist:=5.0;
 
+    pdbpath:=GetOptionValue('pdbpath');
+    if pdbpath<>'' then pdbpath:=IncludeTrailingPathDelimiter(pdbpath);
+    outputpath:=GetOptionValue('outputpath');
+    if outputpath<>'' then outputpath:=IncludeTrailingPathDelimiter(outputpath);
     targetfile:=GetOptionValue('t');
     probefile:=GetOptionValue('p');
     jobfile:=GetOptionValue('j');
@@ -191,21 +291,30 @@ var
       dormsd:=HasOption('rmsd') or HasOption('intrmsd') or HasOption('fullrmsd');
       end;
 
-
     appendjobs:=HasOption('append');
     contactfile:=GetOptionValue('contacts');
     maxcontacts:=0;
+
+    tmp:=GetOptionValue('baseangles');
+    if tmp<>'' then baseangles:=StrToInt(tmp);
+     tmp:=GetOptionValue('maxaxes');
+    if tmp<>'' then maxaxes:=StrToInt(tmp);
+    tmp:=GetOptionValue('shapepoints');
+    if tmp<>'' then shapepoints:=StrToInt(tmp);
+    tmp:=GetOptionValue('displacement');
+    if tmp<>'' then displacement:=StrToFloat(tmp);
+    tmp:=GetOptionValue('symmetryplane');
+    if tmp<>'' then symmetryplane:=StrToFloat(tmp);
+
     tmp:=GetOptionValue('symmetry');
-    if tmp<>'' then planemargin:=StrToFloat(tmp);
+    if tmp<>'' then symmetry:=StrToInt(tmp);
     tmp:=GetOptionValue('maxcontacts');
     if tmp<>'' then maxcontacts:=StrToInt(tmp);
     tmp:=GetOptionValue('minalign');
     if tmp<>'' then minalign:=StrToFloat(tmp);
     tmp:=GetOptionValue('intdist');
     if tmp<>'' then intdist:=StrToFloat(tmp);
-    tmp:=GetOptionValue('fixedzrotation');
-    if tmp<>'' then
-      fixedzrotation:=StrToFloat(tmp)/180*pi;
+
 
     tmp:=GetOptionValue('maxmodels');
     if tmp<>'' then
@@ -286,19 +395,61 @@ var
     model:TMolecule;
     runs:TDockRuns;
 
-  begin
-    outfile:=GetOptionValue('outfile');
-    constraintset:=StrToInt(GetOptionValue('constraintset'));
-    modelid:=StrToInt(GetOptionValue('model'));
-    minscoreix:=StrToInt(GetOptionValue('minscore'));
-    maxscoreix:=StrToInt(GetOptionValue('maxscore'));
+    procedure ExportAllStructures(Run:TDockRun);
 
+    var
+      cs,id:Integer;
+      modelman:TPDBModelMan;
+      probe,target:TMolecule;
+      sl:TStringList;
+      pdbname:string;
+      tmp,jobname:string;
+      firstid,lastid:Integer;
+
+    begin
+      jobname:=ChangeFileExt(ExtractFileName(jobfile),'');
+      tmp:=GetOptionValue('firstid');
+      if tmp<>'' then firstid:=StrToInt(tmp)
+        else firstid:=0;
+      tmp:=GetOptionValue('lastid');
+      if tmp<>'' then lastid:=StrToInt(tmp)
+        else lastid:=High(Run.ConstraintSets[0].DockModels);
+
+      sl:=TStringList.Create;
+      modelman:=TPDBModelMan.Create(Config.MonomersPath);
+      target:=modelman.LoadLayer(pdbpath+Run.TargetFile);
+      probe:=modelman.LoadLayer(pdbpath+Run.ProbeFile);
+      for cs:=0 to High(Run.ConstraintSets) do
+        for id:=firstid to lastid do
+          begin
+          model:=GetModel(target,probe,Run,cs,id);
+          pdbname:=jobname+'_'+IntToStr(cs)+'_'+IntToStr(id)+'.pdb';
+          SaveToPDB(model,outputpath+pdbname);
+          sl.add(pdbname);
+          model.Free;
+          end;
+        modelman.Free;
+        sl.SaveToFile(outputpath+ChangeFileExt(jobname,'')+'_models.txt');
+        sl.Free;
+    end;
+
+  begin
     runs:=LoadOrders(jobfile);
-    if HasOption('model') then
-      model:=GetModel(runs[0],constraintset,modelid);
-    SaveToPDB(model,outfile);
+    if HasOption('all') then
+      ExportAllStructures(runs[0])
+    else
+      begin
+      outfile:=GetOptionValue('outfile');
+      constraintset:=StrToInt(GetOptionValue('constraintset'));
+      modelid:=StrToInt(GetOptionValue('model'));
+      minscoreix:=StrToInt(GetOptionValue('minscore'));
+      maxscoreix:=StrToInt(GetOptionValue('maxscore'));
+      if HasOption('model') then
+        model:=GetModel(runs[0],constraintset,modelid);
+      SaveToPDB(model,outputpath+outfile);
+      model.Free;
+      end;
     FreeOrders(runs);
-    model.Free;
   end;
 
   procedure AddRmsd;
@@ -394,6 +545,7 @@ var
 
   var
     runs:TDockRuns;
+    idlist:string;
 
     procedure WriteHeaders;
 
@@ -411,24 +563,25 @@ var
         'Total Rotations'+#9+'Done rotations');
     end;
 
-    function Counts(NumModels:Integer):string;
-
-
+    function Counts(NumModels:Integer; out AcceptList:string):string;
 
     var
       c,m,hi,good,accept:Integer;
       lscore,iscore,miniscore,minlscore:TFloat;
+      buildlist:Boolean;
 
     begin
       { TODO : Auto detect probe and interface rmsd scores if LigandScore or InterfaceScore <0 }
       {LigandScore=0;
       InterfaceScore=1;}
 
+      buildlist:=HasOption('list');
       hi:=0;
       good:=0;
       accept:=0;
       minlscore:=100000;
       miniscore:=100000;
+      AcceptList:='';
       for c:=0 to High(runs[0].ConstraintSets) do
         for m:=0 to High(runs[0].ConstraintSets[c].ScoreResults[0].ScoreVals) do
           begin
@@ -439,9 +592,10 @@ var
           if (lscore<1) or (iscore<1) then Inc(hi)
           else if (lscore<5) or (iscore<2) then Inc(good)
           else if (lscore<10) or (iscore<4) then Inc(accept);
+          if buildlist and ((lscore<10) or (iscore<4)) then
+            AcceptList:=AcceptList+#9+IntToStr(m);
           if m>=NumModels then Break;
           end;
-
       Result:=IntToStr(hi)+#9+IntToStr(good)+#9+IntToStr(accept)+
               #9+FloatToStrF(minlscore,ffFixed,2,2)+#9+FloatToStrF(miniscore,ffFixed,2,2);
     end;
@@ -451,18 +605,55 @@ var
     rep:string;
 
   begin
+    try
     runs:=LoadOrders(jobfile);
+    except
+      WriteLn('**'+jobfile+' not found**');
+      Halt;
+    end;
     if GetOptionValue('summary')='h' then
       WriteHeaders;
     rep:=ExtractFileName(jobfile)+#9;
     for f:=0 to High(maxmodels) do
-      rep:=rep+Counts(maxmodels[f])+#9;
+      rep:=rep+Counts(maxmodels[f],idlist)+#9;
     WriteLn(rep,runs[0].Stats.ConstraintsTickCount,#9,
         runs[0].Stats.DigitizationTickCount,#9,
         runs[0].Stats.DomainTickCount,#9,
         runs[0].Stats.ScoringTickCount, #9,
-        runs[0].TotalAngles,#9,
-        runs[0].CompletedAngles);
+        Length(runs[0].Rotations),#9,
+        runs[0].CompletedRotations,idlist);
+    FreeOrders(runs);
+  end;
+
+  procedure ContactScore;
+
+  var
+    runs:TDockRuns;
+    run:TDockRun;
+    cs,id:Integer;
+    modelman:TPDBModelMan;
+    probe,target:TMolecule;
+    sl:TStringList;
+    pdbname:string;
+    matname:string;
+    contactmat:TSubMatrix;
+    scores:TFLoats;
+  begin
+    matname:=GetOptionValue('contactscore');
+    contactmat:=ReadBLASTMatrix(matname);
+    runs:=LoadOrders(jobfile);
+    run:=runs[0];
+    modelman:=TPDBModelMan.Create(Config.MonomersPath);
+    target:=modelman.LoadLayer(pdbpath+run.TargetFile);
+    probe:=modelman.LoadLayer(pdbpath+run.ProbeFile);
+    for cs:=0 to High(run.ConstraintSets) do
+      begin
+      scores:=ResidueContactScore(target,probe,run.ConstraintSets[cs].DockModels,
+              contactmat,3);
+      for id:=0 to High(scores) do
+          WriteLn(scores[id]);
+      end;
+    modelman.Free;
     FreeOrders(runs);
   end;
 
@@ -479,17 +670,20 @@ begin
     Exit;
   end;
 
-
   { add your program here }
   LoadAtomData;
   LoadAAData;
 
   GetOptions;
-  if jobfile='' then
+  if HasOption('test') then
+    RunTests
+  else if jobfile='' then
     Error('Job file is mandatory.')
   else
     begin
     FDockMan:=TDockOrdersManager.Create(jobfile);
+    if HasOption('contactscore') then
+      ContactScore;
     if HasOption('summary') then
       Summary;
     if HasOption('export') then
@@ -515,14 +709,14 @@ begin
         if probeout<>'' then SaveToPDB(FDockMan.Probe,probeout)
           else probeout:=probefile;
         FDockMan.SetPDBFiles(targetout,probeout);
+        FDockMan.BuildShapes;
+        FDockMan.BuildRotations(shapepoints, baseangles, displacement,symmetry,maxaxes);
         if dormsd then
           AddRmsd;
         if contactfile<>'' then
           FDockMan.AddResidueContacts(contactfile, maxcontacts);
-        if fixedzrotation>=0 then
-          FDOckMan.FixZRotation(fixedzrotation);
-        if planemargin>0 then
-          FDockMan.AddSymmetryConstraint(planemargin);
+        if symmetryplane>0 then
+          FDockMan.AddSymmetryConstraint(symmetryplane);
         if unconstrainedmodels>0 then
           FDockMan.AddNullConstraintSet(unconstrainedmodels,unconstrainedoverlap);
         FDockMan.SaveOrders(appendjobs);

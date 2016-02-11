@@ -24,7 +24,7 @@ interface
 uses
   Classes, SysUtils, basetypes,geomutils, molecules, pdbmolecules, molutils,
   molfit, alignment, stringutils, oclconfiguration, quicksort,
-  laz2_DOM, laz2_XMLRead, laz2_XMLWrite;
+  laz2_DOM, laz2_XMLRead, laz2_XMLWrite,rotations;
 
 const
   //current orders version
@@ -156,13 +156,21 @@ type
     InsertedModelsCount:Integer;
   end;
 
+  TShapeInfo=record
+    Coords:TCoords;
+    Rads:TFloats;
+  end;
+
   TDockRun=record
     TargetFile,ProbeFile:string;
+    Target,Probe:TShapeInfo;
+    TargetRads,ProbeRads:TFloats;
     Resolution,AddedRadius:TFloat;
-    NumAxisSteps,
+    Axes:TCoords;
+    Rotations:TQuaternions;
+    AxisIndexes:TIntegers;    //axis rotations belong to
     SecondsBetweenSaves:Integer;
-    FixedZRotation:TFloat;          //z rotation for probe, -1 if not used
-    CompletedAngles,TotalAngles:Integer;
+    CompletedRotations:Integer;
     ConstraintSets:TConstraintSets;
     ScoreDefs:TScoreDefs;
     Stats:TDockStats;
@@ -185,6 +193,7 @@ type
                                     out TargetFit, ProbeFit:TFitCoordsResult);
         //uses MagicFit to find the matches and returns the alpha carbon coordinates
 
+
     public
       property Target:TMolecule read FTarget;
       property Probe:TMolecule read FProbe;
@@ -195,10 +204,14 @@ type
                                 Center:Boolean;RandomizeProbe:Boolean);overload;
       procedure PreparePartners(JobIndex:Integer=0);overload;
         //prepares the docking partners for that job
+
+      procedure BuildShapes;
+        //copies target and probe coordinates and radii, adding addedradius
       procedure SetPDBFiles(TargetFile,ProbeFile:string);
 
-      procedure FixZrotation(Angle:TFloat);
-        //fixes the Z rotation of probe to angle (in radians)
+      procedure BuildRotations(Shapepoints:Integer;BaseCount:Integer;
+                                Displacement:TFloat;Symmetry:Integer;MaxAxes:Integer);
+        //generates Axes, Rotations and AxisIndexes
 
       procedure AddResidueContacts(ContactFile:string;MaxContacts:Integer=0);
         //text file containing one contact per line
@@ -226,7 +239,8 @@ type
   function LoadOrders(FileName:string):TDockRuns;
   function ReadAsTable(FileName:string):TSimpleStrings;
   procedure ZeroStats(var Stats:TDockStats);
-  function GetModel(const Run:TDockRun;ConstSetIx,ModelId:Integer):TMolecule;
+  function GetModel(Target,Probe:TMolecule; const Run: TDockRun; ConstSetIx, ModelId: Integer): TMolecule;overload;
+  function GetModel(const Run:TDockRun;ConstSetIx,ModelId:Integer):TMolecule;overload;
   procedure FreeOrders(var Orders:TDockRuns);
   procedure SortedModelList(const DockRun:TDockRun; out ConstSetIxs,ModelIxs:TIntegers);
   function CountModels(const DockRun:TDockRun):Integer;
@@ -262,12 +276,9 @@ var
     AddTextNode('ProbeFile',DockRun.ProbeFile,Result);
     AddTextNode('Resolution',FloatToStrF(DockRun.Resolution,ffFixed,0,2),Result);
     AddTextNode('AddedRadius',FloatToStrF(DockRun.AddedRadius,ffFixed,0,2),Result);
-    AddTextNode('NumAxisSteps',IntToStr(DockRun.NumAxisSteps),Result);
-    if DockRun.FixedZRotation>=0 then
-      AddTextNode('FixedZRotation',FloatToStr(DockRun.FixedZRotation),Result);;
     AddTextNode('SecondsBetweenSaves',IntToStr(DockRun.SecondsBetweenSaves),Result);
-    AddTextNode('CompletedRotations',IntToStr(DockRun.CompletedAngles),Result);
-    AddTextNode('TotalRotations',IntToStr(DockRun.TotalAngles),Result);
+    AddTextNode('CompletedRotations',IntToStr(DockRun.CompletedRotations),Result);
+    AddTextNode('TotalRotations',IntToStr(Length(DockRun.Rotations)),Result);
     Parent.AppendChild(Result);
  end;
 
@@ -350,7 +361,8 @@ var
     Parent.AppendChild(tmp);
   end;
 
-  procedure AddQuaternion(Parent:TDOMNode;QuatName:string;Quat:TQuaternion);
+  procedure AddQuaternion(Parent:TDOMNode;QuatName:string;Quat:TQuaternion;
+                              Index:Integer=-1);
 
   var tmp:TDOMElement;
   begin
@@ -359,6 +371,8 @@ var
     tmp.SetAttribute('i',FloatToStrF(Quat[1],ffFixed,0,3));
     tmp.SetAttribute('j',FloatToStrF(Quat[2],ffFixed,0,3));
     tmp.SetAttribute('k',FloatToStrF(Quat[3],ffFixed,0,3));
+    if Index>=0 then
+      tmp.SetAttribute('ix',IntToStr(Index));
     Parent.AppendChild(tmp);
   end;
 
@@ -426,7 +440,6 @@ var
     Parent.AppendChild(setnode);
   end;
 
-
   procedure AddDockStats(Parent:TDOMNode;const Stats:TDockStats);
 
   var statnode:TDOMNode;
@@ -445,6 +458,46 @@ var
       end;
     Parent.AppendChild(statnode);
   end;
+
+  procedure AddShapeInfo(Parent:TDomNode;NodeName:string;ShapeInfo:TShapeInfo);
+
+  var
+    shapenode:TDOMNode;
+    atomnode:TDOMNode;
+    var f:Integer;
+
+  begin
+    shapenode:=Doc.CreateElement(NodeName);
+    with ShapeInfo do
+      for f:=0 to High(Coords) do
+      begin
+      atomnode:=Doc.CreateElement('Atom');
+      TDOMElement(atomnode).SetAttribute('X',FloatToStrF(Coords[f,0],ffFixed,0,3));
+      TDOMElement(atomnode).SetAttribute('Y',FloatToStrF(Coords[f,1],ffFixed,0,3));
+      TDOMElement(atomnode).SetAttribute('Z',FloatToStrF(Coords[f,2],ffFixed,0,3));
+      TDOMElement(atomnode).SetAttribute('R',FloatToStrF(Rads[f],ffFixed,0,3));
+      shapenode.AppendChild(atomnode);
+      end;
+    Parent.AppendChild(shapenode);
+  end;
+
+  procedure AddRotations(Parent:TDomNode;Run:TDockRun);
+
+  var
+    axes,rotations:TDOMNode;
+    f:Integer;
+
+  begin
+    axes:=Doc.CreateElement('Axes');
+    for f:=0 to High(Run.Axes) do
+      AddCoordinate(axes,'Axis',Run.Axes[f]);
+    Parent.AppendChild(axes);
+    Rotations:=Doc.CreateElement('Rotations');
+    for f:=0 to High(Run.Rotations) do
+      AddQuaternion(rotations,'Rotation',Run.Rotations[f],Run.AxisIndexes[f]);
+    Parent.AppendChild(rotations);
+  end;
+
 
 
 var
@@ -472,6 +525,9 @@ begin
       root.AppendChild(run);
       AddDockStats(run,DockRun.Stats);
       AddDockParameters(run);
+      AddShapeInfo(run,'Target',Dockrun.Target);
+      AddShapeInfo(run,'Probe',Dockrun.Probe);
+      AddRotations(run,DockRun);
 
       for f:=0 to High(DockRun.ConstraintSets) do
         AddConstraintSet(run,DockRun.ConstraintSets[f]);
@@ -535,17 +591,20 @@ var
  end;
 
 
- function ReadPointSet(Node:TDOMNode;PointSetName:string):TCoords;overload;
+  function ReadPointSet(Node:TDOMNode;PointSetName:string):TCoords;overload;
 
- var
+  var
    pointset:TDOMNode;
 
- begin
+  begin
     pointset:=Node.FindNode(PointSetName);
     Result:=ReadPointSet(pointset);
- end;
+  end;
 
   procedure ReadDockParameters(DockIx:Integer;Node:TDomNode);
+
+  var totrotations:Integer;
+
   begin
     with Result[DockIx] do
       begin
@@ -553,11 +612,11 @@ var
       ProbeFile:=ReadTextNode('ProbeFile',Node);
       Resolution:=StrToFLoat(ReadTextNode('Resolution',Node));
       AddedRadius:=StrToFLoat(ReadTextNode('AddedRadius',Node));
-      NumAxisSteps:=StrToInt(ReadTextNode('NumAxisSteps',Node));
-      FixedZRotation:=StrToFloat(ReadTextNode('FixedZRotation',Node,'-1'));
       SecondsBetweenSaves:=StrToInt(ReadTextNode('SecondsBetweenSaves',Node));
-      CompletedAngles:=StrToInt(ReadTextNode('CompletedRotations',Node));
-      TotalAngles:=StrToInt(ReadTextNode('TotalRotations',Node));
+      CompletedRotations:=StrToInt(ReadTextNode('CompletedRotations',Node));
+      totrotations:=StrToInt(ReadTextNode('TotalRotations',Node));
+      SetLength(Rotations,totrotations);
+      SetLength(AxisIndexes,totrotations);
       end
   end;
 
@@ -574,7 +633,8 @@ var
 
   function ReadQuaternion(Parent:TDOMNode;QuatName:string):TQuaternion;
 
-  var tmp:TDOMNode;
+  var
+    tmp:TDOMNode;
 
   begin
     tmp:=Parent.FindNode(QuatName);
@@ -583,6 +643,7 @@ var
     Result[2]:=StrToFloat(TDOMElement(tmp).GetAttribute('j'));
     Result[3]:=StrToFloat(TDOMElement(tmp).GetAttribute('k'));
   end;
+
 
   procedure AddConstraintSet(DockIx:Integer;Node:TDomNode);
 
@@ -728,8 +789,55 @@ var
       TestedModelsCount:=StrToInt(ReadTextNode('TestedModelsCount',statnode));
       InsertedModelsCount:=StrToInt(ReadTextNode('InsertedModelsCount',statnode));
       end;
-    Parent.AppendChild(statnode);
+    Parent.AppendChild(statnode);          statnode:=Parent.FindNode('Stats');
   end;
+
+  procedure ReadShapeInfo(Parent:TDomNode;NodeName:string;var ShapeInfo:TShapeInfo);
+
+  var
+    shapenode:TDOMNode;
+    atomnode:TDOMNode;
+    var f:Integer;
+
+  begin
+    shapenode:=Parent.FindNode(NodeName);
+    with ShapeInfo do
+      begin
+      SetLength(Coords,shapenode.ChildNodes.Count);
+      SetLength(Rads,shapenode.ChildNodes.Count);
+      for f:=0 to shapenode.ChildNodes.Count-1 do
+        begin
+        atomnode:=shapenode.ChildNodes.Item[f];;
+        Coords[f,0]:=StrToFloat(TDOMElement(atomnode).GetAttribute('X'));
+        Coords[f,1]:=StrToFloat(TDOMElement(atomnode).GetAttribute('Y'));
+        Coords[f,2]:=StrToFloat(TDOMElement(atomnode).GetAttribute('Z'));
+        Rads[f]:=StrToFloat(TDOMElement(atomnode).GetAttribute('R'));
+        end;
+      end;
+  end;
+
+  procedure ReadRotations(Parent:TDomNode;var Run:TDockRun);
+
+  var
+    len:Integer;
+    rotations,rotation:TDOMNode;
+    f:Integer;
+
+  begin
+    Run.Axes:=ReadPointSet(Parent,'Axes');
+    rotations:=Parent.FindNode('Rotations');
+    SetLength(Run.Rotations, rotations.ChildNodes.Count);
+    SetLength(Run.AxisIndexes,rotations.ChildNodes.Count);
+    for f:=0 to rotations.ChildNodes.Count-1 do
+      begin
+      rotation:=rotations.ChildNodes.Item[f];
+      Run.Rotations[f,0]:=StrToFloat(TDOMElement(rotation).GetAttribute('r'));
+      Run.Rotations[f,1]:=StrToFloat(TDOMElement(rotation).GetAttribute('i'));
+      Run.Rotations[f,2]:=StrToFloat(TDOMElement(rotation).GetAttribute('j'));
+      Run.Rotations[f,3]:=StrToFloat(TDOMElement(rotation).GetAttribute('k'));
+      Run.AxisIndexes[f]:=StrToInt(TDOMElement(rotation).GetAttribute('ix'));
+    end;
+ end;
 
 
 
@@ -737,6 +845,7 @@ var
   f,g:Integer;
   node,currdock:TDOMNode;
   nodename:string;
+
 begin
   ReadXMLFile(doc, FileName);
   orders:=doc.DocumentElement;
@@ -749,6 +858,12 @@ begin
       Result[f].ScoreDefs:=nil;
       currdock:=orders.ChildNodes.Item[f];
       ReadDockStats(currdock,Result[f].Stats);
+      try
+        ReadShapeInfo(currdock,'Target',Result[f].Target);
+        ReadShapeInfo(currdock,'Probe',Result[f].Probe);
+        ReadRotations(currdock,Result[f]);
+      except
+      end;
       for g:=0 to currdock.ChildNodes.count-1 do
         begin
         node:=currdock.ChildNodes.Item[g];
@@ -833,6 +948,28 @@ begin
     end;
 end;
 
+function GetModel(Target,Probe:TMolecule; const Run: TDockRun; ConstSetIx, ModelId: Integer): TMolecule;
+
+var
+  modelman:TPDBModelMan;
+  f:Integer;
+  rot:TQuaternion;
+  transvec:TCoord;
+  chain:TMolecule;
+
+begin
+  Result:=TMolecule.CopyFrom(Target,nil);
+  rot:=Run.ConstraintSets[ConstSetIx].DockModels[ModelId].Rotation;
+  transvec:=Run.ConstraintSets[ConstSetIx].DockModels[ModelId].TransVec;
+  for f:=0 to High(probe.Groups) do
+    begin
+    chain:=TMolecule.CopyFrom(Probe.Groups[f],nil);
+    chain.Transform(rot);
+    chain.Transform(transvec);
+    Result.AddGroup(chain);
+    end;
+end;
+
 function GetModel(const Run: TDockRun; ConstSetIx, ModelId: Integer): TMolecule;
 
 var
@@ -844,20 +981,9 @@ var
 
 begin
   modelman:=TPDBModelMan.Create(Config.MonomersPath);
-
   target:=modelman.LoadLayer(Run.TargetFile);
   probe:=modelman.LoadLayer(Run.ProbeFile);
-  Result:=TMolecule.CopyFrom(target,nil);
-  rot:=Run.ConstraintSets[ConstSetIx].DockModels[ModelId].Rotation;
-  transvec:=Run.ConstraintSets[ConstSetIx].DockModels[ModelId].TransVec;
-
-  for f:=0 to High(probe.Groups) do
-    begin
-    chain:=TMolecule.CopyFrom(probe.Groups[f],nil);
-    chain.Transform(rot);
-    chain.Transform(transvec);
-    Result.AddGroup(chain);
-    end;
+  Result:=GetModel(target,probe,Run,ConstSetIx,ModelId);
   modelman.Free;
 end;
 
@@ -1111,14 +1237,13 @@ begin
     begin
     Resolution:=1;
     AddedRadius:=1.35;
-    NumAxisSteps:=24;
-    FixedZRotation:=-1;
     SecondsBetweenSaves:=1000;
-    CompletedAngles:=0;
+    CompletedRotations:=0;
     ConstraintSets:=nil;
     ScoreDefs:=nil;
-    CompletedAngles:=0;
-    TotalAngles:=-1;
+    Axes:=nil;
+    AxisIndexes:=nil;
+    Rotations:=nil;
     ZeroStats(Stats);
     end;
 end;
@@ -1175,6 +1300,17 @@ begin
    PreparePartners(TargetFile, ProbeFile, '', '', False, False);
 end;
 
+procedure TDockOrdersManager.BuildShapes;
+begin
+  with FDockRuns[FCurrentDock] do
+    begin
+    Target.Coords:=ListCoords(FTarget);
+    Probe.Coords:=ListCoords(FProbe);
+    Target.Rads:=Add(ListRadii(Ftarget),AddedRadius);
+    Probe.Rads:=Add(ListRadii(Ftarget),AddedRadius);
+    end;
+end;
+
 procedure TDockOrdersManager.SetPDBFiles(TargetFile, ProbeFile: string);
 
 begin
@@ -1182,10 +1318,28 @@ begin
   FDockRuns[FCurrentDock].ProbeFile:=ProbeFile;
 end;
 
-procedure TDockOrdersManager.FixZrotation(Angle: TFloat);
+procedure TDockOrdersManager.BuildRotations(Shapepoints:Integer;
+  BaseCount: Integer; Displacement: TFloat; Symmetry: Integer; MaxAxes: Integer);
+
+var
+  selcoords,coords:TCoords;
+  atoms:TAtoms;
+  f:Integer;
+  rotman:TRotationManager;
 begin
-  FDockRuns[FCurrentDock].FixedZRotation:=Angle;
+  coords:=FProbe.AllCoords;
+  selcoords:=SpacedCoords(coords,40);
+  rotman:=TRotationManager.Create(selcoords);
+  rotman.MaxDistQuaternions(BaseCount,Displacement,Symmetry,MaxAxes);
+  with  FDockRuns[FCurrentDock] do
+    begin
+    Rotations:=rotman.Rotations;
+    Axes:=rotman.SelectedAxes;
+    AxisIndexes:=rotman.AxisIndexes;
+    end;
+
 end;
+
 
 procedure TDockOrdersManager.AddResidueContacts(ContactFile: string;
   MaxContacts: Integer);

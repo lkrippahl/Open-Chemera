@@ -89,12 +89,17 @@ type
     procedure Clear;
   end;
 
-  function AtomRecord(AtomName,ResName,ChainName:string;AtomId,ResId:Integer;Position:TCoord):string;
+  function AtomRecord(AtomName,ResName,ChainName:string;AtomId,
+                      ResId:Integer;Position:TCoord;Element:string;
+                      Occupancy:TFloat=1.0;
+                      Temperature:TFloat=1.0):string;
 
 implementation
 
-function AtomRecord(AtomName, ResName, ChainName: string; AtomId,
-  ResId: Integer; Position: TCoord): string;
+function AtomRecord(AtomName,ResName,ChainName:string;AtomId,
+                    ResId:Integer;Position:TCoord;Element:string;
+                    Occupancy:TFloat=1.0;
+                    Temperature:TFloat=1.0):string;
 
 {
 1 - 6          Record name     "ATOM"
@@ -116,6 +121,9 @@ function AtomRecord(AtomName, ResName, ChainName: string; AtomId,
 79 - 80        LString(2)      charge        Charge on the atom, IUPAC form}
 
 begin
+  if Length(AtomName)<4 then
+    AtomName:=' '+AtomName;
+    //this seems to be the rule on pdb files, although that is not what the documentation states.
   Result:='ATOM  '+
           RightJustify(AtomId,5)+' '+
           LeftJustify(AtomName,4)+' '+
@@ -124,7 +132,11 @@ begin
           RightJustify(ResId,4)+'    '+
           RightJustify(Position[0],8,3)+
           RightJustify(Position[1],8,3)+
-          RightJustify(Position[2],8,3);
+          RightJustify(Position[2],8,3)+
+          RightJustify(Occupancy,6,2)+
+          RightJustify(Temperature,6,2)+
+          '           '+
+          LeftJustify(Element,2);
 end;
 
 { TPDBReader }
@@ -307,4 +319,4 @@ begin
 end;
 
 end.
-
+

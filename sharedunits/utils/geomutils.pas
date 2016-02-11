@@ -71,6 +71,10 @@ function Distance(Vec1,Vec2:TCoord):TFloat;overload;
 function Distance(Vecs1,Vecs2:TCoords):TFloats;overload;
 function Distance(Quart1,Quart2:TQuaternion):TFloat;overload; //euclidean
 
+function DistanceSquared(Vec1,Vec2:TCoord):TFloat;
+
+function MidPoint(Coords:TCoords):TCoord;
+
 function Rotate(Vec:TCoord;RotMat:TRotMatrix):TCoord;overload;
 function Rotate(Vecs:TCoords;RotMat:TRotMatrix):TCoords;overload;
 function Rotate(Vec:TCoord;Quaternion:TQuaternion):TCoord;overload;
@@ -87,6 +91,21 @@ function StaticRMSD(Coords1,Coords2:TCoords):TFloat;
 // Assumes same number of coords in both arrays
 
 
+//two-dimensional distances
+procedure Intersection2D(x1,y1,x2,y2,x3,y3,x4,y4:TFloat;out Px,Py:TFloat);
+function DistanceToLine2D(LineX1,LineY1,LineX2,LineY2,PointX,PointY,Norm:TFloat):TFloat;overload;
+function DistanceToLine2D(LineX1,LineY1,LineX2,LineY2,PointX,PointY:TFloat):TFloat;overload;
+function DistanceToSegment2D(x1, y1, x2, y2, Px, Py: TFloat): TFloat;overload;
+   //like distance to line, but checks extremities of segment
+
+
+function DistanceToNormalizedAxis(const Axis,Point:TCoord):TFloat;
+// distance to a normalized vector starting from the origin
+
+procedure OrthogonalCoords(const Axis,Point:TCoord;out x,y:TFloat);
+// returns coordinate along axis and orthogonal to axis
+
+
 //Old functions, with matrices
 { TODO : Replace these with quaternions? }
 function RotAndPlace(Rotation:TRotMatrix;Place,Vector:TCoord):TCoord;overload;
@@ -96,10 +115,10 @@ function XRotation(Angle:TFloat):TRotMatrix;
 function YRotation(Angle:TFloat):TRotMatrix;
 function ZRotation(Angle:TFloat):TRotMatrix;
 function InvertBase(M: TRotMatrix): TRotMatrix;
+function BuildBase(Vec1, Vec2: TCoord): TRotMatrix;
 
 
 {
-
 function DotProduct(v1,v2:TCoord):TFloat;
 function Normalise(v1: TCoord): TCoord;
 function CrossProduct(v1, v2: TCoord): TCoord;
@@ -378,6 +397,23 @@ begin
                Sqr(Quart1[2]-Quart2[2])+Sqr(Quart1[3]-Quart2[3]));
 end;
 
+function DistanceSquared(Vec1, Vec2: TCoord): TFloat;
+begin
+  Result:=Sqr(Vec1[0]-Vec2[0])+Sqr(Vec1[1]-Vec2[1])+Sqr(Vec1[2]-Vec2[2]);
+end;
+
+function MidPoint(Coords: TCoords): TCoord;
+
+var
+  f:Integer;
+
+begin
+  Result:=NullVector;
+  for f:=0 to High(Coords) do
+    Result:=Add(Result,Coords[f]);
+  Result:=Multiply(Result,1/Length(Coords));
+end;
+
 function Rotate(Vec: TCoord; RotMat: TRotMatrix): TCoord;
 begin
   Result[0]:=RotMat[0,0]*Vec[0]+RotMat[0,1]*Vec[1]+RotMat[0,2]*Vec[2];
@@ -487,6 +523,82 @@ begin
   Result:=Sqrt(Result/Length(Coords1));
 end;
 
+procedure Intersection2D(x1,y1,x2,y2,x3,y3,x4,y4:TFloat;out Px,Py:TFloat);
+
+// from https://en.wikipedia.org/wiki/Line–line_intersection#Given_two_points_on_each_line
+
+var
+  num,den:TFloat;
+
+begin
+  num := (x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4);
+  den := (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4);
+  Px:=num/den;
+  num := (x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4);
+  Py:=num/den;
+end;
+
+function DistanceToLine2D(LineX1, LineY1, LineX2, LineY2, PointX, PointY,
+  Norm: TFloat): TFloat;
+// from https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
+begin
+  Result:=(LineY2-LineY1)*PointX-(LineX2-LineX1)*PointY+LineX2*LineY1-LineY2*LineX1;
+  if Result<0 then Result:=-Result;
+end;
+
+function DistanceToLine2D(LineX1, LineY1, LineX2, LineY2, PointX, PointY: TFloat
+  ): TFloat;
+
+var norm:TFloat;
+
+begin
+  norm:=Sqrt(Sqr(LineY2-LineY1)+Sqr(LineX2-LineX1));
+  Result:=DistanceToLine2D(LineX1, LineY1, LineX2, LineY2, PointX, PointY,norm);
+end;
+
+function DistanceToSegment2D(x1, y1, x2, y2, Px, Py: TFloat): TFloat;
+
+// from http://stackoverflow.com/questions/849211/shortest-distance-between-a-point-and-a-line-segment
+
+var
+  dsquare,t:TFloat;
+  projx,projy:TFloat;
+
+begin
+  dsquare := Sqr(x1-x2)+Sqr(y1-y2);
+  if dsquare<Tiny then //segment is a point
+    Result:=Sqrt(Sqr(Px-x1)+Sqr(Py-y1))
+  else
+    begin
+    t:=((px-x1)*(x2-x1)+(py-y1)*(y2-y1))/dsquare;
+    if t<0 then //outside point 1
+      Result:=Sqrt(Sqr(Px-x1)+Sqr(Py-y1))
+    else if t>1 then //outside point 2
+      Result:=Sqrt(Sqr(Px-x2)+Sqr(Py-y2))
+    else
+      begin
+      projx:=x1+t*(x2-x1);
+      projy:=y1+t*(y2-y1);
+      Result:=Sqrt(Sqr(Px-projx)+Sqr(Py-projy));
+      end;
+    end;
+end;
+
+function DistanceToNormalizedAxis(const Axis,Point:TCoord):TFloat;
+
+var vec:TCoord;
+
+begin
+  vec := Subtract(Point,Axis);
+  Result := Norm(CrossProduct(Point,vec));
+end;
+
+procedure OrthogonalCoords(const Axis, Point: TCoord; out x, y: TFloat);
+begin
+  x:=DotProduct(Axis,Point);
+  y:=DistanceToNormalizedAxis(Axis,Point);
+end;
+
 function RotAndPlace(Rotation: TRotMatrix; Place, Vector: TCoord): TCoord;
 
 begin
@@ -580,6 +692,22 @@ begin
   for f:=0 to 2 do
     for g:=0 to 2 do
       Result[f,g]:=M[g,f];
+end;
+
+function BuildBase(Vec1, Vec2: TCoord): TRotMatrix;
+
+var
+  norm1,norm2,norm3:TCoord;
+  f:Integer;
+
+begin
+  norm1 := Multiply(Vec1,1/Norm(Vec1));
+  for f:=0 to 2 do Result[f,0]:=norm1[1];
+  norm2 := Multiply(Vec2,1/Norm(Vec2));
+  norm3 := CrossProduct(norm1,norm2);
+  for f:=0 to 2 do Result[f,2]:=norm3[f];
+  norm2 := CrossProduct(norm3,norm1);
+  for f:=0 to 2 do Result[f,1]:=norm2[f];
 end;
 
 

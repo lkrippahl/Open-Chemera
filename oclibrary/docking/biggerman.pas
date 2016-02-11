@@ -18,7 +18,7 @@ unit biggerman;
 interface
 
 uses
-  Classes, SysUtils, basetypes, bogie, docktasks, molecules, pdbmolecules,
+  Classes, SysUtils, basetypes, bogie, docktasks, molecules,
   geomutils, molutils, oclconfiguration, linegrids,rmsd;
 
 
@@ -29,7 +29,6 @@ type
   TBiGGERManager=class
     private
       FJobs:TDockRuns;
-      FMolecules:TPdbModelMan;
       FCurrentJobFile:string;
 
       procedure RunJob(Ix:Integer);
@@ -72,9 +71,8 @@ var score,constraint :Integer;
 begin
   with FJobs[Ix] do
     begin
-    if (TotalAngles<0) or (CompletedAngles<TotalAngles) then
+    if CompletedRotations<Length(Rotations) then
       RunGeometric(Ix);
-
     for score:=0 to High(ScoreDefs) do
       for constraint:=0 to High(ConstraintSets) do
         if not Computed(ScoreDefs[score].Name, ConstraintSets[constraint].ScoreResults) then
@@ -98,7 +96,6 @@ var
   targetcoords,probecoords:TCoords;
   initialtime,lasttime,currenttime,lastsave:Int64;
   totalsecs:TFloat;
-  target,probe:TMolecule;
   dockman:TDockManager;
   s:string;
   f:Integer;
@@ -110,20 +107,17 @@ begin
     begin
     //Load structures and get atoms
     tick:=GetTickCount;
-    target:=FMolecules.LoadLayer(TargetFile);
-    probe:=FMolecules.LoadLayer(ProbeFile);
-    targetrads:=Add(ListRadii(target),AddedRadius);
-    targetcoords:=ListCoords(target);
-    proberads:=Add(ListRadii(probe),AddedRadius);
-    probecoords:=ListCoords(probe);
+    targetrads:=Target.Rads;
+    targetcoords:=Target.Coords;
+    proberads:=Probe.Rads;
+    probecoords:=Probe.Coords;
     //setup dockmanager with constraints and build all rotations
     dockman:=TDockManager.Create(targetcoords,targetrads,probecoords,proberads,
              Resolution);
     dockman.ImportConstraintSets(FJobs[Ix].ConstraintSets);
     dockman.BuildTargetGrid;
-    dockman.BuildRotations(NumAxisSteps,FixedZRotation);
-    TotalAngles:=dockman.TotalRotations;
-    dockman.CurrentRotation:=CompletedAngles-1;
+    dockman.BuildRotations(FJobs[ix]);
+    dockman.CurrentRotation:=CompletedRotations-1;
 
     initialtime:=GetTickCount;
     lasttime:=initialtime;
@@ -147,7 +141,7 @@ begin
         begin
         WriteLn('Autosaving');
         lastsave:=currenttime;
-        CompletedAngles:=dockman.CurrentRotation+1;
+        CompletedRotations:=dockman.CurrentRotation+1;
         dockman.ExportResults(FJobs[Ix].ConstraintSets);
         SaveCurrent(FCurrentJobFile);
         end;
@@ -157,19 +151,19 @@ begin
           totalsecs:=(currenttime-initialtime)/1000;
           WriteLn('Current Job: ',FCurrentJobFile,' (',
             IntToStr(ix+1),' of ',IntToStr(Length(FJobs))+')');
-          WriteLn('Angle: ',dockman.CurrentRotation,' Total time:',
+          WriteLn('Angle: ',dockman.CurrentRotation,' of ',Length(Rotations),'; Total time:',
             FloatToStrF(totalsecs,ffFixed,0,2),'s Average:',
             FloatToStrF(totalsecs/rotationcount,ffFixed,0,2),
             's Estimated:',
-            FloatToStrF(TotalAngles*totalsecs/rotationcount,ffFixed,0,2));
+            FloatToStrF(Length(Rotations)*totalsecs/rotationcount,ffFixed,0,2));
           lasttime:=GetTickCount;
           s:='';
           for f:=0 to dockman.ModelGroupsCount-1 do
             s:=s+IntToStr(dockman.Models(f)[0].OverlapScore)+';';
-          Writeln(s);
+          Writeln('Best models:',s);
           end;
       end;
-    CompletedAngles:=dockman.CurrentRotation+1;
+    CompletedRotations:=dockman.CurrentRotation+1;
     dockman.ExportResults(FJobs[Ix].ConstraintSets);
     Stats.TotalTickCount:=Stats.TotalTickCount+GetTimeInteval(tick);
     end;
@@ -231,7 +225,6 @@ end;
 constructor TBiGGERManager.Create;
 begin
   inherited;
-  FMolecules:=TPdbModelMan.Create(Config.MonomersPath);
   Verbosity:=10;
 end;
 
@@ -259,7 +252,6 @@ procedure TBiGGERManager.ExportGrids(FileName: string);
 var
   targetrads,proberads:TFloats;
   targetcoords,probecoords:TCoords;
-  target,probe:TMolecule;
   dockman:TDockManager;
   ix:Integer;
   sl:TStringList;
@@ -287,12 +279,10 @@ begin
   sl:=TStringList.Create;
   for ix:=0 to High(FJobs) do with FJobs[ix] do
     begin
-    target:=FMolecules.LoadLayer(TargetFile);
-    probe:=FMolecules.LoadLayer(ProbeFile);
-    targetrads:=Add(ListRadii(target),AddedRadius);
-    targetcoords:=ListCoords(target);
-    proberads:=Add(ListRadii(probe),AddedRadius);
-    probecoords:=ListCoords(probe);
+    targetrads:=Target.Rads;
+    targetcoords:=Target.Coords;
+    proberads:=Probe.Rads;
+    probecoords:=Probe.Coords;
     //setup dockmanager with constraints
     dockman:=TDockManager.Create(targetcoords,targetrads,probecoords,proberads,
              Resolution);
@@ -305,8 +295,6 @@ begin
     sl.Add(':'+ProbeFile);
     DescribeGrid(dockman.ProbeGrid);
     dockman.Free;
-    target.Free;
-    probe.Free;
     end;
   sl.SaveToFile(FileName);
   sl.Free;
@@ -316,7 +304,6 @@ procedure TBiGGERManager.Free;
 begin
   if Self<>nil then
     begin
-    FMolecules.Free;
     FreeOrders(FJobs);
     inherited;
     end;

@@ -1,7 +1,7 @@
 object CmMainForm: TCmMainForm
-  Left = 298
+  Left = 290
   Height = 49
-  Top = 25
+  Top = 21
   Width = 754
   Caption = 'CmMainForm'
   Menu = MainMenu
@@ -62,6 +62,10 @@ object CmMainForm: TCmMainForm
       object MenuItem11: TMenuItem
         Caption = 'Show Rotation'
         OnClick = MenuItem11Click
+      end
+      object MenuItem13: TMenuItem
+        Caption = 'Create Shape Points'
+        OnClick = MenuItem13Click
       end
       object MenuItem12: TMenuItem
         Caption = 'Test Symmetry'

@@ -247,7 +247,8 @@ begin
         oldchain:=chain;
         end;
       end;
-    sl.Add(AtomRecord(atoms[f].Name,rname,chname,atoms[f].ID,rid,atoms[f].Coords));
+    sl.Add(AtomRecord(atoms[f].Name,rname,chname,atoms[f].ID,rid,atoms[f].Coords,
+    Element(atoms[f].AtomicNumber)));
     end;
   sl.SaveToFile(FileName);
   sl.Free;

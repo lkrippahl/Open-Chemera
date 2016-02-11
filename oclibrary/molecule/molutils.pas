@@ -37,7 +37,15 @@ procedure GroupsInContact(const Groups1, Groups2: TMolecules; const Dist: TFloat
             out Interface1,Interface2:TIntegers);
   //returns indexes of groups of each Mol1 and Mol2 within distance of the other
   //groups must be terminal (with only atoms, not groups)
-  //**Not efficient**
+  //TODO: make more efficient
+
+procedure GroupContacts(const Groups1, Groups2: TMolecules; const Dist: TFloat;
+            out Interface1,Interface2:TIntegers);
+  //returns indexes of each pairwise contact from Mol1 to Mol2 within distance
+  //groups must be terminal (with only atoms, not groups)
+  //TODO: make more efficient
+
+
 
 function NeighbourIndexes(FromCoords,ToCoords:TCoords;Dist:TFloat):TIntegers;
   //returns an array with the indexes of FromCoords that are within Dist of any ToCoords
@@ -59,18 +67,12 @@ end;
 function FindCenter(Molecule: TMolecule; Selection: TSelection): TCoord;
 
 var
-  atoms:TAtoms;
+  coords:TCoords;
   f:Integer;
 
 begin
-  Result:=NullVector;
-  atoms:=Molecule.AllAtoms;
-  if atoms<>nil then
-    begin
-    for f:=0 to High(atoms) do
-      Result:=Add(Result,atoms[f].Coords);
-    Result:=Multiply(Result,1/Length(atoms));
-    end;
+  coords:=Molecule.AllCoords;
+  Result:=MidPoint(coords);
 end;
 
 function ListCoords(Molecule: TMolecule; Selection: TSelection): TCoords;
@@ -235,6 +237,29 @@ begin
   for f:=0 to High(interfixs2) do
     if interfixs2[f]>0 then
         AddToArray(f,Interface2);
+end;
+
+procedure GroupContacts(const Groups1, Groups2: TMolecules; const Dist: TFloat;
+  out Interface1, Interface2: TIntegers);
+
+var
+  hulls1,hulls2:TCuboids;
+  f,ix1,ix2:Integer;
+  interfixs1,interfixs2:TIntegers;
+
+begin
+  Interface1:=nil;
+  Interface2:=nil;
+  hulls1:=CalcHulls(Groups1,Dist);
+  hulls2:=CalcHulls(Groups2,Dist);
+  for ix1:=0 to High(hulls1) do
+    for ix2:=0 to High(hulls2) do
+      if InContact(hulls1[ix1],hulls2[ix2]) and
+        AtomsInContact(Groups1[ix1].GroupAtoms,Groups2[ix2].GroupAtoms,Dist) then
+          begin
+          AddToArray(ix1,Interface1);
+          AddToArray(ix2,Interface2);
+          end;
 end;
 
 function NeighbourIndexes(FromCoords, ToCoords: TCoords; Dist: TFloat

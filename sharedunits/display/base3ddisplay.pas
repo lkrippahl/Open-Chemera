@@ -86,6 +86,7 @@ type
     Material:T3DMaterial;
     Objects:T3DObjects;
     end;
+  T3DobjectLists=array of T3DObjectList;
 
   //Display interface
   //TO DO: fill in functions in paralel with GLUT window development

@@ -297,6 +297,7 @@ procedure TSettingsManager.AssignCPK(Molecule: TMolecule);
 
 var
   f,ix,mapix:Integer;
+  atomicnumber:Integer;
 
 begin
   ix:=IndexFromMolecule(Molecule);
@@ -312,7 +313,11 @@ begin
       with FMaps[mapix] do
         for f:=0 to High(AtomSettings) do
           with AtomSettings[f] do
-            MaterialIX:=MaterialIxs[Round(Mult*(Atom.AtomicNumber-MinVal))];
+            begin
+            atomicnumber:=Atom.AtomicNumber;
+            if atomicnumber<0 then atomicnumber:=1;
+            MaterialIX:=MaterialIxs[Round(Mult*(atomicnumber-MinVal))];
+            end;
     end;
 end;
 

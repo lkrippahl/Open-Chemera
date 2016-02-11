@@ -40,11 +40,11 @@ type
 
   TDisplayManager=class
   private
-     //These objects are provided externally.
+    //These objects are provided externally.
     //This form neither creates nor destroys them
     FDisplay:IBase3DDisplay;        //Interface to display window
     FLayers:TMolecules;
-
+    FObjectLists:T3DobjectLists;
 
     //SettingsLists
     FGrids:TGridSettingsArray;
@@ -59,13 +59,19 @@ type
 
     procedure Attach(Molecule:TMolecule);overload;
     procedure Attach(AGrid:TGridPlane;ATransVec:TCoord;AResolution:TFloat;AColor:TRGBAColor);overload;
+    procedure Attach(Spheres:TCoords;Radii:TFloats;Ambient,Diffuse,Specular:TRGBAColor);
+    procedure Attach(Top,Bottom:TCoords;TopRad,BotRad: TFloats;Ambient,Diffuse,Specular:TRGBAColor);
+
 
     procedure Detach(Molecule:TMolecule);
       //remove one molecule
 
     function LayerIndex(Molecule:TMolecule):Integer;
+    procedure SetAtomsColor(Molecule:TMolecule;Indexes:TIntegers;Ambient,Diffuse,Specular:TRGBAColor);
+    procedure SetVisibility(Molecule:TMolecule;Indexes:TIntegers;Visible:Boolean);
     procedure RenderLayers;
     procedure RenderGrids;
+    procedure RenderLists;
     procedure Render(ShowLayers:Boolean=True;ShowGrids:Boolean=True);
 
     procedure OnDeleteAtoms;
@@ -142,7 +148,6 @@ begin
   DebugLn('Attached:'+Molecule.Name);
   FSettings.AssignCPK(Molecule);
   FSettings.CreateMaterialTable(Molecule);
-
 end;
 
 procedure TDisplayManager.Attach(AGrid:TGridPlane;ATransVec:TCoord;AResolution:TFloat;AColor:TRGBAColor);
@@ -158,6 +163,57 @@ begin
     Resolution:=AResolution;
     end;
   DebugLn('Attached Docking grid');
+end;
+
+procedure TDisplayManager.Attach(Spheres: TCoords; Radii: TFloats; Ambient,
+  Diffuse, Specular: TRGBAColor);
+
+var
+  objectlist:T3DObjectList;
+  f:Integer;
+
+begin
+  objectlist.Material:=DefaultMaterial;
+  objectlist.Material.Ambient:=Ambient;
+  objectlist.Material.Diffuse:=Diffuse;
+  objectlist.Material.Specular:=Specular;
+  SetLength(objectlist.Objects,Length(Spheres));
+  for f:=0 to High(Spheres) do
+    with objectlist.Objects[f] do
+      begin
+      ObjectType:=otSphere;
+      sphC:=Spheres[f];
+      Rad:=Radii[f];
+      end;
+  SetLength(FObjectLists,Length(FObjectLists)+1);
+  FObjectLists[High(FObjectLists)]:=objectlist;
+
+end;
+
+procedure TDisplayManager.Attach(Top, Bottom: TCoords; TopRad,BotRad: TFloats; Ambient,
+  Diffuse, Specular: TRGBAColor);
+
+var
+  objectlist:T3DObjectList;
+  f:Integer;
+
+begin
+  objectlist.Material:=DefaultMaterial;
+  objectlist.Material.Ambient:=Ambient;
+  objectlist.Material.Diffuse:=Diffuse;
+  objectlist.Material.Specular:=Specular;
+  SetLength(objectlist.Objects,Length(Top));
+  for f:=0 to High(Top) do
+    with objectlist.Objects[f] do
+      begin
+      ObjectType:=otCilinder;
+      cylC1:=Top[f];
+      cylC2:=Bottom[f];
+      Rad1:=TopRad[f];
+      Rad2:=BotRad[f];
+      end;
+  SetLength(FObjectLists,Length(FObjectLists)+1);
+  FObjectLists[High(FObjectLists)]:=objectlist;
 end;
 
 procedure TDisplayManager.Detach(Molecule: TMolecule);
@@ -192,6 +248,18 @@ begin
   Result:=High(FLayers);
   while (Result>=0) and (FLayers[Result]<>Molecule) do
     Dec(Result);
+end;
+
+procedure TDisplayManager.SetAtomsColor(Molecule: TMolecule;
+  Indexes: TIntegers; Ambient, Diffuse, Specular: TRGBAColor);
+begin
+  //TODO
+end;
+
+procedure TDisplayManager.SetVisibility(Molecule: TMolecule;
+  Indexes: TIntegers; Visible: Boolean);
+begin
+  //TODO (need to rethink settings, too complex...)
 end;
 
 procedure TDisplayManager.RenderLayers;
@@ -248,12 +316,23 @@ begin
     FDisplay.AddObjectList(ol);
     end;
 end;
+
+procedure TDisplayManager.RenderLists;
+
+var f:Integer;
+
+begin
+  for f:=0 to High(FObjectLists) do
+    FDisplay.AddObjectList(FobjectLists[f]);
+end;
+
 procedure TDisplayManager.Render(ShowLayers: Boolean; ShowGrids: Boolean);
 
 begin
   FDisplay.ClearObjectLists;
   if ShowLayers then RenderLayers;
   if ShowGrids then RenderGrids;
+  RenderLists;
   FDisplay.Compile;
 end;
 

@@ -46,10 +46,11 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="chemeramain"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="7"/>
-        <CursorPos X="3" Y="23"/>
+        <TopLine Value="306"/>
+        <CursorPos X="24" Y="326"/>
         <UsageCount Value="206"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -65,10 +66,10 @@
         <Filename Value="..\molecule\molecules.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="molecules"/>
-        <EditorIndex Value="6"/>
+        <EditorIndex Value="10"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="1"/>
-        <CursorPos X="15" Y="157"/>
+        <TopLine Value="72"/>
+        <CursorPos X="3" Y="88"/>
         <UsageCount Value="206"/>
         <Loaded Value="True"/>
       </Unit3>
@@ -76,9 +77,9 @@
         <Filename Value="..\molecule\pdbmolecules.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="pdbmolecules"/>
-        <EditorIndex Value="1"/>
+        <EditorIndex Value="4"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="28"/>
+        <TopLine Value="35"/>
         <CursorPos X="1" Y="1"/>
         <UsageCount Value="206"/>
         <Loaded Value="True"/>
@@ -94,10 +95,10 @@
         <Filename Value="..\molecule\selections.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="selections"/>
-        <EditorIndex Value="5"/>
+        <EditorIndex Value="9"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="299"/>
-        <CursorPos X="25" Y="315"/>
+        <TopLine Value="319"/>
+        <CursorPos X="9" Y="346"/>
         <UsageCount Value="206"/>
         <Loaded Value="True"/>
       </Unit6>
@@ -105,7 +106,7 @@
         <Filename Value="..\UI\glutwindow.pas"/>
         <TopLine Value="191"/>
         <CursorPos X="21" Y="203"/>
-        <UsageCount Value="85"/>
+        <UsageCount Value="74"/>
       </Unit7>
       <Unit8>
         <Filename Value="..\display\base3ddisplay.pas"/>
@@ -124,12 +125,6 @@
         <UsageCount Value="205"/>
       </Unit9>
       <Unit10>
-        <Filename Value="..\display\glrenderer.pas"/>
-        <TopLine Value="20"/>
-        <CursorPos X="3" Y="28"/>
-        <UsageCount Value="1"/>
-      </Unit10>
-      <Unit11>
         <Filename Value="..\display\oglform.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="OpenGLForm"/>
@@ -137,14 +132,14 @@
         <TopLine Value="9"/>
         <CursorPos X="59" Y="25"/>
         <UsageCount Value="206"/>
-      </Unit11>
-      <Unit12>
+      </Unit10>
+      <Unit11>
         <Filename Value="..\parsing\pdbparser.pas"/>
         <IsPartOfProject Value="True"/>
         <CursorPos X="32" Y="21"/>
         <UsageCount Value="202"/>
-      </Unit12>
-      <Unit13>
+      </Unit11>
+      <Unit12>
         <Filename Value="..\base\oclconfiguration.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="oclconfiguration"/>
@@ -152,83 +147,89 @@
         <TopLine Value="28"/>
         <CursorPos X="3" Y="39"/>
         <UsageCount Value="200"/>
-      </Unit13>
-      <Unit14>
+      </Unit12>
+      <Unit13>
         <Filename Value="C:\lazarus\lcl\dialogs.pp"/>
         <TopLine Value="16"/>
         <CursorPos X="14" Y="139"/>
-        <UsageCount Value="26"/>
-      </Unit14>
-      <Unit15>
+        <UsageCount Value="15"/>
+      </Unit13>
+      <Unit14>
         <Filename Value="..\utils\geomhash.pas"/>
         <IsPartOfProject Value="True"/>
         <CursorPos X="43" Y="21"/>
         <UsageCount Value="208"/>
-      </Unit15>
-      <Unit16>
+      </Unit14>
+      <Unit15>
         <Filename Value="..\..\sharedunits\display\oglform.pas"/>
         <ComponentName Value="OpenGLForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="oglform"/>
-        <WindowIndex Value="1"/>
-        <TopLine Value="124"/>
-        <CursorPos X="69" Y="127"/>
-        <UsageCount Value="99"/>
-      </Unit16>
-      <Unit17>
+        <EditorIndex Value="1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="261"/>
+        <CursorPos X="27" Y="298"/>
+        <UsageCount Value="98"/>
+        <Loaded Value="True"/>
+      </Unit15>
+      <Unit16>
         <Filename Value="..\..\sharedunits\general\threedcalc.pas"/>
         <TopLine Value="474"/>
         <CursorPos X="10" Y="479"/>
-        <UsageCount Value="14"/>
-      </Unit17>
-      <Unit18>
+        <UsageCount Value="3"/>
+      </Unit16>
+      <Unit17>
         <Filename Value="..\..\sharedunits\general\basetypes.pas"/>
         <UnitName Value="basetypes"/>
-        <WindowIndex Value="1"/>
-        <TopLine Value="31"/>
-        <CursorPos X="16" Y="53"/>
+        <EditorIndex Value="3"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="134"/>
+        <CursorPos X="51" Y="1018"/>
         <UsageCount Value="114"/>
-      </Unit18>
-      <Unit19>
+        <Loaded Value="True"/>
+      </Unit17>
+      <Unit18>
         <Filename Value="..\..\sharedunits\utils\stringutils.pas"/>
         <TopLine Value="205"/>
         <CursorPos X="7" Y="221"/>
-        <UsageCount Value="94"/>
-      </Unit19>
-      <Unit20>
+        <UsageCount Value="83"/>
+      </Unit18>
+      <Unit19>
         <Filename Value="..\molecule\pdbparser.pas"/>
         <UnitName Value="pdbparser"/>
         <WindowIndex Value="1"/>
         <TopLine Value="263"/>
         <CursorPos X="27" Y="277"/>
-        <UsageCount Value="28"/>
-      </Unit20>
-      <Unit21>
+        <UsageCount Value="17"/>
+      </Unit19>
+      <Unit20>
         <Filename Value="..\..\sharedunits\display\base3ddisplay.pas"/>
         <UnitName Value="base3ddisplay"/>
-        <WindowIndex Value="1"/>
-        <TopLine Value="79"/>
-        <CursorPos X="37" Y="105"/>
-        <UsageCount Value="116"/>
-      </Unit21>
-      <Unit22>
+        <EditorIndex Value="8"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="63"/>
+        <CursorPos X="19" Y="79"/>
+        <UsageCount Value="112"/>
+        <Loaded Value="True"/>
+      </Unit20>
+      <Unit21>
         <Filename Value="..\..\sharedunits\utils\geomhash.pas"/>
         <TopLine Value="113"/>
         <CursorPos X="9" Y="66"/>
-        <UsageCount Value="110"/>
-      </Unit22>
-      <Unit23>
+        <UsageCount Value="99"/>
+      </Unit21>
+      <Unit22>
         <Filename Value="..\..\sharedunits\display\displayobjects.pas"/>
         <UnitName Value="displayobjects"/>
-        <EditorIndex Value="4"/>
+        <EditorIndex Value="7"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="67"/>
-        <CursorPos X="15" Y="60"/>
+        <TopLine Value="203"/>
+        <CursorPos X="4" Y="218"/>
         <UsageCount Value="100"/>
         <Loaded Value="True"/>
-      </Unit23>
-      <Unit24>
+      </Unit22>
+      <Unit23>
         <Filename Value="..\gui\moleculetree.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="MolTreeForm"/>
@@ -237,55 +238,54 @@
         <TopLine Value="19"/>
         <CursorPos X="81" Y="35"/>
         <UsageCount Value="200"/>
-      </Unit24>
-      <Unit25>
+      </Unit23>
+      <Unit24>
         <Filename Value="..\..\sharedunits\forms\notifications.pas"/>
         <IsPartOfProject Value="True"/>
         <TopLine Value="18"/>
         <CursorPos X="61" Y="31"/>
         <UsageCount Value="200"/>
-      </Unit25>
-      <Unit26>
+      </Unit24>
+      <Unit25>
         <Filename Value="..\..\sharedunits\utils\geomutils.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="geomutils"/>
-        <EditorIndex Value="7"/>
+        <EditorIndex Value="11"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="61"/>
-        <CursorPos X="10" Y="77"/>
+        <TopLine Value="62"/>
+        <CursorPos X="10" Y="81"/>
+        <UsageCount Value="200"/>
+        <Loaded Value="True"/>
+      </Unit25>
+      <Unit26>
+        <Filename Value="..\molecule\molutils.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="molutils"/>
+        <EditorIndex Value="5"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="11"/>
+        <CursorPos X="19" Y="75"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
       </Unit26>
       <Unit27>
-        <Filename Value="..\molecule\molutils.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="molutils"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="2"/>
-        <WindowIndex Value="0"/>
-        <TopLine Value="1"/>
-        <CursorPos X="6" Y="13"/>
-        <UsageCount Value="200"/>
-        <Loaded Value="True"/>
-      </Unit27>
-      <Unit28>
         <Filename Value="..\docking\linegrids.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="linegrids"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="6"/>
         <WindowIndex Value="0"/>
         <TopLine Value="17"/>
         <CursorPos X="3" Y="33"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
-      </Unit28>
-      <Unit29>
+      </Unit27>
+      <Unit28>
         <Filename Value="C:\lazarus\fpc\2.6.0\source\packages\opengl\src\gl.pp"/>
         <TopLine Value="1122"/>
         <CursorPos X="3" Y="1138"/>
-        <UsageCount Value="75"/>
-      </Unit29>
-      <Unit30>
+        <UsageCount Value="64"/>
+      </Unit28>
+      <Unit29>
         <Filename Value="..\..\sharedunits\display\povray.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="povray"/>
@@ -293,266 +293,277 @@
         <TopLine Value="1"/>
         <CursorPos X="16" Y="25"/>
         <UsageCount Value="202"/>
-      </Unit30>
-      <Unit31>
+      </Unit29>
+      <Unit30>
         <Filename Value="..\docking\dockdomains.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="dockdomains"/>
-        <EditorIndex Value="8"/>
+        <EditorIndex Value="12"/>
         <WindowIndex Value="0"/>
         <TopLine Value="47"/>
         <CursorPos X="19" Y="69"/>
         <UsageCount Value="202"/>
         <Loaded Value="True"/>
-      </Unit31>
-      <Unit32>
+      </Unit30>
+      <Unit31>
         <Filename Value="C:\lazarus\lcl\forms.pp"/>
         <TopLine Value="691"/>
         <CursorPos X="45" Y="715"/>
-        <UsageCount Value="90"/>
-      </Unit32>
-      <Unit33>
+        <UsageCount Value="79"/>
+      </Unit31>
+      <Unit32>
         <Filename Value="..\docking\dockconstraints.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="dockconstraints"/>
-        <EditorIndex Value="9"/>
+        <EditorIndex Value="13"/>
         <WindowIndex Value="0"/>
         <TopLine Value="360"/>
         <CursorPos X="23" Y="378"/>
         <UsageCount Value="204"/>
         <Loaded Value="True"/>
-      </Unit33>
-      <Unit34>
+      </Unit32>
+      <Unit33>
         <Filename Value="C:\lazarus\fpc\2.6.0\source\rtl\inc\objpash.inc"/>
         <TopLine Value="185"/>
         <CursorPos X="24" Y="201"/>
-        <UsageCount Value="59"/>
-      </Unit34>
-      <Unit35>
+        <UsageCount Value="48"/>
+      </Unit33>
+      <Unit34>
         <Filename Value="..\docking\bogie.pas"/>
         <UnitName Value="bogie"/>
-        <EditorIndex Value="10"/>
+        <EditorIndex Value="14"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <UsageCount Value="89"/>
+        <UsageCount Value="103"/>
         <Loaded Value="True"/>
-      </Unit35>
-      <Unit36>
+      </Unit34>
+      <Unit35>
         <Filename Value="..\molecule\pdbsurface.pas"/>
         <TopLine Value="217"/>
-        <UsageCount Value="16"/>
-      </Unit36>
-      <Unit37>
+        <UsageCount Value="5"/>
+      </Unit35>
+      <Unit36>
         <Filename Value="..\molecule\surface.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="surface"/>
-        <EditorIndex Value="11"/>
+        <EditorIndex Value="15"/>
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
-      </Unit37>
-      <Unit38>
+      </Unit36>
+      <Unit37>
         <Filename Value="C:\lazarus\fpc\2.6.0\source\rtl\objpas\sysutils\sysstrh.inc"/>
         <TopLine Value="139"/>
         <CursorPos X="10" Y="155"/>
-        <UsageCount Value="27"/>
-      </Unit38>
-      <Unit39>
+        <UsageCount Value="16"/>
+      </Unit37>
+      <Unit38>
         <Filename Value="C:\lazarus\fpc\2.6.0\source\packages\opengl\src\glext.pp"/>
         <TopLine Value="40"/>
         <CursorPos X="68" Y="45"/>
-        <UsageCount Value="13"/>
-      </Unit39>
-      <Unit40>
+        <UsageCount Value="2"/>
+      </Unit38>
+      <Unit39>
         <Filename Value="..\docking\docktasks.pas"/>
         <TopLine Value="735"/>
         <CursorPos Y="757"/>
-        <UsageCount Value="10"/>
-      </Unit40>
-      <Unit41>
+        <UsageCount Value="9"/>
+      </Unit39>
+      <Unit40>
         <Filename Value="..\..\sharedunits\forms\formdocker.pas"/>
         <IsPartOfProject Value="True"/>
         <TopLine Value="14"/>
         <CursorPos X="81" Y="26"/>
-        <UsageCount Value="152"/>
-      </Unit41>
-      <Unit42>
+        <UsageCount Value="206"/>
+      </Unit40>
+      <Unit41>
         <Filename Value="C:\lazarus\fpc\2.6.0\source\packages\opengl\src\glu.pp"/>
         <TopLine Value="84"/>
         <CursorPos X="3" Y="100"/>
-        <UsageCount Value="10"/>
-      </Unit42>
-      <Unit43>
-        <Filename Value="C:\lazarus\lcl\graphics.pp"/>
-        <TopLine Value="206"/>
-        <CursorPos X="3" Y="223"/>
-        <UsageCount Value="4"/>
-      </Unit43>
-      <Unit44>
+        <UsageCount Value="9"/>
+      </Unit41>
+      <Unit42>
         <Filename Value="C:\lazarus\fpc\2.6.4\source\packages\opengl\src\gl.pp"/>
         <UnitName Value="GL"/>
         <WindowIndex Value="1"/>
         <TopLine Value="70"/>
         <CursorPos X="11" Y="85"/>
-        <UsageCount Value="12"/>
-      </Unit44>
-      <Unit45>
+        <UsageCount Value="1"/>
+      </Unit42>
+      <Unit43>
         <Filename Value="C:\lazarus\components\opengl\openglcontext.pas"/>
         <UnitName Value="OpenGLContext"/>
         <WindowIndex Value="1"/>
         <TopLine Value="182"/>
         <CursorPos X="3" Y="198"/>
-        <UsageCount Value="11"/>
-      </Unit45>
-      <Unit46>
+        <UsageCount Value="0"/>
+      </Unit43>
+      <Unit44>
         <Filename Value="..\molecule\molfit.pas"/>
         <UnitName Value="molfit"/>
         <WindowIndex Value="1"/>
         <TopLine Value="4"/>
         <CursorPos X="43" Y="20"/>
-        <UsageCount Value="11"/>
-      </Unit46>
-      <Unit47>
+        <UsageCount Value="0"/>
+      </Unit44>
+      <Unit45>
         <Filename Value="..\sequence\alignment.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="alignment"/>
         <WindowIndex Value="1"/>
         <TopLine Value="1"/>
         <CursorPos X="1" Y="1"/>
-        <UsageCount Value="83"/>
-      </Unit47>
-      <Unit48>
+        <UsageCount Value="191"/>
+      </Unit45>
+      <Unit46>
         <Filename Value="C:\lazarus\fpc\2.6.4\source\packages\opengl\src\glu.pp"/>
         <UnitName Value="glu"/>
         <WindowIndex Value="1"/>
         <TopLine Value="387"/>
         <CursorPos X="3" Y="400"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
+      </Unit46>
+      <Unit47>
+        <Filename Value="..\docking\rotations.pas"/>
+        <UnitName Value="rotations"/>
+        <EditorIndex Value="2"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="77"/>
+        <CursorPos X="52" Y="93"/>
+        <UsageCount Value="65"/>
+        <Loaded Value="True"/>
+      </Unit47>
+      <Unit48>
+        <Filename Value="C:\lazarus\fpc\2.6.4\source\rtl\inc\mathh.inc"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="60"/>
+        <CursorPos X="53" Y="73"/>
+        <UsageCount Value="8"/>
       </Unit48>
     </Units>
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
-        <Filename Value="chemeramain.pas"/>
-        <Caret Line="757" Column="11" TopLine="726"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="279" Column="25" TopLine="262"/>
       </Position1>
       <Position2>
-        <Filename Value="chemeramain.pas"/>
-        <Caret Line="710" Column="5" TopLine="700"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="283" Column="30" TopLine="267"/>
       </Position2>
       <Position3>
-        <Filename Value="chemeramain.pas"/>
-        <Caret Line="733" Column="32" TopLine="718"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="312" Column="23" TopLine="297"/>
       </Position3>
       <Position4>
-        <Filename Value="chemeramain.pas"/>
-        <Caret Line="331" Column="27" TopLine="320"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="96" Column="50" TopLine="73"/>
       </Position4>
       <Position5>
-        <Filename Value="..\docking\bogie.pas"/>
-        <Caret Line="122" Column="5" TopLine="101"/>
+        <Filename Value="chemeramain.pas"/>
+        <Caret Line="311" Column="15" TopLine="300"/>
       </Position5>
       <Position6>
-        <Filename Value="..\docking\bogie.pas"/>
-        <Caret Line="137" Column="24" TopLine="113"/>
+        <Filename Value="chemeramain.pas"/>
+        <Caret Line="312" Column="37" TopLine="296"/>
       </Position6>
       <Position7>
-        <Filename Value="..\docking\bogie.pas"/>
-        <Caret Line="128" Column="7" TopLine="114"/>
+        <Filename Value="chemeramain.pas"/>
+        <Caret Line="313" Column="23" TopLine="296"/>
       </Position7>
       <Position8>
-        <Filename Value="..\docking\bogie.pas"/>
-        <Caret Line="131" Column="30" TopLine="115"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="440" Column="29" TopLine="429"/>
       </Position8>
       <Position9>
-        <Filename Value="chemeramain.pas"/>
-        <Caret Line="339" Column="52" TopLine="323"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="97" Column="53" TopLine="77"/>
       </Position9>
       <Position10>
-        <Filename Value="chemeramain.pas"/>
-        <Caret Line="336" Column="15" TopLine="320"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="388" Column="40" TopLine="369"/>
       </Position10>
       <Position11>
-        <Filename Value="chemeramain.pas"/>
-        <Caret Line="332" Column="82" TopLine="319"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="51" Column="7" TopLine="45"/>
       </Position11>
       <Position12>
-        <Filename Value="chemeramain.pas"/>
-        <Caret Line="767" Column="2" TopLine="727"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="421" Column="9" TopLine="413"/>
       </Position12>
       <Position13>
-        <Filename Value="chemeramain.pas"/>
-        <Caret Line="335" Column="66" TopLine="335"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="124" Column="1" TopLine="109"/>
       </Position13>
       <Position14>
-        <Filename Value="chemeramain.pas"/>
-        <Caret Line="55" Column="15" TopLine="40"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="138" Column="14" TopLine="123"/>
       </Position14>
       <Position15>
         <Filename Value="chemeramain.pas"/>
-        <Caret Line="139" Column="3" TopLine="136"/>
+        <Caret Line="308" Column="17" TopLine="296"/>
       </Position15>
       <Position16>
-        <Filename Value="chemeramain.pas"/>
-        <Caret Line="808" Column="34" TopLine="791"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="451" Column="3" TopLine="430"/>
       </Position16>
       <Position17>
-        <Filename Value="chemeramain.pas"/>
-        <Caret Line="743" Column="12" TopLine="722"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="334" Column="1" TopLine="334"/>
       </Position17>
       <Position18>
         <Filename Value="chemeramain.pas"/>
-        <Caret Line="741" Column="34" TopLine="721"/>
+        <Caret Line="309" Column="1" TopLine="296"/>
       </Position18>
       <Position19>
-        <Filename Value="chemeramain.pas"/>
-        <Caret Line="682" Column="71" TopLine="671"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="105" Column="32" TopLine="86"/>
       </Position19>
       <Position20>
-        <Filename Value="..\..\sharedunits\display\displayobjects.pas"/>
-        <Caret Line="139" Column="3" TopLine="134"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="467" Column="16" TopLine="453"/>
       </Position20>
       <Position21>
-        <Filename Value="chemeramain.pas"/>
-        <Caret Line="682" Column="5" TopLine="676"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="253" Column="84" TopLine="230"/>
       </Position21>
       <Position22>
-        <Filename Value="chemeramain.pas"/>
-        <Caret Line="738" Column="29" TopLine="683"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="106" Column="22" TopLine="95"/>
       </Position22>
       <Position23>
-        <Filename Value="chemeramain.pas"/>
-        <Caret Line="660" Column="14" TopLine="643"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="462" Column="21" TopLine="446"/>
       </Position23>
       <Position24>
-        <Filename Value="..\molecule\selections.pas"/>
-        <Caret Line="315" Column="27" TopLine="298"/>
+        <Filename Value="chemeramain.pas"/>
+        <Caret Line="316" Column="35" TopLine="293"/>
       </Position24>
       <Position25>
-        <Filename Value="chemeramain.pas"/>
-        <Caret Line="731" Column="29" TopLine="661"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="509" Column="46" TopLine="503"/>
       </Position25>
       <Position26>
-        <Filename Value="chemeramain.pas"/>
-        <Caret Line="167" Column="3" TopLine="164"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="507" Column="34" TopLine="475"/>
       </Position26>
       <Position27>
-        <Filename Value="chemeramain.pas"/>
-        <Caret Line="670" Column="3" TopLine="1"/>
+        <Filename Value="..\docking\rotations.pas"/>
+        <Caret Line="93" Column="55" TopLine="88"/>
       </Position27>
       <Position28>
-        <Filename Value="..\docking\bogie.pas"/>
-        <Caret Line="1" Column="1" TopLine="1"/>
+        <Filename Value="chemeramain.pas"/>
+        <Caret Line="328" Column="32" TopLine="312"/>
       </Position28>
       <Position29>
         <Filename Value="chemeramain.pas"/>
-        <Caret Line="670" Column="3" TopLine="28"/>
+        <Caret Line="332" Column="77" TopLine="303"/>
       </Position29>
       <Position30>
-        <Filename Value="..\molecule\molutils.pas"/>
-        <Caret Line="1" Column="1" TopLine="1"/>
+        <Filename Value="chemeramain.pas"/>
+        <Caret Line="4" Column="18" TopLine="1"/>
       </Position30>
     </JumpHistory>
   </ProjectOptions>

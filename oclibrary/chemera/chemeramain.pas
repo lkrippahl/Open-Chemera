@@ -21,7 +21,7 @@ uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Menus,
   pdbmolecules, oglform, displayobjects, LCLProc, oclconfiguration, molecules,
   molutils, geomutils, basetypes, linegrids, base3ddisplay, dockdomains,
-  bogie, povray,selections, surface;
+  bogie, povray,selections, surface, rotations;
 
 type
 
@@ -34,6 +34,7 @@ type
     MenuItem10: TMenuItem;
     MenuItem11: TMenuItem;
     MenuItem12: TMenuItem;
+    MenuItem13: TMenuItem;
     MenuItem2: TMenuItem;
     MenuItem3: TMenuItem;
     MenuItem4: TMenuItem;
@@ -51,6 +52,7 @@ type
     procedure MenuItem10Click(Sender: TObject);
     procedure MenuItem11Click(Sender: TObject);
     procedure MenuItem12Click(Sender: TObject);
+    procedure MenuItem13Click(Sender: TObject);
     procedure MenuItem2Click(Sender: TObject);
     procedure MenuItem3Click(Sender: TObject);
     procedure MenuItem4Click(Sender: TObject);
@@ -68,6 +70,7 @@ type
     FMolecules:TPdbModelMan;
 
     //Test functions
+    procedure TestShapePoints;
     procedure TestGrids;
     procedure TestRotationSampling;
     procedure TestBogie;
@@ -165,6 +168,11 @@ end;
 procedure TCmMainForm.MenuItem12Click(Sender: TObject);
 begin
   TestSymmetryConstraints;
+end;
+
+procedure TCmMainForm.MenuItem13Click(Sender: TObject);
+begin
+  TestShapePoints;
 end;
 
 procedure TCmMainForm.MenuItem2Click(Sender: TObject);
@@ -268,6 +276,65 @@ begin
   OpenDlg.Filter:='';//Pdb file|*.pdb;GZipped PDB file|*.gz';
   if OpenDlg.Execute then
     LoadFile(OpenDlg.FileName);
+end;
+
+procedure TCmMainForm.TestShapePoints;
+//generates a set of points describing the shape of the protein
+
+var
+  mol:TMolecule;
+  coords,selcoords,axes:TCoords;
+  selatoms:TIntegers;
+  atoms:TAtoms;
+  f:Integer;
+  rotman:TRotationManager;
+  rads:TFloats;
+
+begin
+  //mol := FMolecules.LoadLayer('C:\My Documents\Research\papers\2015-WCB\data\cleandimers\1OAC-A-prob.pdb');
+  mol := FMolecules.LoadLayer('C:\My Documents\Research\papers\2015-WCB\data\cleantrimers\1AA0.pdb');
+  //mol := FMolecules.LoadLayer('C:\My Documents\Research\papers\2015-WCB\data\cleantrimers\1CA4.pdb');
+  CenterMolecule(mol);
+  coords:=mol.AllCoords;
+  selatoms:=SpacedPoints(coords,40);
+  atoms := mol.AllAtoms;
+  writeln(length(atoms));
+  for f:=0 to High(atoms) do atoms[f].Radius:=0.1;
+  for f:=0 to high(selatoms) do atoms[selatoms[f]].Radius:=1;
+  SetLength(selcoords,Length(selatoms));
+  for f:=0 to High(selatoms) do selcoords[f]:=coords[selatoms[f]];
+  FDispMan.Attach(mol);
+  rotman:=TRotationManager.Create(selcoords);
+  //rotman.InitializeAxes(2000);
+  //rotman.ComputeAxisDistances;
+  //rotman.SelectAxes(6);
+  //rotman.SelectAxes(6);
+  //rotman.SelectAxesByMaxmin(8,5000);
+  //rotman.ForceSingleRotation(-1);
+  //rotman.GenerateQuaternions(16,8);
+  //rotman.GenerateQuaternions(rotman.AxialDistance,rotman.AxialDistance/2);
+
+  //rotman.MaxDistQuaternions(3000,10);
+  rotman.MaxDistQuaternions(3000,5,2);
+
+  axes := Multiply(rotman.GetSelectedAxes,100);
+  rads := FilledFloats(Length(axes),1);
+  for f:=0 to High(axes) do
+    //rads[f]:=rotman.MinDist(f);
+    rads[f]:=rotman.RotationCount(f);
+  WriteLn(Round(Sum(rads)));
+  rads:=Multiply(rads,1/Max(rads));
+  FDispMan.Attach(axes,rads,RGBAColor(0.2,0,0,1),RGBAColor(1,0,0,1),RGBAColor(0.2,0.2,0.2,1));
+
+  rads:=FilledFloats(length(rotman.Rotations),0.2);
+  SetLength(axes,length(rads));
+  for f:=0 to High(axes) do
+    axes[f]:=Rotate(selcoords[0],rotman.Rotations[f]);
+
+  FDispMan.Attach(axes,rads,RGBAColor(0,0,0.2,1),RGBAColor(0,0,1,1),RGBAColor(0.2,0.2,0.2,1));
+  FDispMan.Render;
+  FDisplay.Refresh;
+  rotman.Free;
 end;
 
 

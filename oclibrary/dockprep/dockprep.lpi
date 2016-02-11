@@ -30,6 +30,7 @@
     <RunParams>
       <local>
         <FormatVersion Value="1"/>
+        <CommandLineParams Value="-test"/>
       </local>
     </RunParams>
     <RequiredPackages Count="3">
@@ -43,7 +44,7 @@
         <PackageName Value="LazUtils"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="13">
+    <Units Count="14">
       <Unit0>
         <Filename Value="dockprep.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -109,6 +110,11 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="geomhash"/>
       </Unit12>
+      <Unit13>
+        <Filename Value="..\docking\protinter.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="protinter"/>
+      </Unit13>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -142,7 +148,7 @@
     </Other>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="3">
+    <Exceptions Count="4">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -152,6 +158,9 @@
       <Item3>
         <Name Value="EFOpenError"/>
       </Item3>
+      <Item4>
+        <Name Value="EConvertError"/>
+      </Item4>
     </Exceptions>
   </Debugging>
 </CONFIG>
